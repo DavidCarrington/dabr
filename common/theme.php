@@ -128,9 +128,8 @@ function theme_error($message) {
 function theme_page($title, $content) {
   global $user;
   if ($user->username) {
-    $header = '<p><a href="">home</a> | <a href="replies">replies</a> | <a href="directs">directs</a> | <a href="public">public</a> | <a href="about">about</a>';
-    $footer = '<hr><p>dabr <a href="CHANGELOG">v'.DABR_VERSION.'</a> <a href="logout">logout</a></p>';
-    $content = $header.$content.$footer;
+    $menu = '<p><a href="">home</a> | <a href="replies">replies</a> | <a href="directs">directs</a> | <a href="public">public</a> | <a href="about">about</a> | <a href="logout">logout</a></p>';
+    $content = $menu.$content.$menu;
   }
   header('Content-Type: text/html; charset=utf-8');
   echo '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">

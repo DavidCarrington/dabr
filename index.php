@@ -2,8 +2,6 @@
 
 if (file_exists('offline.html')) { readfile('offline.html'); exit(); }
 
-define('DABR_VERSION', '0.3');
-
 include 'config.php';
 include 'common/authentication.php';
 include 'common/theme.php';

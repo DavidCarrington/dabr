@@ -7,7 +7,7 @@ class DabrTwitterClient extends Twitter {
     global $user;
     $this->username = $user->username;
     $this->password = $user->password;
-    $this->user_agent = 'dabr ' . DABR_VERSION;
+    $this->user_agent = 'dabr';
   }
   
   function update($status) {
