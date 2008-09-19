@@ -118,7 +118,8 @@ function theme_avatar($url, $force_large = false) {
 
 function theme_status_time_link($status) {
   $time_link = format_interval(time() - strtotime($status->created_at), 1);
-  return "<small><a href='status/{$status->id}'>$time_link ago</a> from {$status->source}</small>";
+  $source = $status->source ? " from {$status->source}" : '';
+  return "<small><a href='status/{$status->id}'>$time_link ago</a>$source</small>";
 }
 
 function theme_timeline($feed) {
@@ -133,6 +134,24 @@ function theme_timeline($feed) {
     );
   }
   return theme('table', array(), $rows, array('class' => 'timeline'));
+}
+
+function theme_search_results($feed) {
+  $rows = array();
+  foreach ($feed->results as $status) {
+    $text = twitter_parse_tags($status->text);
+    $link = theme('status_time_link', $status);
+    
+    $rows[] = array(
+      theme('avatar', $status->profile_image_url),
+      "<a href='user/{$status->from_user}'>{$status->from_user}</a> - {$link}<br>{$text}",
+    );
+  }
+  return theme('table', array(), $rows, array('class' => 'timeline'));
+}
+
+function theme_search_form() {
+  return '<form action="search" method="GET"><input name="query" /><input type="submit" value="Search" /></form>';
 }
 
 ?>

@@ -6,6 +6,11 @@ class Twitter {
   var $user_agent = 'A PHP Twitter Class';
   var $headers = array();
   
+  function search($query) {
+    $request = 'http://search.twitter.com/search.json?q=' . urlencode($query);
+    return $this->json_process($request);
+  }
+  
   function show($id) {
     if (!$id) return false;
     $request = "http://twitter.com/statuses/show/{$id}.json";

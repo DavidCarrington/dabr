@@ -128,7 +128,7 @@ function theme_error($message) {
 function theme_page($title, $content) {
   global $user;
   if ($user->username) {
-    $menu = '<p><a href="">home</a> | <a href="replies">replies</a> | <a href="directs">directs</a> | <a href="public">public</a> | <a href="about">about</a> | <a href="logout">logout</a></p>';
+    $menu = theme('menu');
     $content = $menu.$content.$menu;
   }
   header('Content-Type: text/html; charset=utf-8');
