@@ -58,6 +58,7 @@ function twitter_parse_links_callback($matches) {
 function twitter_parse_tags($input) {
   $out = preg_replace_callback('#([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?=\b)#is', 'twitter_parse_links_callback', $input);
   $out = preg_replace('#(@([a-z_A-Z0-9]+))#', '@<a href="user/$2">$2</a>', $out);
+  $out = preg_replace('#(\\#([a-z_A-Z0-9]+))#', '<a href="search/?query=%23$2">$0</a>', $out);
   return $out;
 }
 
