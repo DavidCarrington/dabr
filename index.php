@@ -50,6 +50,18 @@ menu_register(array(
     'hidden' => true,
     'callback' => 'twitter_user_page',
   ),
+  'follow' => array(
+    'hidden' => true,
+    'callback' => 'twitter_follow_page',
+  ),
+  'unfollow' => array(
+    'hidden' => true,
+    'callback' => 'twitter_follow_page',
+  ),
+  'delete' => array(
+    'hidden' => true,
+    'callback' => 'twitter_delete_page',
+  ),
 ));
 
 function twitter_status_page($query) {
@@ -59,6 +71,30 @@ function twitter_status_page($query) {
     $tl = $t->show($id);
     $content = theme('status', $tl);
     theme('page', "Status $id", $content);
+  }
+}
+
+function twitter_delete_page($query) {
+  $t = new DabrTwitterClient();
+  $id = (int) $query[1];
+  if ($id) {
+    $tl = $t->destroy($id);
+    header('Location: '. BASE_URL);
+    exit();
+  }
+}
+
+function twitter_follow_page($query) {
+  $t = new DabrTwitterClient();
+  $user = $query[1];
+  if ($user) {
+    if($query[0] == 'follow'){
+      $t->follow_user($user);
+    } else {
+      $t->leave_user($user);
+    }
+    header('Location: '. BASE_URL);
+    exit();
   }
 }
 
@@ -89,7 +125,7 @@ function twitter_replies_page() {
 function twitter_directs_page() {
   $t = new DabrTwitterClient();
   $content = theme('status_form');
-  $content .= theme('timeline', $t->direct_messages());
+  $content .= theme('directs', $t->direct_messages());
   theme('page', 'Direct Messages', $content);
 }
 

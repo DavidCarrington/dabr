@@ -20,14 +20,14 @@ class Twitter {
   function update($status) {
     if (!$status) return false;
     $request = 'http://twitter.com/statuses/update.json';
-    $post_data = 'status='.urlencode($status);
+    $post_data = 'source=dabr&status='.urlencode($status);
     return $this->json_process($request, $post_data);
   }
   
   function destroy($id) {
     if (!$id) return false;
     $request = "http://twitter.com/statuses/destroy/{$id}.json";
-    return $this->json_process($request);
+    return $this->json_process($request, 'a=b');
   }
   
 	function user_timeline($user) {
@@ -62,13 +62,13 @@ class Twitter {
   function follow_user( $id ) {
     if (!$id) return false;
 		$request = "http://twitter.com/friendships/create/{$id}.json";
-		return $this->json_process($request);
+		return $this->json_process($request, 'a=b');
 	}
 	
 	function leave_user( $id ) {
     if (!$id) return false;
 		$request = "http://twitter.com/friendships/destroy/{$id}.json";
-		return $this->json_process($request);
+		return $this->json_process($request, 'a=b');
 	}
   
   function json_process($url, $post_data=false) {

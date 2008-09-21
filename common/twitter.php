@@ -29,7 +29,7 @@ class DabrTwitterClient extends Twitter {
 
         default:
           $result = json_decode($this->response);
-          theme('error', "<h2>Error {$http_code}</h2><p>{$result->error}</p>");
+          theme('error', "<h2>Error {$http_code}</h2><p>{$result->error}</p><hr><p>$url</p>");
       }
     }
   }
@@ -96,13 +96,23 @@ function theme_status($status) {
   $out .= "<p>$parsed</p>
 <table align='center'><tr><td>$avatar</td><td><b>{$status->user->screen_name}</b>
 <br>$time_since</table>";
+global $user;
+if ($user->username == $status->user->screen_name) {
+$out .= "<form action='delete/{$status->id}' method='post'><input type='submit' value='Delete without confirmation' /></form>";
+}
   return $out;
 }
 
 function theme_user($feed) {
   $status = $feed[0];
   $out = theme('status_form', "@{$status->user->screen_name} ");
-  $out .= "<table><tr><td>".theme('avatar', $status->user->profile_image_url, 1)."</td><td><b>{$status->user->screen_name}</b><br>{$status->user->description}</td></table>";
+  $out .= "<table><tr><td>".theme('avatar', $status->user->profile_image_url, 1)."</td>
+<td><b>{$status->user->screen_name}</b>
+<br>{$status->user->description}
+<br>{$status->user->followers_count} followers 
+| <a href='follow/{$status->user->screen_name}'>Follow</a> |
+<a href='unfollow/{$status->user->screen_name}'>Unfollow</a>
+</td></table>";
   $list = array();
   foreach ($feed as $status) {
     $list[] = twitter_parse_tags($status->text).' '.theme('status_time_link', $status);
@@ -120,6 +130,20 @@ function theme_status_time_link($status) {
   $time_link = format_interval(time() - strtotime($status->created_at), 1);
   $source = $status->source ? " from {$status->source}" : '';
   return "<small><a href='status/{$status->id}'>$time_link ago</a>$source</small>";
+}
+
+function theme_directs($feed) {
+  $rows = array();
+  foreach ($feed as $status) {
+    $text = twitter_parse_tags($status->text);
+    $link = theme('status_time_link', $status);
+    
+    $rows[] = array(
+      theme('avatar', $status->sender->profile_image_url),
+      "<a href='user/{$status->sender->screen_name}'>{$status->sender->screen_name}</a> - {$link}<br>{$text}",
+    );
+  }
+  return theme('table', array(), $rows, array('class' => 'timeline'));
 }
 
 function theme_timeline($feed) {
