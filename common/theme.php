@@ -126,11 +126,8 @@ function theme_error($message) {
 }
 
 function theme_page($title, $content) {
-  global $user;
-  if ($user->username) {
-    $menu = theme('menu');
-    $content = $menu.$content.$menu;
-  }
+  $menu = theme('menu');
+  $content = $menu.$content.$menu;
   header('Content-Type: text/html; charset=utf-8');
   echo '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
