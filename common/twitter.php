@@ -20,6 +20,10 @@ menu_register(array(
     'security' => true,
     'callback' => 'twitter_replies_page',
   ),
+  'favourites' => array(
+    'security' => true,
+    'callback' =>  'twitter_favourites_page',
+  ),
   'directs' => array(
     'security' => true,
     'callback' => 'twitter_directs_page',
@@ -133,8 +137,6 @@ function format_interval($timestamp, $granularity = 2) {
 
 function twitter_status_page($query) {
   $id = (int) $query[1];
-    //~ echo '<hr>',$id;
-    //~ die();
   if ($id) {
     $request = "http://twitter.com/statuses/show/{$id}.json";
     $tl = twitter_process($request, $id);
@@ -224,6 +226,18 @@ function twitter_user_page($query) {
   }
 }
 
+function twitter_favourites_page($query) {
+  $screen_name = $query[1];
+  if (!$screen_name) {
+    $screen_name = $GLOBALS['user']['username'];
+  }
+  $request = "http://twitter.com/favorites/{$screen_name}.json";
+  $tl = twitter_process($request);
+  $content = theme('status_form');
+  $content .= theme('timeline', $tl);
+  theme('page', 'User', $content);
+}
+
 function twitter_friends_page() {
   user_ensure_authenticated();
   $request = 'http://twitter.com/statuses/friends_timeline.json';
@@ -299,6 +313,7 @@ function theme_directs($feed) {
 
 function theme_timeline($feed) {
   $rows = array();
+  if (count($feed) == 0) return theme('no_tweets');
   foreach ($feed as $status) {
     $text = twitter_parse_tags($status->text);
     $link = theme('status_time_link', $status);
@@ -309,6 +324,10 @@ function theme_timeline($feed) {
     );
   }
   return theme('table', array(), $rows, array('class' => 'timeline'));
+}
+
+function theme_no_tweets() {
+  return '<p>No tweets to display.</p>';
 }
 
 function theme_search_results($feed) {
