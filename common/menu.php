@@ -26,16 +26,26 @@ function menu_execute_active_handler() {
   return false;
 }
 
+function menu_visible_items() {
+  static $items;
+  if (!isset($items)) {
+    $items = array();
+    foreach ($GLOBALS['menu_registry'] as $url => $page) {
+      if ($page['security'] && !user_is_authenticated()) continue;
+      if ($page['hidden']) continue;
+      $items[$url] = $page;
+    }
+  }
+  return $items;
+}
+
 function theme_menu() {
-  global $menu_registry;
   $links = array();
-  foreach ($menu_registry as $url => $page) {
-    if ($page['security'] && !user_is_authenticated()) continue;
-    if ($page['hidden']) continue;
+  foreach (menu_visible_items() as $url => $page) {
     $title = $url ? $url : 'home';
     $links[] = "<a href='$url'>$title</a>";
   }
-  return implode(' | ', $links);
+  return $GLOBALS['user']['username'].' | '.implode(' | ', $links);
 }
 
 ?>
