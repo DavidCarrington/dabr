@@ -26,7 +26,7 @@ function logout_page() {
 
 function about_page() {
   $content = file_get_contents('about.html');
-  theme_page('About', $content);
+  theme('page', 'About', $content);
 }
 
 menu_execute_active_handler();
