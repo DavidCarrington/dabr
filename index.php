@@ -3,6 +3,7 @@
 if (file_exists('offline.html')) { readfile('offline.html'); exit(); }
 
 include 'config.php';
+include 'common/browser.php';
 include 'common/user.php';
 include 'common/menu.php';
 include 'common/theme.php';
@@ -29,6 +30,7 @@ function about_page() {
   theme('page', 'About', $content);
 }
 
+browser_detect();
 menu_execute_active_handler();
 
 ?>

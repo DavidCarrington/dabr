@@ -110,8 +110,7 @@ function twitter_fetch($url) {
 
 function twitter_parse_links_callback($matches) {
   $url = $matches[1];
-    $encoded = urlencode($url);
-    return "<a href='http://google.com/gwt/n?u={$encoded}'>{$url}</a>";
+  return theme('external_link', $url);
 }
 
 function twitter_parse_tags($input) {
@@ -374,6 +373,11 @@ function theme_search_results($feed) {
 
 function theme_search_form() {
   return '<form action="search" method="GET"><input name="query" /><input type="submit" value="Search" /></form>';
+}
+
+function theme_external_link($url) {
+  $encoded = urlencode($url);
+  return "<a href='http://google.com/gwt/n?u={$encoded}'>{$url}</a>";
 }
 
 ?>
