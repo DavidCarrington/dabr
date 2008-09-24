@@ -46,7 +46,6 @@ menu_register(array(
     'callback' => 'twitter_follow_page',
   ),
   'followers' => array(
-    'hidden' => true,
     'callback' => 'twitter_followers_page',
   ),
   'delete' => array(
@@ -116,7 +115,7 @@ function twitter_parse_links_callback($matches) {
 function twitter_parse_tags($input) {
   $out = preg_replace_callback('#([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?=\b)#is', 'twitter_parse_links_callback', $input);
   $out = preg_replace('#(@([a-z_A-Z0-9]+))#', '@<a href="user/$2">$2</a>', $out);
-  $out = preg_replace('#(\\#([a-z_A-Z0-9]+))#', '<a href="search/?query=%23$2">$0</a>', $out);
+  $out = preg_replace('#(\\#([a-z_A-Z0-9:_-]+))#', '<a href="search/?query=%23$2">$0</a>', $out);
   return $out;
 }
 
@@ -178,6 +177,10 @@ function twitter_follow_page($query) {
 
 function twitter_followers_page($query) {
   $user = $query[1];
+  if (!$user) {
+    user_ensure_authenticated();
+    $user = $GLOBALS['user']['username'];
+  }
   $request = "http://twitter.com/statuses/followers/{$user}.json";
   $tl = twitter_process($request);
   $content = theme('followers', $tl);
