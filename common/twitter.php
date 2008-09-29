@@ -144,7 +144,7 @@ function format_interval($timestamp, $granularity = 2) {
 function twitter_status_page($query) {
   $id = (int) $query[1];
   if ($id) {
-    $request = "http://twitter.com/statuses/show/{$id}.json";
+    $request = "http://twitter.com/statuses/show/{$id}.json?page=".intval($_GET['page']);
     $tl = twitter_process($request, $id);
     $content = theme('status', $tl);
     theme('page', "Status $id", $content);
@@ -154,7 +154,7 @@ function twitter_status_page($query) {
 function twitter_delete_page($query) {
   $id = (int) $query[1];
   if ($id) {
-    $request = "http://twitter.com/statuses/destroy/{$id}.json";
+    $request = "http://twitter.com/statuses/destroy/{$id}.json?page=".intval($_GET['page']);
     $tl = twitter_process($request, 1);
     header('Location: '. BASE_URL);
     exit();
@@ -169,6 +169,7 @@ function twitter_follow_page($query) {
     } else {
       $request = "http://twitter.com/friendships/destroy/{$user}.json";
     }
+    $request .= '?page='.intval($_GET['page']);
     twitter_process($request, 1);
     header('Location: '. BASE_URL);
     exit();
@@ -181,7 +182,7 @@ function twitter_followers_page($query) {
     user_ensure_authenticated();
     $user = $GLOBALS['user']['username'];
   }
-  $request = "http://twitter.com/statuses/followers/{$user}.json";
+  $request = "http://twitter.com/statuses/followers/{$user}.json?page=".intval($_GET['page']);
   $tl = twitter_process($request);
   $content = theme('followers', $tl);
   theme('page', 'Followers', $content);
@@ -199,14 +200,14 @@ function twitter_update() {
 }
 
 function twitter_public_page() {
-  $request = 'http://twitter.com/statuses/public_timeline.json';
+  $request = 'http://twitter.com/statuses/public_timeline.json?page='.intval($_GET['page']);
   $content = theme('status_form');
   $content .= theme('timeline', twitter_process($request));
   theme('page', 'Public Timeline', $content);
 }
 
 function twitter_replies_page() {
-  $request = 'http://twitter.com/statuses/replies.json';
+  $request = 'http://twitter.com/statuses/replies.json?page='.intval($_GET['page']);
   $tl = twitter_process($request);
   $content = theme('status_form');
   $content .= theme('timeline', $tl);
@@ -214,7 +215,7 @@ function twitter_replies_page() {
 }
 
 function twitter_directs_page() {
-  $request = 'http://twitter.com/direct_messages.json';
+  $request = 'http://twitter.com/direct_messages.json?page='.intval($_GET['page']);
   $tl = twitter_process($request);
   $content = theme('status_form');
   $content .= theme('directs', $tl);
@@ -225,7 +226,9 @@ function twitter_search_page() {
   $search_query = $_GET['query'];
   $content = theme('search_form');
   if ($search_query) {
-    $request = 'http://search.twitter.com/search.json?q=' . urlencode($search_query);
+    $page = (int) $_GET['page'];
+    if ($page == 0) $page = 1;
+    $request = 'http://search.twitter.com/search.json?q=' . urlencode($search_query).'&page='.$page;
     $tl = twitter_process($request);
     $content .= theme('search_results', $tl);
   }
@@ -235,7 +238,7 @@ function twitter_search_page() {
 function twitter_user_page($query) {
   $screen_name = $query[1];
   if ($screen_name) {
-    $request = "http://twitter.com/statuses/user_timeline/{$screen_name}.json";
+    $request = "http://twitter.com/statuses/user_timeline/{$screen_name}.json?page=".intval($_GET['page']);
     $tl = twitter_process($request);
     $content = theme('user', $tl);
     theme('page', "User {$screen_name}", $content);
@@ -249,7 +252,7 @@ function twitter_favourites_page($query) {
   if (!$screen_name) {
     $screen_name = $GLOBALS['user']['username'];
   }
-  $request = "http://twitter.com/favorites/{$screen_name}.json";
+  $request = "http://twitter.com/favorites/{$screen_name}.json?page=".intval($_GET['page']);
   $tl = twitter_process($request);
   $content = theme('status_form');
   $content .= theme('timeline', $tl);
@@ -258,7 +261,7 @@ function twitter_favourites_page($query) {
 
 function twitter_friends_page() {
   user_ensure_authenticated();
-  $request = 'http://twitter.com/statuses/friends_timeline.json';
+  $request = 'http://twitter.com/statuses/friends_timeline.json?page='.intval($_GET['page']);
   $tl = twitter_process($request);
   $content = theme('status_form');
   $content .= theme('timeline', $tl);
@@ -292,6 +295,7 @@ function theme_user($feed) {
   $out .= "<table><tr><td>".theme('avatar', $status->user->profile_image_url, 1)."</td>
 <td><b>{$status->user->screen_name}</b>
 <br>{$status->user->description}
+<br><small><a href='{$status->user->url}'>{$status->user->url}</a></small>
 <br><a href='followers/{$status->user->screen_name}'>{$status->user->followers_count} followers</a>
 | <a href='follow/{$status->user->screen_name}'>Follow</a> |
 <a href='unfollow/{$status->user->screen_name}'>Unfollow</a>
@@ -326,7 +330,9 @@ function theme_directs($feed) {
       "<a href='user/{$status->sender->screen_name}'>{$status->sender->screen_name}</a> - {$link}<br>{$text}",
     );
   }
-  return theme('table', array(), $rows, array('class' => 'timeline'));
+  $content = theme('table', array(), $rows, array('class' => 'directs'));
+  $content .= theme('pagination');
+  return $content;
 }
 
 function theme_timeline($feed) {
@@ -341,7 +347,9 @@ function theme_timeline($feed) {
       "<a href='user/{$status->user->screen_name}'>{$status->user->screen_name}</a> - {$link}<br>{$text}",
     );
   }
-  return theme('table', array(), $rows, array('class' => 'timeline'));
+  $content = theme('table', array(), $rows, array('class' => 'timeline'));
+  $content .= theme('pagination');
+  return $content;
 }
 
 function theme_followers($feed) {
@@ -353,7 +361,9 @@ function theme_followers($feed) {
       "<a href='user/{$user->screen_name}'>{$user->screen_name}</a> - {$user->location}",
     );
   }
-  return theme('table', array(), $rows, array('class' => 'followers'));
+  $content = theme('table', array(), $rows, array('class' => 'followers'));
+  $content .= theme('pagination');
+  return $content;
 }
 
 function theme_no_tweets() {
@@ -371,7 +381,9 @@ function theme_search_results($feed) {
       "<a href='user/{$status->from_user}'>{$status->from_user}</a> - {$link}<br>{$text}",
     );
   }
-  return theme('table', array(), $rows, array('class' => 'timeline'));
+  $content = theme('table', array(), $rows, array('class' => 'timeline'));
+  $content .= theme('pagination');
+  return $content;
 }
 
 function theme_search_form() {
@@ -381,6 +393,17 @@ function theme_search_form() {
 function theme_external_link($url) {
   $encoded = urlencode($url);
   return "<a href='http://google.com/gwt/n?u={$encoded}'>{$url}</a>";
+}
+
+function theme_pagination() {
+  $page = intval($_GET['page']);
+  if (preg_match('#&q(.*)#', $_SERVER['QUERY_STRING'], $matches)) {
+    $query = $matches[0];
+  }
+  if ($page == 0) $page = 1;
+  if ($page > 1) $links[] = "<a href='{$_GET['q']}?page=".($page-1)."$query'>Newer</a>";
+  $links[] = "<a href='{$_GET['q']}?page=".($page+1)."$query'>Older</a>";
+  return '<p>'.implode(' | ', $links).'</p>';
 }
 
 ?>
