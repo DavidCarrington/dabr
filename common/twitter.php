@@ -357,7 +357,7 @@ function theme_status($status) {
 function theme_retweet($status) {
   $text = "RT @{$status->user->screen_name}: {$status->text}";
   $length = strlen($text);
-  $content = "<form action='update' method='post'><textarea name='status' style='width:100%' rows='3'>$text</textarea><br><input type='submit' value='Retweet'> <small>Length before editting: $length</small></form>";
+  $content = "<form action='update' method='post'><textarea name='status' style='width:100%' rows='3'>$text</textarea><br><input type='submit' value='Retweet'> <small>Length before editing: $length</small></form>";
   return $content;
 }
 
