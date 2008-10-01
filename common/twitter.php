@@ -24,6 +24,16 @@ menu_register(array(
     'security' => true,
     'callback' =>  'twitter_favourites_page',
   ),
+  'favourite' => array(
+    'hidden' => true,
+    'security' => true,
+    'callback' => 'twitter_mark_favourite_page',
+  ),
+  'unfavourite' => array(
+    'hidden' => true,
+    'security' => true,
+    'callback' => 'twitter_mark_favourite_page',
+  ),
   'directs' => array(
     'security' => true,
     'callback' => 'twitter_directs_page',
@@ -259,6 +269,18 @@ function twitter_favourites_page($query) {
   theme('page', 'User', $content);
 }
 
+function twitter_mark_favourite_page($query) {
+  $id = (int) $query[1];
+  if ($query[0] == 'unfavourite') {
+    $request = "http://twitter.com/favorites/destroy/$id.json";
+  } else {
+    $request = "http://twitter.com/favorites/create/$id.json";
+  }
+  twitter_process($request, 1);
+  header('Location: '. BASE_URL. '/favourites');
+  exit();
+}
+
 function twitter_friends_page() {
   user_ensure_authenticated();
   $request = 'http://twitter.com/statuses/friends_timeline.json?page='.intval($_GET['page']);
@@ -341,10 +363,11 @@ function theme_timeline($feed) {
   foreach ($feed as $status) {
     $text = twitter_parse_tags($status->text);
     $link = theme('status_time_link', $status);
+    $actions = theme('action_icons', $status);
 
     $rows[] = array(
       theme('avatar', $status->user->profile_image_url),
-      "<a href='user/{$status->user->screen_name}'>{$status->user->screen_name}</a> - {$link}<br>{$text}",
+      "<a href='user/{$status->user->screen_name}'>{$status->user->screen_name}</a> $actions  - {$link}<br>{$text}",
     );
   }
   $content = theme('table', array(), $rows, array('class' => 'timeline'));
@@ -375,10 +398,11 @@ function theme_search_results($feed) {
   foreach ($feed->results as $status) {
     $text = twitter_parse_tags($status->text);
     $link = theme('status_time_link', $status);
+    $actions = theme('action_icons', $status);
 
     $rows[] = array(
       theme('avatar', $status->profile_image_url),
-      "<a href='user/{$status->from_user}'>{$status->from_user}</a> - {$link}<br>{$text}",
+      "<a href='user/{$status->from_user}'>{$status->from_user}</a> $actions - {$link}<br>{$text}",
     );
   }
   $content = theme('table', array(), $rows, array('class' => 'timeline'));
@@ -404,6 +428,16 @@ function theme_pagination() {
   if ($page > 1) $links[] = "<a href='{$_GET['q']}?page=".($page-1)."$query'>Newer</a>";
   $links[] = "<a href='{$_GET['q']}?page=".($page+1)."$query'>Older</a>";
   return '<p>'.implode(' | ', $links).'</p>';
+}
+
+function theme_action_icons($status) {
+  $actions = array();
+  if ($status->favorited == '1') {
+    $actions[] = "<a href='unfavourite/{$status->id}'><img src='images/star.png' /></a>";
+  } else {
+    $actions[] = "<a href='favourite/{$status->id}'><img src='images/star_grey.png' /></a>";
+  }
+  return implode(' ', $actions);
 }
 
 ?>
