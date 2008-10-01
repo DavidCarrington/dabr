@@ -63,6 +63,11 @@ menu_register(array(
     'security' => true,
     'callback' => 'twitter_delete_page',
   ),
+  'retweet' => array(
+    'hidden' => true,
+    'security' => true,
+    'callback' => 'twitter_retweet_page',
+  ),
 ));
 
 function twitter_process($url, $post_data = false) {
@@ -154,10 +159,20 @@ function format_interval($timestamp, $granularity = 2) {
 function twitter_status_page($query) {
   $id = (int) $query[1];
   if ($id) {
-    $request = "http://twitter.com/statuses/show/{$id}.json?page=".intval($_GET['page']);
+    $request = "http://twitter.com/statuses/show/{$id}.json";
     $tl = twitter_process($request, $id);
     $content = theme('status', $tl);
     theme('page', "Status $id", $content);
+  }
+}
+
+function twitter_retweet_page($query) {
+  $id = (int) $query[1];
+  if ($id) {
+    $request = "http://twitter.com/statuses/show/{$id}.json";
+    $tl = twitter_process($request, $id);
+    $content = theme('retweet', $tl);
+    theme('page', 'Retweet', $content);
   }
 }
 
@@ -224,12 +239,40 @@ function twitter_replies_page() {
   theme('page', 'Replies', $content);
 }
 
-function twitter_directs_page() {
-  $request = 'http://twitter.com/direct_messages.json?page='.intval($_GET['page']);
-  $tl = twitter_process($request);
-  $content = theme('status_form');
-  $content .= theme('directs', $tl);
-  theme('page', 'Direct Messages', $content);
+function twitter_directs_page($query) {
+  $action = strtolower(trim($query[1]));
+  switch ($action) {
+    case 'create':
+      $to = $query[2];
+      $content = theme('directs_form', $to);
+      theme('page', 'Create DM', $content);
+    
+    case 'send':
+      $to = urlencode(trim(stripslashes($_POST['to'])));
+      $message = urlencode(trim(stripslashes($_POST['message'])));
+      $request = 'http://twitter.com/direct_messages/new.json';
+      twitter_process($request, "user=$to&text=$message");
+      header('Location: '. BASE_URL);
+      exit();
+
+    case 'inbox':
+    default:
+      $request = 'http://twitter.com/direct_messages.json?page='.intval($_GET['page']);
+      $tl = twitter_process($request);
+      $content .= theme('directs', $tl);
+      theme('page', 'DM Inbox', $content);
+  }
+}
+
+function theme_directs_form($to) {
+  if ($to) {
+    $html_to = "Sending direct message to <b>$to</b><input name='to' value='$to' type='hidden'>";
+  } else {
+    $html_to = "To: <input name='to'><br>Message:";
+  }
+  $content = "<form action='directs/send' method='post'>$html_to<br><textarea name='message' style='width: 100%' rows='3'></textarea><br><input type='submit' value='Send'></form>";
+  $content .= '<p>Note: there is currently no confirmation page after sending directs.</p>';
+  return $content;
 }
 
 function twitter_search_page() {
@@ -311,6 +354,13 @@ function theme_status($status) {
   return $out;
 }
 
+function theme_retweet($status) {
+  $text = "RT @{$status->user->screen_name}: {$status->text}";
+  $length = strlen($text);
+  $content = "<form action='update' method='post'><textarea name='status' style='width:100%' rows='3'>$text</textarea><br><input type='submit' value='Retweet'> <small>Length before editting: $length</small></form>";
+  return $content;
+}
+
 function theme_user($feed) {
   $status = $feed[0];
   $out = theme('status_form', "@{$status->user->screen_name} ");
@@ -352,7 +402,8 @@ function theme_directs($feed) {
       "<a href='user/{$status->sender->screen_name}'>{$status->sender->screen_name}</a> - {$link}<br>{$text}",
     );
   }
-  $content = theme('table', array(), $rows, array('class' => 'directs'));
+  $content = '<p><a href="directs/create">Create new message</a></p>';
+  $content .= theme('table', array(), $rows, array('class' => 'directs'));
   $content .= theme('pagination');
   return $content;
 }
@@ -436,6 +487,10 @@ function theme_action_icons($status) {
     $actions[] = "<a href='unfavourite/{$status->id}'><img src='images/star.png' /></a>";
   } else {
     $actions[] = "<a href='favourite/{$status->id}'><img src='images/star_grey.png' /></a>";
+  }
+  if ($status->user->screen_name != $GLOBALS['user']['username']) {
+    $actions[] = "<a href='directs/create/{$status->user->screen_name}'>DM</a>";
+    $actions[] = "<a href='retweet/{$status->id}'>RT</a>";
   }
   return implode(' ', $actions);
 }
