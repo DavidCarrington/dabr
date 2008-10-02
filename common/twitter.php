@@ -21,7 +21,6 @@ menu_register(array(
     'callback' => 'twitter_replies_page',
   ),
   'favourites' => array(
-    'security' => true,
     'callback' =>  'twitter_favourites_page',
   ),
   'favourite' => array(
@@ -254,6 +253,12 @@ function twitter_directs_page($query) {
       twitter_process($request, "user=$to&text=$message");
       header('Location: '. BASE_URL);
       exit();
+    
+    case 'sent':
+      $request = 'http://twitter.com/direct_messages/sent.json?page='.intval($_GET['page']);
+      $tl = twitter_process($request);
+      $content .= theme('directs', $tl, 1);
+      theme('page', 'DM Sent', $content);
 
     case 'inbox':
     default:
@@ -303,13 +308,14 @@ function twitter_user_page($query) {
 function twitter_favourites_page($query) {
   $screen_name = $query[1];
   if (!$screen_name) {
+    user_ensure_authenticated();
     $screen_name = $GLOBALS['user']['username'];
   }
   $request = "http://twitter.com/favorites/{$screen_name}.json?page=".intval($_GET['page']);
   $tl = twitter_process($request);
   $content = theme('status_form');
   $content .= theme('timeline', $tl);
-  theme('page', 'User', $content);
+  theme('page', 'Favourites', $content);
 }
 
 function twitter_mark_favourite_page($query) {
@@ -357,7 +363,7 @@ function theme_status($status) {
 function theme_retweet($status) {
   $text = "RT @{$status->user->screen_name}: {$status->text}";
   $length = strlen($text);
-  $content = "<form action='update' method='post'><textarea name='status' style='width:100%' rows='3'>$text</textarea><br><input type='submit' value='Retweet'> <small>Length before editing: $length</small></form>";
+  $content = "<form action='update' method='post'><textarea name='status' cols='30' rows='5'>$text</textarea><br><input type='submit' value='Retweet'> Length before editing: $length</form>";
   return $content;
 }
 
@@ -387,22 +393,22 @@ function theme_avatar($url, $force_large = false) {
 
 function theme_status_time_link($status) {
   $time_link = format_interval(time() - strtotime($status->created_at), 1);
-  $source = $status->source ? " from {$status->source}" : '';
-  return "<small><a href='status/{$status->id}'>$time_link ago</a>$source</small>";
+  return "<small><a href='status/{$status->id}'>$time_link ago</a></small>";
 }
 
-function theme_directs($feed) {
+function theme_directs($feed, $sent_items = false) {
   $rows = array();
   foreach ($feed as $status) {
     $text = twitter_parse_tags($status->text);
+    $user = $sent_items ? $status->recipient : $status->sender;
     $link = theme('status_time_link', $status);
 
     $rows[] = array(
-      theme('avatar', $status->sender->profile_image_url),
-      "<a href='user/{$status->sender->screen_name}'>{$status->sender->screen_name}</a> - {$link}<br>{$text}",
+      theme('avatar', $user->profile_image_url),
+      "<a href='user/{$user->screen_name}'>{$user->screen_name}</a> - {$link}<br>{$text}",
     );
   }
-  $content = '<p><a href="directs/create">Create new message</a></p>';
+  $content = '<p><a href="directs/create">Create</a> | <a href="directs/inbox">Inbox</a> | <a href="directs/sent">Sent</a></p>';
   $content .= theme('table', array(), $rows, array('class' => 'directs'));
   $content .= theme('pagination');
   return $content;
@@ -415,15 +421,28 @@ function theme_timeline($feed) {
     $text = twitter_parse_tags($status->text);
     $link = theme('status_time_link', $status);
     $actions = theme('action_icons', $status);
-
-    $rows[] = array(
+    $source = $status->source ? "<small> from {$status->source}</small>" : '';
+    
+    $row = array(
       theme('avatar', $status->user->profile_image_url),
-      "<a href='user/{$status->user->screen_name}'>{$status->user->screen_name}</a> $actions  - {$link}<br>{$text}",
+      "<a href='user/{$status->user->screen_name}'>{$status->user->screen_name}</a> $actions $link<br>{$text} $source",
     );
+    if (twitter_is_reply($status)) {
+      $row = array('class' => 'reply', 'data' => $row);
+    }
+    $rows[] = $row;
   }
   $content = theme('table', array(), $rows, array('class' => 'timeline'));
   $content .= theme('pagination');
   return $content;
+}
+
+function twitter_is_reply($status) {
+  if (!user_is_authenticated()) {
+    return false;
+  }
+  $user = "@{$GLOBALS['user']['username']}";
+  return preg_match("#$user#", $status->text);
 }
 
 function theme_followers($feed) {
@@ -451,10 +470,14 @@ function theme_search_results($feed) {
     $link = theme('status_time_link', $status);
     $actions = theme('action_icons', $status);
 
-    $rows[] = array(
+    $row = array(
       theme('avatar', $status->profile_image_url),
       "<a href='user/{$status->from_user}'>{$status->from_user}</a> $actions - {$link}<br>{$text}",
     );
+    if (twitter_is_reply($status)) {
+      $row = array('class' => 'reply', 'data' => $row);
+    }
+    $rows[] = $row;
   }
   $content = theme('table', array(), $rows, array('class' => 'timeline'));
   $content .= theme('pagination');
@@ -482,16 +505,19 @@ function theme_pagination() {
 }
 
 function theme_action_icons($status) {
+  $user = $status->from_user ? $status->from_user : $status->user->screen_name;
   $actions = array();
+  
+  $actions[] = "<a href='user/{$user}'><img src='images/reply.png' /></a>";
+  if ($status->user->screen_name != $GLOBALS['user']['username']) {
+    $actions[] = "<a href='directs/create/{$user}'><img src='images/dm.png' /></a>";
+  }
   if ($status->favorited == '1') {
     $actions[] = "<a href='unfavourite/{$status->id}'><img src='images/star.png' /></a>";
   } else {
     $actions[] = "<a href='favourite/{$status->id}'><img src='images/star_grey.png' /></a>";
   }
-  if ($status->user->screen_name != $GLOBALS['user']['username']) {
-    $actions[] = "<a href='directs/create/{$status->user->screen_name}'>DM</a>";
-    $actions[] = "<a href='retweet/{$status->id}'>RT</a>";
-  }
+  $actions[] = "<a href='retweet/{$status->id}'><img src='images/retweet.png' /></a>";
   return implode(' ', $actions);
 }
 
