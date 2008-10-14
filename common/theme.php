@@ -132,7 +132,7 @@ function theme_page($title, $content) {
   echo '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head><title>',$_SERVER['SERVER_NAME'],' - ',$title,'</title><base href="',BASE_URL,'" />
-<style type="text/css">td{vertical-align:top;}tr.reply td{background:#FFA;}img{border:0}</style></head>
+<style type="text/css">a{color:#44f}td{vertical-align:top}tr.reply td{background:#FFA}img{border:0}small,small a{color:#888}td{border-bottom:1px dashed #CCC}</style></head>
 <body>', $content, '</body>
 </html>';
   exit();

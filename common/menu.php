@@ -15,7 +15,10 @@ function menu_execute_active_handler() {
   $query = (array) explode('/', $_GET['q']);
   $id = $query[0];
   $page = $menu_registry[$id];
-  if (!$page) die('404 - Page not found.');
+  if (!$page) {
+    header("HTTP/1.0 404 Not Found");
+    die('404 - Page not found.');
+  }
   
   if ($page['security'])
     user_ensure_authenticated();

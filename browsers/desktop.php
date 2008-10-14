@@ -13,7 +13,7 @@ function desktop_theme_status_form($text = '') {
 <script type="text/javascript">
 function updateCount() {
   document.getElementById("remaining").innerHTML = 140 - document.getElementById("status").value.length;
-  setTimeout(updateCount, 1000);
+  setTimeout(updateCount, 200);
 }
 updateCount();
 </script>';

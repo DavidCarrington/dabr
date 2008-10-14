@@ -67,6 +67,10 @@ menu_register(array(
     'security' => true,
     'callback' => 'twitter_retweet_page',
   ),
+  'flickr' => array(
+    'hidden' => true,
+    'callback' => 'flickr_thumbnail',
+  ),
 ));
 
 function twitter_process($url, $post_data = false) {
@@ -130,7 +134,40 @@ function twitter_parse_tags($input) {
   $out = preg_replace_callback('#([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?=\b)#is', 'twitter_parse_links_callback', $input);
   $out = preg_replace('#(@([a-z_A-Z0-9]+))#', '@<a href="user/$2">$2</a>', $out);
   $out = preg_replace('#(\\#([a-z_A-Z0-9:_-]+))#', '<a href="search/?query=%23$2">$0</a>', $out);
+  $out = twitter_photo_replace($out);
   return $out;
+}
+
+function twitter_photo_replace($text) {
+  $tmp = strip_tags($text);
+  if (preg_match_all('#twitpic.com/[\d\w]+#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+    foreach ($matches[0] as $match) {
+      $text = "<a href='http://{$match}'><img src='http://{$match}-thumb.jpg' class='twitpic' width='75' height='75' /></a><br>".$text;
+    }
+  }
+  if (preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+    foreach ($matches[1] as $key => $match) {
+      $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$match' /></a><br>".$text;
+    }
+  }
+  return $text;
+}
+
+function flickr_thumbnail($query) {
+  $id = $query[1];
+  if ($id) {
+    header('HTTP/1.1 301 Moved Permanently') ;
+    header('Location: '. flickr_id_to_url($id));
+  }
+  exit();
+}
+
+function flickr_id_to_url($id) {
+  if (!$id) return '';
+  $url = "http://api.flickr.com/services/rest/?method=flickr.photos.getSizes&photo_id=$id&api_key=".FLICKR_API_KEY;
+  $flickr_xml = twitter_fetch($url);
+  preg_match('#"(http://.*_s\.jpg)"#', $flickr_xml, $matches);
+  return $matches[1];
 }
 
 function format_interval($timestamp, $granularity = 2) {
