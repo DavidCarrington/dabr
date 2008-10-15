@@ -319,7 +319,7 @@ function theme_directs_form($to) {
 
 function twitter_search_page() {
   $search_query = $_GET['query'];
-  $content = theme('search_form');
+  $content = theme('search_form', $search_query);
   if ($search_query) {
     $page = (int) $_GET['page'];
     if ($page == 0) $page = 1;
@@ -378,7 +378,7 @@ function twitter_friends_page() {
 
 function theme_status_form($text = '') {
   if (user_is_authenticated()) {
-    return "<form method='POST' action='update'><input name='status' value='{$text}'/> <input type='submit' value='Update' /></form>";
+    return "<form method='POST' action='update'><input name='status' value='{$text}' maxlength='140' /> <input type='submit' value='Update' /></form>";
   }
 }
 
@@ -521,11 +521,13 @@ function theme_search_results($feed) {
   return $content;
 }
 
-function theme_search_form() {
-  return '<form action="search" method="GET"><input name="query" /><input type="submit" value="Search" /></form>';
+function theme_search_form($query) {
+  $query = stripslashes(htmlentities($query));
+  return "<form action='search' method='GET'><input name='query' value=\"$query\" /><input type='submit' value='Search' /></form>";
 }
 
 function theme_external_link($url) {
+  if (substr($url, 0, strlen(BASE_URL)) == BASE_URL) return "<a href='$url'>$url</a>";
   $encoded = urlencode($url);
   return "<a href='http://google.com/gwt/n?u={$encoded}'>{$url}</a>";
 }
