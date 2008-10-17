@@ -1,6 +1,10 @@
 <?php
 
 function browser_detect() {
+  if ($_SERVER['HTTP_X_NOKIA_BEARER'] == 'GPRS') {
+    browser_load('text');
+    return;
+  }
   $user_agent = $_SERVER['HTTP_USER_AGENT'];
   $handle = fopen('browsers/list.csv', 'r');
   while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
@@ -16,7 +20,7 @@ function browser_load($browser) {
   $GLOBALS['current_theme'] = $browser;
   $file = "browsers/$browser.php";
   if (file_exists($file)) {
-    include($file);
+    require_once($file);
   }
 }
 

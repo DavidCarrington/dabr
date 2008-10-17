@@ -48,7 +48,7 @@ function theme_menu() {
     $title = $url ? $url : 'home';
     $links[] = "<a href='$url'>$title</a>";
   }
-  return $GLOBALS['user']['username'].' | '.implode(' | ', $links);
+  return "<b><a href='user/{$GLOBALS['user']['username']}'>{$GLOBALS['user']['username']}</a></b> | ".implode(' | ', $links);
 }
 
 ?>

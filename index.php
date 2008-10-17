@@ -1,5 +1,11 @@
 <?php
 
+header( 'Expires: Sat, 26 Jul 1997 05:00:00 GMT' ); 
+header( 'Last-Modified: ' . date('r') ); 
+header( 'Cache-Control: no-store, no-cache, must-revalidate' ); 
+header( 'Cache-Control: post-check=0, pre-check=0', false ); 
+header( 'Pragma: no-cache' );
+
 if (file_exists('offline.html')) { readfile('offline.html'); exit(); }
 
 include 'config.php';
