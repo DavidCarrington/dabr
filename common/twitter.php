@@ -263,13 +263,15 @@ function twitter_update() {
 function twitter_public_page() {
   $request = 'http://twitter.com/statuses/public_timeline.json?page='.intval($_GET['page']);
   $content = theme('status_form');
-  $content .= theme('timeline', twitter_process($request));
+  $tl = twitter_standard_timeline(twitter_process($request), 'public');
+  $content .= theme('timeline', $tl);
   theme('page', 'Public Timeline', $content);
 }
 
 function twitter_replies_page() {
   $request = 'http://twitter.com/statuses/replies.json?page='.intval($_GET['page']);
   $tl = twitter_process($request);
+  $tl = twitter_standard_timeline($tl, 'replies');
   $content = theme('status_form');
   $content .= theme('timeline', $tl);
   theme('page', 'Replies', $content);
@@ -293,17 +295,23 @@ function twitter_directs_page($query) {
     
     case 'sent':
       $request = 'http://twitter.com/direct_messages/sent.json?page='.intval($_GET['page']);
-      $tl = twitter_process($request);
-      $content .= theme('directs', $tl, 1);
+      $tl = twitter_standard_timeline(twitter_process($request), 'directs_sent');
+      $content = theme_directs_menu();
+      $content .= theme('timeline', $tl);
       theme('page', 'DM Sent', $content);
 
     case 'inbox':
     default:
       $request = 'http://twitter.com/direct_messages.json?page='.intval($_GET['page']);
-      $tl = twitter_process($request);
-      $content .= theme('directs', $tl);
+      $tl = twitter_standard_timeline(twitter_process($request), 'directs_inbox');
+      $content = theme_directs_menu();
+      $content .= theme('timeline', $tl);
       theme('page', 'DM Inbox', $content);
   }
+}
+
+function theme_directs_menu() {
+  return '<p><a href="directs/create">Create</a> | <a href="directs/inbox">Inbox</a> | <a href="directs/sent">Sent</a></p>';
 }
 
 function theme_directs_form($to) {
@@ -325,7 +333,8 @@ function twitter_search_page() {
     if ($page == 0) $page = 1;
     $request = 'http://search.twitter.com/search.json?q=' . urlencode($search_query).'&page='.$page;
     $tl = twitter_process($request);
-    $content .= theme('search_results', $tl);
+    $tl = twitter_standard_timeline($tl, 'search');
+    $content .= theme('timeline', $tl);
   }
   theme('page', 'Search', $content);
 }
@@ -335,7 +344,9 @@ function twitter_user_page($query) {
   if ($screen_name) {
     $request = "http://twitter.com/statuses/user_timeline/{$screen_name}.json?page=".intval($_GET['page']);
     $tl = twitter_process($request);
-    $content = theme('user', $tl);
+    $tl = twitter_standard_timeline($tl, 'user');
+    $content = theme_user_header($tl);
+    $content .= theme('timeline', $tl);
     theme('page', "User {$screen_name}", $content);
   } else {
     // TODO: user search screen
@@ -350,6 +361,7 @@ function twitter_favourites_page($query) {
   }
   $request = "http://twitter.com/favorites/{$screen_name}.json?page=".intval($_GET['page']);
   $tl = twitter_process($request);
+  $tl = twitter_standard_timeline($tl, 'favourites');
   $content = theme('status_form');
   $content .= theme('timeline', $tl);
   theme('page', 'Favourites', $content);
@@ -371,6 +383,7 @@ function twitter_friends_page() {
   user_ensure_authenticated();
   $request = 'http://twitter.com/statuses/friends_timeline.json?page='.intval($_GET['page']);
   $tl = twitter_process($request);
+  $tl = twitter_standard_timeline($tl, 'friends');
   $content = theme('status_form');
   $content .= theme('timeline', $tl);
   theme('page', 'Home', $content);
@@ -404,22 +417,22 @@ function theme_retweet($status) {
   return $content;
 }
 
-function theme_user($feed) {
-  $status = $feed[0];
-  $out = theme('status_form', "@{$status->user->screen_name} ");
-  $out .= "<table><tr><td>".theme('avatar', $status->user->profile_image_url, 1)."</td>
-<td><b>{$status->user->screen_name}</b>
-<br>{$status->user->description}
-<br><small><a href='{$status->user->url}'>{$status->user->url}</a></small>
-<br><a href='followers/{$status->user->screen_name}'>{$status->user->followers_count} followers</a>
-| <a href='follow/{$status->user->screen_name}'>Follow</a> |
-<a href='unfollow/{$status->user->screen_name}'>Unfollow</a>
-</td></table>";
-  $list = array();
-  foreach ($feed as $status) {
-    $list[] = twitter_parse_tags($status->text).' '.theme('status_time_link', $status);
+function theme_user_header($feed) {
+  $user = $feed[0]->from;
+  $out = theme('status_form', "@{$user->screen_name} ");
+  $name = $user->screen_name;
+  if ($user->name && $user->name != $user->screen_name) {
+    $name .= " ({$user->name})";
   }
-  $out .= theme('list', $list);
+  $out .= "<table><tr><td>".theme('avatar', $user->profile_image_url, 1)."</td>
+<td><b>{$name}</b>
+<br>{$user->description}
+<br><small><a href='{$status->user->url}'>{$user->url}</a></small>
+<br><a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a>
+| <a href='follow/{$user->screen_name}'>Follow</a>
+| <a href='unfollow/{$user->screen_name}'>Unfollow</a>
+| <a href='directs/create/{$user->screen_name}'>Direct Message</a>
+</td></table>";
   return $out;
 }
 
@@ -433,22 +446,59 @@ function theme_status_time_link($status) {
   return "<small><a href='status/{$status->id}'>$time_link ago</a></small>";
 }
 
-function theme_directs($feed, $sent_items = false) {
-  $rows = array();
-  foreach ($feed as $status) {
-    $text = twitter_parse_tags($status->text);
-    $user = $sent_items ? $status->recipient : $status->sender;
-    $link = theme('status_time_link', $status);
+function twitter_standard_timeline($feed, $source) {
+  $output = array();
+  switch ($source) {
+    case 'user':
+    case 'friends':
+    case 'replies':
+      foreach ($feed as $status) {
+        $new = $status;
+        $new->from = $new->user;
+        unset($new->user);
+        $output[] = $new;
+      }
+      return $output;
+    
+    case 'search':
+      foreach ($feed->results as $status) {
+        $output[] = (object) array(
+          'id' => $status->id,
+          'text' => $status->text,
+          'from' => (object) array(
+            'id' => $status->from_user_id,
+            'screen_name' => $status->from_user,
+            'profile_image_url' => $status->profile_image_url,
+          ),
+          'to' => (object) array(
+            'id' => $status->to_user_id,
+            'screen_name' => $status->to_user,
+          ),
+          'created_at' => $status->created_at,
+        );
+      }
+      return $output;
+    
+    case 'directs_sent':
+    case 'directs_inbox':
+      foreach ($feed as $status) {
+        $new = $status;
+        if ($source == 'directs_inbox') {
+          $new->from = $new->sender;
+          $new->to = $new->recipient;
+        } else {
+          $new->from = $new->recipient;
+          $new->to = $new->sender;
+        }
+        unset($new->sender, $new->recipient);
+        $output[] = $new;
+      }
+      return $output;
 
-    $rows[] = array(
-      theme('avatar', $user->profile_image_url),
-      "<a href='user/{$user->screen_name}'>{$user->screen_name}</a> - {$link}<br>{$text}",
-    );
+    default:
+      echo "<h1>$source</h1><pre>";
+      print_r($feed); die();
   }
-  $content = '<p><a href="directs/create">Create</a> | <a href="directs/inbox">Inbox</a> | <a href="directs/sent">Sent</a></p>';
-  $content .= theme('table', array(), $rows, array('class' => 'directs'));
-  $content .= theme('pagination');
-  return $content;
 }
 
 function theme_timeline($feed) {
@@ -461,8 +511,8 @@ function theme_timeline($feed) {
     $source = $status->source ? "<small> from {$status->source}</small>" : '';
     
     $row = array(
-      theme('avatar', $status->user->profile_image_url),
-      "<a href='user/{$status->user->screen_name}'>{$status->user->screen_name}</a> $actions $link<br>{$text} $source",
+      theme('avatar', $status->from->profile_image_url),
+      "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br>{$text} $source",
     );
     if (twitter_is_reply($status)) {
       $row = array('class' => 'reply', 'data' => $row);
