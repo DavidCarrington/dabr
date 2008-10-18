@@ -453,9 +453,10 @@ function twitter_standard_timeline($feed, $source) {
   $output = array();
   switch ($source) {
     case 'favourites':
-    case 'user':
     case 'friends':
+    case 'public':
     case 'replies':
+    case 'user':
       foreach ($feed as $status) {
         $new = $status;
         $new->from = $new->user;
