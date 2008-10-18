@@ -441,9 +441,12 @@ function theme_avatar($url, $force_large = false) {
   return "<img src='$url' height='$size' width='$size' />";
 }
 
-function theme_status_time_link($status) {
+function theme_status_time_link($status, $is_link = true) {
   $time_link = format_interval(time() - strtotime($status->created_at), 1);
-  return "<small><a href='status/{$status->id}'>$time_link ago</a></small>";
+  $out = "$time_link ago";
+  if ($is_link)
+    $out = "<a href='status/{$status->id}'>$out</a>";
+  return "<small>$out</small>";
 }
 
 function twitter_standard_timeline($feed, $source) {
@@ -491,6 +494,7 @@ function twitter_standard_timeline($feed, $source) {
           $new->to = $new->sender;
         }
         unset($new->sender, $new->recipient);
+        $new->is_direct = true;
         $output[] = $new;
       }
       return $output;
@@ -506,14 +510,16 @@ function theme_timeline($feed) {
   if (count($feed) == 0) return theme('no_tweets');
   foreach ($feed as $status) {
     $text = twitter_parse_tags($status->text);
-    $link = theme('status_time_link', $status);
+    $link = theme('status_time_link', $status, !$status->is_direct);
     $actions = theme('action_icons', $status);
+    $avatar = theme('avatar', $status->from->profile_image_url);
     $source = $status->source ? "<small> from {$status->source}</small>" : '';
-    
     $row = array(
-      theme('avatar', $status->from->profile_image_url),
       "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br>{$text} $source",
     );
+    if ($avatar) {
+      array_unshift($row, $avatar);
+    }
     if (twitter_is_reply($status)) {
       $row = array('class' => 'reply', 'data' => $row);
     }
@@ -601,10 +607,12 @@ function theme_action_icons($status) {
   if ($status->user->screen_name != $GLOBALS['user']['username']) {
     $actions[] = "<a href='directs/create/{$user}'><img src='images/dm.png' /></a>";
   }
-  if ($status->favorited == '1') {
-    $actions[] = "<a href='unfavourite/{$status->id}'><img src='images/star.png' /></a>";
-  } else {
-    $actions[] = "<a href='favourite/{$status->id}'><img src='images/star_grey.png' /></a>";
+  if (!$status->is_direct) {
+    if ($status->favorited == '1') {
+      $actions[] = "<a href='unfavourite/{$status->id}'><img src='images/star.png' /></a>";
+    } else {
+      $actions[] = "<a href='favourite/{$status->id}'><img src='images/star_grey.png' /></a>";
+    }
   }
   $actions[] = "<a href='retweet/{$status->id}'><img src='images/retweet.png' /></a>";
   return implode(' ', $actions);
