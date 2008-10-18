@@ -452,6 +452,7 @@ function theme_status_time_link($status, $is_link = true) {
 function twitter_standard_timeline($feed, $source) {
   $output = array();
   switch ($source) {
+    case 'favourites':
     case 'user':
     case 'friends':
     case 'replies':
