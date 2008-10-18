@@ -5,7 +5,7 @@ function text_theme_avatar($url, $force_large = false) {
 }
 
 function text_theme_action_icons($status) {
-  $user = $status->from_user ? $status->from_user : $status->user->screen_name;
+  $user = $status->user->screen_name;
   $actions = array();
   
   if ($status->user->screen_name != $GLOBALS['user']['username']) {

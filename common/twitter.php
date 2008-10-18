@@ -601,7 +601,7 @@ function theme_pagination() {
 }
 
 function theme_action_icons($status) {
-  $user = $status->from_user ? $status->from_user : $status->user->screen_name;
+  $user = $status->from->screen_name;
   $actions = array();
   
   $actions[] = "<a href='user/{$user}'><img src='images/reply.png' /></a>";
