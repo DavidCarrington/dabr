@@ -145,7 +145,7 @@ function twitter_photo_replace($text) {
       $text = "<a href='http://{$match}'><img src='http://{$match}-thumb.jpg' class='twitpic' width='75' height='75' /></a><br>".$text;
     }
   }
-  if (preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+  if (FLICKR_API_KEY && preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
       $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$match' /></a><br>".$text;
     }

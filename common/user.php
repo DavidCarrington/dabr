@@ -45,7 +45,7 @@ function _user_save_cookie($stay_logged_in = 0) {
 }
 
 function _user_encryption_key() {
-  return file_get_contents(KEY_LOCATION);
+  return ENCRYPTION_KEY;
 }
 
 function _user_encrypt_cookie() {
