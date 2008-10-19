@@ -427,7 +427,7 @@ function theme_user_header($feed) {
   $out .= "<table><tr><td>".theme('avatar', $user->profile_image_url, 1)."</td>
 <td><b>{$name}</b>
 <br>{$user->description}
-<br><small><a href='{$status->user->url}'>{$user->url}</a></small>
+<br><small><a href='{$user->url}'>{$user->url}</a></small>
 <br><a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a>
 | <a href='follow/{$user->screen_name}'>Follow</a>
 | <a href='unfollow/{$user->screen_name}'>Unfollow</a>
