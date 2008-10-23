@@ -345,7 +345,7 @@ function twitter_user_page($query) {
     $request = "http://twitter.com/statuses/user_timeline/{$screen_name}.json?page=".intval($_GET['page']);
     $tl = twitter_process($request);
     $tl = twitter_standard_timeline($tl, 'user');
-    $content = theme_user_header($tl);
+    $content = theme('user_header', $tl);
     $content .= theme('timeline', $tl);
     theme('page', "User {$screen_name}", $content);
   } else {
@@ -426,8 +426,11 @@ function theme_user_header($feed) {
   }
   $out .= "<table><tr><td>".theme('avatar', $user->profile_image_url, 1)."</td>
 <td><b>{$name}</b>
-<br>{$user->description}
-<br><small><a href='{$user->url}'>{$user->url}</a></small>
+<small>
+<br>Bio: {$user->description}
+<br>Link: <a href='{$user->url}'>{$user->url}</a>
+<br>Location: {$user->location}
+</small>
 <br><a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a>
 | <a href='follow/{$user->screen_name}'>Follow</a>
 | <a href='unfollow/{$user->screen_name}'>Unfollow</a>
