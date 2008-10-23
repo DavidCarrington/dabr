@@ -81,8 +81,6 @@ Username <input name="username" size="15">
 <br><label><input type="checkbox" value="yes" name="stay-logged-in"> Stay logged in? </label>
 <br><input type="submit" value="Sign In">
 </form>
-
-<p>Not got a Twitter account? Use the <a href="http://m.twitter.com/signup">mobile signup page</a>.</p>
 ';
 }
 
