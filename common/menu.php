@@ -42,11 +42,16 @@ function menu_visible_items() {
   return $items;
 }
 
-function theme_menu() {
+function theme_menu($menu) {
   $links = array();
   foreach (menu_visible_items() as $url => $page) {
+    //~ if ($menu == 'top' && !isset($page['accesskey'])) continue;
     $title = $url ? $url : 'home';
-    $links[] = "<a href='$url'>$title</a>";
+    if ($menu == 'bottom' && isset($page['accesskey'])) {
+      $links[] = "<a href='$url' accesskey='{$page['accesskey']}'>$title</a> {$page['accesskey']}";
+    } else {
+      $links[] = "<a href='$url'>$title</a>";
+    }
   }
   return "<div class='menu'><b><a href='user/{$GLOBALS['user']['username']}'>{$GLOBALS['user']['username']}</a></b> | ".implode(' | ', $links).'</div>';
 }

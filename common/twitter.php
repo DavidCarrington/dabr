@@ -3,6 +3,7 @@
 menu_register(array(
   '' => array(
     'callback' => 'twitter_friends_page',
+    'accesskey' => '0',
   ),
   'status' => array(
     'hidden' => true,
@@ -13,15 +14,10 @@ menu_register(array(
     'security' => true,
     'callback' => 'twitter_update',
   ),
-  'public' => array(
-    'callback' => 'twitter_public_page',
-  ),
   'replies' => array(
     'security' => true,
     'callback' => 'twitter_replies_page',
-  ),
-  'favourites' => array(
-    'callback' =>  'twitter_favourites_page',
+    'accesskey' => '1',
   ),
   'favourite' => array(
     'hidden' => true,
@@ -36,9 +32,15 @@ menu_register(array(
   'directs' => array(
     'security' => true,
     'callback' => 'twitter_directs_page',
+    'accesskey' => '2',
   ),
   'search' => array(
     'callback' => 'twitter_search_page',
+    'accesskey' => '3',
+  ),
+  'public' => array(
+    'callback' => 'twitter_public_page',
+    'accesskey' => '4',
   ),
   'user' => array(
     'hidden' => true,
@@ -53,6 +55,9 @@ menu_register(array(
     'hidden' => true,
     'security' => true,
     'callback' => 'twitter_follow_page',
+  ),
+  'favourites' => array(
+    'callback' =>  'twitter_favourites_page',
   ),
   'followers' => array(
     'callback' => 'twitter_followers_page',
@@ -599,8 +604,8 @@ function theme_pagination() {
     $query = $matches[0];
   }
   if ($page == 0) $page = 1;
-  if ($page > 1) $links[] = "<a href='{$_GET['q']}?page=".($page-1)."$query'>Newer</a>";
-  $links[] = "<a href='{$_GET['q']}?page=".($page+1)."$query'>Older</a>";
+  if ($page > 1) $links[] = "<a href='{$_GET['q']}?page=".($page-1)."$query' accesskey='8'>Newer</a> 8";
+  $links[] = "<a href='{$_GET['q']}?page=".($page+1)."$query' accesskey='9'>Older</a> 9";
   return '<p>'.implode(' | ', $links).'</p>';
 }
 

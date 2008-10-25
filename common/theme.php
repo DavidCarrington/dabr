@@ -126,8 +126,8 @@ function theme_error($message) {
 }
 
 function theme_page($title, $content) {
-  $menu = theme('menu');
-  $content = $menu.$content.$menu;
+  $content = theme('menu', 'top').$content;
+  $content .= theme('menu', 'bottom');
   ob_start('ob_gzhandler');
   header('Content-Type: text/html; charset=utf-8');
   echo '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
