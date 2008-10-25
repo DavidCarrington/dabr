@@ -2,7 +2,7 @@
 
 menu_register(array(
   '' => array(
-    'callback' => 'twitter_friends_page',
+    'callback' => 'twitter_home_page',
     'accesskey' => '0',
   ),
   'status' => array(
@@ -60,7 +60,13 @@ menu_register(array(
     'callback' =>  'twitter_favourites_page',
   ),
   'followers' => array(
+    'security' => true,
     'callback' => 'twitter_followers_page',
+  ),
+  'friends' => array(
+    'hidden' => true,
+    'security' => true,
+    'callback' => 'twitter_friends_page',
   ),
   'delete' => array(
     'hidden' => true,
@@ -217,13 +223,22 @@ function twitter_retweet_page($query) {
   }
 }
 
+function twitter_refresh($page = NULL) {
+  if ($page) {
+    $page = BASE_URL . $page;
+  } else {
+    $page = $_SERVER['HTTP_REFERER'];
+  }
+  header('Location: '. $page);
+  exit();
+}
+
 function twitter_delete_page($query) {
   $id = (int) $query[1];
   if ($id) {
     $request = "http://twitter.com/statuses/destroy/{$id}.json?page=".intval($_GET['page']);
     $tl = twitter_process($request, 1);
-    header('Location: '. BASE_URL);
-    exit();
+    twitter_refresh('user/'.$GLOBALS['user']['username']);
   }
 }
 
@@ -235,11 +250,21 @@ function twitter_follow_page($query) {
     } else {
       $request = "http://twitter.com/friendships/destroy/{$user}.json";
     }
-    $request .= '?page='.intval($_GET['page']);
     twitter_process($request, 1);
-    header('Location: '. BASE_URL);
-    exit();
+    twitter_refresh('friends');
   }
+}
+
+function twitter_friends_page($query) {
+  $user = $query[1];
+  if (!$user) {
+    user_ensure_authenticated();
+    $user = $GLOBALS['user']['username'];
+  }
+  $request = "http://twitter.com/statuses/friends/{$user}.json?page=".intval($_GET['page']);
+  $tl = twitter_process($request);
+  $content = theme('followers', $tl);
+  theme('page', 'Friends', $content);
 }
 
 function twitter_followers_page($query) {
@@ -261,8 +286,7 @@ function twitter_update() {
     $post_data = 'source=dabr&status='.urlencode($status);
     $b = twitter_process($request, $post_data);
   }
-  header('Location: '. BASE_URL);
-  exit();
+  twitter_refresh();
 }
 
 function twitter_public_page() {
@@ -295,8 +319,7 @@ function twitter_directs_page($query) {
       $message = urlencode(trim(stripslashes($_POST['message'])));
       $request = 'http://twitter.com/direct_messages/new.json';
       twitter_process($request, "user=$to&text=$message");
-      header('Location: '. BASE_URL);
-      exit();
+      twitter_refresh('directs/sent');
     
     case 'sent':
       $request = 'http://twitter.com/direct_messages/sent.json?page='.intval($_GET['page']);
@@ -326,7 +349,6 @@ function theme_directs_form($to) {
     $html_to = "To: <input name='to'><br>Message:";
   }
   $content = "<form action='directs/send' method='post'>$html_to<br><textarea name='message' style='width: 100%' rows='3'></textarea><br><input type='submit' value='Send'></form>";
-  $content .= '<p>Note: there is currently no confirmation page after sending directs.</p>';
   return $content;
 }
 
@@ -384,7 +406,7 @@ function twitter_mark_favourite_page($query) {
   exit();
 }
 
-function twitter_friends_page() {
+function twitter_home_page() {
   user_ensure_authenticated();
   $request = 'http://twitter.com/statuses/friends_timeline.json?page='.intval($_GET['page']);
   $tl = twitter_process($request);
@@ -550,7 +572,7 @@ function twitter_is_reply($status) {
 
 function theme_followers($feed) {
   $rows = array();
-  if (count($feed) == 0) return '<p>No followers</p>';
+  if (count($feed) == 0) return '<p>No users to display.</p>';
   foreach ($feed as $user) {
     $rows[] = array(
       theme('avatar', $user->profile_image_url),
