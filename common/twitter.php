@@ -461,6 +461,7 @@ function theme_user_header($feed) {
 <br><a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a>
 | <a href='follow/{$user->screen_name}'>Follow</a>
 | <a href='unfollow/{$user->screen_name}'>Unfollow</a>
+| <a href='friends/{$user->screen_name}'>Friends</a>
 | <a href='directs/create/{$user->screen_name}'>Direct Message</a>
 </td></table>";
   return $out;
