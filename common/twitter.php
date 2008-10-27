@@ -402,8 +402,7 @@ function twitter_mark_favourite_page($query) {
     $request = "http://twitter.com/favorites/create/$id.json";
   }
   twitter_process($request, 1);
-  header('Location: '. BASE_URL. '/favourites');
-  exit();
+  twitter_refresh();
 }
 
 function twitter_home_page() {
