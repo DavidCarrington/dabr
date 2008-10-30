@@ -301,6 +301,8 @@ function twitter_replies_page() {
   $request = 'http://twitter.com/statuses/replies.json?page='.intval($_GET['page']);
   $tl = twitter_process($request);
   $tl = twitter_standard_timeline($tl, 'replies');
+  $tl += twitter_search('@'.$GLOBALS['user']['username']);
+  krsort($tl);
   $content = theme('status_form');
   $content .= theme('timeline', $tl);
   theme('page', 'Replies', $content);
@@ -356,14 +358,19 @@ function twitter_search_page() {
   $search_query = $_GET['query'];
   $content = theme('search_form', $search_query);
   if ($search_query) {
-    $page = (int) $_GET['page'];
-    if ($page == 0) $page = 1;
-    $request = 'http://search.twitter.com/search.json?q=' . urlencode($search_query).'&page='.$page;
-    $tl = twitter_process($request);
-    $tl = twitter_standard_timeline($tl, 'search');
+    $tl = twitter_search($search_query);
     $content .= theme('timeline', $tl);
   }
   theme('page', 'Search', $content);
+}
+
+function twitter_search($search_query) {
+  $page = (int) $_GET['page'];
+  if ($page == 0) $page = 1;
+  $request = 'http://search.twitter.com/search.json?q=' . urlencode($search_query).'&page='.$page;
+  $tl = twitter_process($request);
+  $tl = twitter_standard_timeline($tl, 'search');
+  return $tl;
 }
 
 function twitter_user_page($query) {
@@ -444,7 +451,8 @@ function theme_retweet($status) {
 }
 
 function theme_user_header($feed) {
-  $user = $feed[0]->from;
+  $first = array_shift($feed);
+  $user = $first->from;
   $out = theme('status_form', "@{$user->screen_name} ");
   $name = $user->screen_name;
   if ($user->name && $user->name != $user->screen_name) {
@@ -492,13 +500,13 @@ function twitter_standard_timeline($feed, $source) {
         $new = $status;
         $new->from = $new->user;
         unset($new->user);
-        $output[] = $new;
+        $output[$new->id] = $new;
       }
       return $output;
     
     case 'search':
       foreach ($feed->results as $status) {
-        $output[] = (object) array(
+        $output[$status->id] = (object) array(
           'id' => $status->id,
           'text' => $status->text,
           'from' => (object) array(
@@ -553,7 +561,7 @@ function theme_timeline($feed) {
     if ($avatar) {
       array_unshift($row, $avatar);
     }
-    if (twitter_is_reply($status)) {
+    if ($_GET['q'] != 'replies' && twitter_is_reply($status)) {
       $row = array('class' => 'reply', 'data' => $row);
     }
     $rows[] = $row;
@@ -575,9 +583,13 @@ function theme_followers($feed) {
   $rows = array();
   if (count($feed) == 0) return '<p>No users to display.</p>';
   foreach ($feed as $user) {
+    $name = "<a href='user/{$user->screen_name}'>{$user->screen_name}</a>";
+    if ($user->name && $user->name != $user->screen_name) {
+      $name .= " ({$user->name})";
+    }
     $rows[] = array(
       theme('avatar', $user->profile_image_url),
-      "<a href='user/{$user->screen_name}'>{$user->screen_name}</a> - {$user->location}",
+      "{$name} - {$user->location}<small><br>{$user->description}</small>",
     );
   }
   $content = theme('table', array(), $rows, array('class' => 'followers'));
