@@ -35,6 +35,10 @@ function user_is_authenticated() {
   return true;
 }
 
+function user_current_username() {
+  return $GLOBALS['user']['username'];
+}
+
 function _user_save_cookie($stay_logged_in = 0) {
   $cookie = _user_encrypt_cookie();
   $duration = 0;

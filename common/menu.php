@@ -3,20 +3,17 @@
 $menu_registry = array();
 
 function menu_register($items) {
-  global $menu_registry;
   foreach ($items as $url => $item) {
-    $menu_registry[$url] = $item;
+    $GLOBALS['menu_registry'][$url] = $item;
   }
 }
 
 function menu_execute_active_handler() {
-  global $menu_registry;
-  
   $query = (array) explode('/', $_GET['q']);
-  $id = $query[0];
-  $page = $menu_registry[$id];
+  $GLOBALS['page'] = $query[0];
+  $page = $GLOBALS['menu_registry'][$GLOBALS['page']];
   if (!$page) {
-    header("HTTP/1.0 404 Not Found");
+    header('HTTP/1.0 404 Not Found');
     die('404 - Page not found.');
   }
   
@@ -27,6 +24,10 @@ function menu_execute_active_handler() {
     return call_user_func($page['callback'], $query);
 
   return false;
+}
+
+function menu_current_page() {
+  return $GLOBALS['page'];
 }
 
 function menu_visible_items() {
@@ -45,7 +46,6 @@ function menu_visible_items() {
 function theme_menu($menu) {
   $links = array();
   foreach (menu_visible_items() as $url => $page) {
-    //~ if ($menu == 'top' && !isset($page['accesskey'])) continue;
     $title = $url ? $url : 'home';
     if ($menu == 'bottom' && isset($page['accesskey'])) {
       $links[] = "<a href='$url' accesskey='{$page['accesskey']}'>$title</a> {$page['accesskey']}";
@@ -53,7 +53,11 @@ function theme_menu($menu) {
       $links[] = "<a href='$url'>$title</a>";
     }
   }
-  return "<div class='menu'><b><a href='user/{$GLOBALS['user']['username']}'>{$GLOBALS['user']['username']}</a></b> | ".implode(' | ', $links).'</div>';
+  if (user_is_authenticated()) {
+    $user = user_current_username();
+    array_unshift($links, "<b><a href='user/$user'>$user</a></b>");
+  }
+  return '<div class="menu">'.implode(' | ', $links).'</div>';
 }
 
 ?>

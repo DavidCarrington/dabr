@@ -93,7 +93,7 @@ function twitter_process($url, $post_data = false) {
   }
 
   if(user_is_authenticated())
-    curl_setopt($ch, CURLOPT_USERPWD, $GLOBALS['user']['username'].':'.$GLOBALS['user']['password']);
+    curl_setopt($ch, CURLOPT_USERPWD, user_current_username().':'.$GLOBALS['user']['password']);
 
   curl_setopt($ch, CURLOPT_VERBOSE, 1);
   curl_setopt($ch, CURLOPT_NOBODY, 0);
@@ -238,7 +238,7 @@ function twitter_delete_page($query) {
   if ($id) {
     $request = "http://twitter.com/statuses/destroy/{$id}.json?page=".intval($_GET['page']);
     $tl = twitter_process($request, 1);
-    twitter_refresh('user/'.$GLOBALS['user']['username']);
+    twitter_refresh('user/'.user_current_username());
   }
 }
 
@@ -259,7 +259,7 @@ function twitter_friends_page($query) {
   $user = $query[1];
   if (!$user) {
     user_ensure_authenticated();
-    $user = $GLOBALS['user']['username'];
+    $user = user_current_username();
   }
   $request = "http://twitter.com/statuses/friends/{$user}.json?page=".intval($_GET['page']);
   $tl = twitter_process($request);
@@ -271,7 +271,7 @@ function twitter_followers_page($query) {
   $user = $query[1];
   if (!$user) {
     user_ensure_authenticated();
-    $user = $GLOBALS['user']['username'];
+    $user = user_current_username();
   }
   $request = "http://twitter.com/statuses/followers/{$user}.json?page=".intval($_GET['page']);
   $tl = twitter_process($request);
@@ -301,7 +301,7 @@ function twitter_replies_page() {
   $request = 'http://twitter.com/statuses/replies.json?page='.intval($_GET['page']);
   $tl = twitter_process($request);
   $tl = twitter_standard_timeline($tl, 'replies');
-  $tl += twitter_search('@'.$GLOBALS['user']['username']);
+  $tl += twitter_search('@'.user_current_username());
   krsort($tl);
   $content = theme('status_form');
   $content .= theme('timeline', $tl);
@@ -391,7 +391,7 @@ function twitter_favourites_page($query) {
   $screen_name = $query[1];
   if (!$screen_name) {
     user_ensure_authenticated();
-    $screen_name = $GLOBALS['user']['username'];
+    $screen_name = user_current_username();
   }
   $request = "http://twitter.com/favorites/{$screen_name}.json?page=".intval($_GET['page']);
   $tl = twitter_process($request);
@@ -437,7 +437,7 @@ function theme_status($status) {
   $out .= "<p>$parsed</p>
 <table align='center'><tr><td>$avatar</td><td><a href='user/{$status->user->screen_name}'>{$status->user->screen_name}</a>
 <br>$time_since</table>";
-  if ($GLOBALS['user']['username'] == $status->user->screen_name) {
+  if (user_current_username() == $status->user->screen_name) {
     $out .= "<form action='delete/{$status->id}' method='post'><input type='submit' value='Delete without confirmation' /></form>";
   }
   return $out;
@@ -454,10 +454,7 @@ function theme_user_header($feed) {
   $first = array_shift($feed);
   $user = $first->from;
   $out = theme('status_form', "@{$user->screen_name} ");
-  $name = $user->screen_name;
-  if ($user->name && $user->name != $user->screen_name) {
-    $name .= " ({$user->name})";
-  }
+  $name = theme('full_name', $user);
   $out .= "<table><tr><td>".theme('avatar', $user->profile_image_url, 1)."</td>
 <td><b>{$name}</b>
 <small>
@@ -547,8 +544,9 @@ function twitter_standard_timeline($feed, $source) {
 }
 
 function theme_timeline($feed) {
-  $rows = array();
   if (count($feed) == 0) return theme('no_tweets');
+  $rows = array();
+  $page = menu_current_page();
   foreach ($feed as $status) {
     $text = twitter_parse_tags($status->text);
     $link = theme('status_time_link', $status, !$status->is_direct);
@@ -558,10 +556,10 @@ function theme_timeline($feed) {
     $row = array(
       "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br>{$text} $source",
     );
-    if ($avatar) {
+    if ($page != 'user' && $avatar) {
       array_unshift($row, $avatar);
     }
-    if ($_GET['q'] != 'replies' && twitter_is_reply($status)) {
+    if ($page != 'replies' && twitter_is_reply($status)) {
       $row = array('class' => 'reply', 'data' => $row);
     }
     $rows[] = $row;
@@ -575,18 +573,15 @@ function twitter_is_reply($status) {
   if (!user_is_authenticated()) {
     return false;
   }
-  $user = "@{$GLOBALS['user']['username']}";
-  return preg_match("#$user#", $status->text);
+  $user = user_current_username();
+  return preg_match("#@$user#", $status->text);
 }
 
 function theme_followers($feed) {
   $rows = array();
   if (count($feed) == 0) return '<p>No users to display.</p>';
   foreach ($feed as $user) {
-    $name = "<a href='user/{$user->screen_name}'>{$user->screen_name}</a>";
-    if ($user->name && $user->name != $user->screen_name) {
-      $name .= " ({$user->name})";
-    }
+    $name = theme('full_name', $user);
     $rows[] = array(
       theme('avatar', $user->profile_image_url),
       "{$name} - {$user->location}<small><br>{$user->description}</small>",
@@ -595,6 +590,14 @@ function theme_followers($feed) {
   $content = theme('table', array(), $rows, array('class' => 'followers'));
   $content .= theme('pagination');
   return $content;
+}
+
+function theme_full_name($user) {
+  $name = "<a href='user/{$user->screen_name}'>{$user->screen_name}</a>";
+  if ($user->name && $user->name != $user->screen_name) {
+    $name .= " ({$user->name})";
+  }
+  return $name;
 }
 
 function theme_no_tweets() {
@@ -649,7 +652,7 @@ function theme_action_icons($status) {
   $actions = array();
   
   $actions[] = "<a href='user/{$user}'><img src='images/reply.png' /></a>";
-  if ($status->user->screen_name != $GLOBALS['user']['username']) {
+  if ($status->user->screen_name != user_current_username()) {
     $actions[] = "<a href='directs/create/{$user}'><img src='images/dm.png' /></a>";
   }
   if (!$status->is_direct) {
