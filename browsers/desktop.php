@@ -25,6 +25,6 @@ updateCount();
 
 function desktop_theme_search_form($query) {
   $query = stripslashes(htmlentities($query));
-  return "<form action='search' method='GET'><input name='query' value=\"$query\" size='45' /><input type='submit' value='Search' /></form>";
+  return "<form action='search' method='GET'><input name='query' value=\"$query\" style='width:100%; max-width: 300px' /><input type='submit' value='Search' /></form>";
 }
 ?>
