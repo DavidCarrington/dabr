@@ -5,7 +5,11 @@ function browser_detect() {
     browser_load('text');
     return;
   }
-  $user_agent = $_SERVER['HTTP_USER_AGENT'];
+  if (array_key_exists('HTTP_X_DEVICE_USER_AGENT', $_SERVER)) {
+    $user_agent = $_SERVER['HTTP_X_DEVICE_USER_AGENT'];
+  } else {
+    $user_agent = $_SERVER['HTTP_USER_AGENT'];
+  }
   $handle = fopen('browsers/list.csv', 'r');
   while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
     if (preg_match("#{$data[0]}#", $user_agent, $matches)) {
