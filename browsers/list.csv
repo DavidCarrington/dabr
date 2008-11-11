@@ -1,4 +1,5 @@
 (SIE-MC60),text
+(Android),android
 (IEMobile|Symbian|BlackBerry|SAMSUNG),mobile
 (Opera Mini|Opera Mobi),desktop
 (Firefox|Chrome|Opera|MSIE|Safari),desktop
