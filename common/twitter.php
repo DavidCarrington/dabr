@@ -64,7 +64,6 @@ menu_register(array(
     'callback' => 'twitter_followers_page',
   ),
   'friends' => array(
-    'hidden' => true,
     'security' => true,
     'callback' => 'twitter_friends_page',
   ),
@@ -143,7 +142,7 @@ function twitter_parse_links_callback($matches) {
 
 function twitter_parse_tags($input) {
   $out = preg_replace_callback('#([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?=\b)#is', 'twitter_parse_links_callback', $input);
-  $out = preg_replace('#(@([a-z_A-Z0-9]+))#', '@<a href="user/$2">$2</a>', $out);
+  $out = preg_replace('#(^|\s)@([a-z_A-Z0-9]+)#', '$1@<a href="user/$2">$2</a>', $out);
   $out = preg_replace('#(\\#([a-z_A-Z0-9:_-]+))#', '<a href="search/?query=%23$2">$0</a>', $out);
   $out = twitter_photo_replace($out);
   return $out;
@@ -292,7 +291,7 @@ function twitter_update() {
     $post_data = 'source=dabr&status='.urlencode($status);
     $b = twitter_process($request, $post_data);
   }
-  twitter_refresh();
+  twitter_refresh($_POST['from'] ? $_POST['from'] : null);
 }
 
 function twitter_public_page() {
@@ -443,7 +442,7 @@ function theme_status($status) {
   $out .= "<p>$parsed</p>
 <table align='center'><tr><td>$avatar</td><td><a href='user/{$status->user->screen_name}'>{$status->user->screen_name}</a>
 <br>$time_since</table>";
-  if (user_current_username() == $status->user->screen_name) {
+  if (strtolower(user_current_username()) == strtolower($status->user->screen_name)) {
     $out .= "<form action='delete/{$status->id}' method='post'><input type='submit' value='Delete without confirmation' /></form>";
   }
   return $out;
@@ -452,7 +451,8 @@ function theme_status($status) {
 function theme_retweet($status) {
   $text = "RT @{$status->user->screen_name}: {$status->text}";
   $length = strlen($text);
-  $content = "<form action='update' method='post'><textarea name='status' cols='30' rows='5'>$text</textarea><br><input type='submit' value='Retweet'> Length before editing: $length</form>";
+  $from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
+  $content = "<form action='update' method='post'><input type='hidden' name='from' value='$from' /><textarea name='status' cols='30' rows='5'>$text</textarea><br><input type='submit' value='Retweet'> Length before editing: $length</form>";
   return $content;
 }
 
@@ -484,11 +484,36 @@ function theme_avatar($url, $force_large = false) {
 }
 
 function theme_status_time_link($status, $is_link = true) {
-  $time_link = format_interval(time() - strtotime($status->created_at), 1);
-  $out = "$time_link ago";
+  $time = strtotime($status->created_at);
+  if (twitter_date('dmy') == twitter_date('dmy', $time)) {
+    $out = format_interval(time() - $time, 1). ' ago';
+  } else {
+    $out = twitter_date('H:i', $time);
+  }
   if ($is_link)
     $out = "<a href='status/{$status->id}'>$out</a>";
   return "<small>$out</small>";
+}
+
+function twitter_date($format, $timestamp = null) {
+  static $offset;
+  if (!isset($offset)) {
+    if (user_is_authenticated()) {
+      if (array_key_exists('utc_offset', $_COOKIE)) {
+        $offset = $_COOKIE['utc_offset'];
+      } else {
+        $user = twitter_user_info();
+        $offset = $user->utc_offset;
+        setcookie('utc_offset', $offset, time() + 3000000);
+      }
+    } else {
+      $offset = 0;
+    }
+  }
+  if (!isset($timestamp)) {
+    $timestamp = time();
+  }
+  return date($format, $timestamp + $offset);
 }
 
 function twitter_standard_timeline($feed, $source) {
@@ -549,11 +574,29 @@ function twitter_standard_timeline($feed, $source) {
   }
 }
 
+function twitter_user_info($username = null) {
+  if (!$username)
+  $username = user_current_username();
+  $request = "http://twitter.com/users/show/$username.xml";
+  $xml = twitter_fetch($request);
+  $user = simplexml_load_string($xml);
+  return $user;
+}
+
 function theme_timeline($feed) {
   if (count($feed) == 0) return theme('no_tweets');
   $rows = array();
   $page = menu_current_page();
+  $date_heading = false;
   foreach ($feed as $status) {
+    $date = twitter_date('l jS F Y', strtotime($status->created_at));
+    if ($date_heading !== $date) {
+      $date_heading = $date;
+      $rows[] = array(array(
+        'data' => "<small><b>$date</b></small>",
+        'colspan' => 2
+      ));
+    }
     $text = twitter_parse_tags($status->text);
     $link = theme('status_time_link', $status, !$status->is_direct);
     $actions = theme('action_icons', $status);
