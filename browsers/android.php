@@ -24,7 +24,7 @@ function android_theme_page($title, $content) {
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head><title>',$title,'</title><base href="',BASE_URL,'" />
 '.theme('css').'
-<body>', $body, '</body>
+<body id="thepage">', $body, '</body>
 </html>';
   exit();
 }
@@ -41,7 +41,7 @@ function android_theme_menu_top() {
     $user = user_current_username();
     array_unshift($links['extras'], "<b><a href='user/$user'>$user</a></b>");
   }
-  array_push($links['main'], '<a href="#" onclick="sme=document.getElementById(\'menu-extras\');sme.style.display=sme.style.display==\'block\'?\'none\':\'block\'; return false;">more</a>');
+  array_push($links['main'], '<a href="#" onclick="return toggleMenu()">more</a>');
   $html = '<div id="menu">';
   $html .= theme('list', $links['main'], array('id' => 'menu-main'));
   $html .= theme('list', $links['extras'], array('id' => 'menu-extras'));
@@ -55,7 +55,9 @@ function android_theme_menu_bottom() {
 
 
 function android_theme_css() {
-  //~ return '<style type="text/css">'.file_get_contents('browsers/android.css').'</style>';
-  return '<link rel="stylesheet" href="browsers/android.css"></head>';
+  $out = '<style type="text/css">'.file_get_contents('browsers/android.css').'</style>';
+  $out .= '<script type="text/javascript">'.file_get_contents('browsers/android.js').'</script>';
+  return $out;
+  //~ return '<link rel="stylesheet" href="browsers/android.css"></head>';
 }
 ?>

@@ -8,12 +8,12 @@ header('Pragma: no-cache');
 
 if (file_exists('offline.html')) { readfile('offline.html'); exit(); }
 
-include 'config.php';
-include 'common/browser.php';
-include 'common/user.php';
-include 'common/menu.php';
-include 'common/theme.php';
-include 'common/twitter.php';
+require 'config.php';
+require 'common/browser.php';
+require 'common/user.php';
+require 'common/menu.php';
+require 'common/theme.php';
+require 'common/twitter.php';
 
 menu_register(array(
   'about' => array(
