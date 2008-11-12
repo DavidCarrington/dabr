@@ -43,7 +43,15 @@ function menu_visible_items() {
   return $items;
 }
 
-function theme_menu($menu) {
+function theme_menu_top() {
+  return theme('menu_both', 'top');
+}
+
+function theme_menu_bottom() {
+  return theme('menu_both', 'bottom');
+}
+
+function theme_menu_both($menu) {
   $links = array();
   foreach (menu_visible_items() as $url => $page) {
     $title = $url ? $url : 'home';
