@@ -381,11 +381,15 @@ function twitter_search($search_query) {
 function twitter_user_page($query) {
   $screen_name = $query[1];
   if ($screen_name) {
-    $request = "http://twitter.com/statuses/user_timeline/{$screen_name}.json?page=".intval($_GET['page']);
-    $tl = twitter_process($request);
-    $tl = twitter_standard_timeline($tl, 'user');
-    $content = theme('user_header', $tl);
-    $content .= theme('timeline', $tl);
+    $user = twitter_user_info($screen_name);
+    $content = theme('user_header', $user);
+    
+    if (isset($user->status)) {
+      $request = "http://twitter.com/statuses/user_timeline/{$screen_name}.json?page=".intval($_GET['page']);
+      $tl = twitter_process($request);
+      $tl = twitter_standard_timeline($tl, 'user');
+      $content .= theme('timeline', $tl);
+    }
     theme('page', "User {$screen_name}", $content);
   } else {
     // TODO: user search screen
@@ -456,9 +460,7 @@ function theme_retweet($status) {
   return $content;
 }
 
-function theme_user_header($feed) {
-  $first = array_shift($feed);
-  $user = $first->from;
+function theme_user_header($user) {
   $out = theme('status_form', "@{$user->screen_name} ");
   $name = theme('full_name', $user);
   $out .= "<table><tr><td>".theme('avatar', $user->profile_image_url, 1)."</td>
