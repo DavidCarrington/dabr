@@ -578,10 +578,9 @@ function twitter_standard_timeline($feed, $source) {
 
 function twitter_user_info($username = null) {
   if (!$username)
-  $username = user_current_username();
-  $request = "http://twitter.com/users/show/$username.xml";
-  $xml = twitter_fetch($request);
-  $user = simplexml_load_string($xml);
+  $username = user_current_username();  
+  $request = "http://twitter.com/users/show/$username.json";
+  $user = twitter_process($request);
   return $user;
 }
 
