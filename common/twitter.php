@@ -95,7 +95,6 @@ function twitter_process($url, $post_data = false) {
     curl_setopt($ch, CURLOPT_USERPWD, user_current_username().':'.$GLOBALS['user']['password']);
 
   curl_setopt($ch, CURLOPT_VERBOSE, 1);
-  curl_setopt($ch, CURLOPT_NOBODY, 0);
   curl_setopt($ch, CURLOPT_HEADER, 0);
   curl_setopt($ch, CURLOPT_USERAGENT, 'dabr');
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -113,7 +112,7 @@ function twitter_process($url, $post_data = false) {
     default:
       $result = json_decode($response);
       $result = $result->error ? $result->error : $response;
-      theme('error', "<h2>Error {$http_code}</h2><p>{$result}</p><hr><p>$url</p>");
+      theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$result}</p><hr><p>$url</p>");
   }
 }
 
@@ -473,7 +472,7 @@ function theme_user_header($user) {
 <br><a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a>
 | <a href='follow/{$user->screen_name}'>Follow</a>
 | <a href='unfollow/{$user->screen_name}'>Unfollow</a>
-| <a href='friends/{$user->screen_name}'>Friends</a>
+| <a href='friends/{$user->screen_name}'>{$user->friends_count} friends</a>
 | <a href='favourites/{$user->screen_name}'>Favourites</a>
 | <a href='directs/create/{$user->screen_name}'>Direct Message</a>
 </td></table>";

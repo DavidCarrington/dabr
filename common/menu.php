@@ -65,7 +65,7 @@ function theme_menu_both($menu) {
     $user = user_current_username();
     array_unshift($links, "<b><a href='user/$user'>$user</a></b>");
   }
-  return '<div class="menu">'.implode(' | ', $links).'</div>';
+  return "<div class='menu menu-$menu'>".implode(' | ', $links).'</div>';
 }
 
 ?>
