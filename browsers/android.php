@@ -55,9 +55,8 @@ function android_theme_menu_bottom() {
 
 
 function android_theme_css() {
-  $out = '<style type="text/css">'.file_get_contents('browsers/android.css').'</style>';
+  $out = '<link rel="stylesheet" href="browsers/android.css" />';
   $out .= '<script type="text/javascript">'.file_get_contents('browsers/android.js').'</script>';
   return $out;
-  //~ return '<link rel="stylesheet" href="browsers/android.css"></head>';
 }
 ?>
