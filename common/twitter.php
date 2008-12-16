@@ -142,7 +142,7 @@ function twitter_parse_links_callback($matches) {
 function twitter_parse_tags($input) {
   $out = preg_replace_callback('#([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?=\b)#is', 'twitter_parse_links_callback', $input);
   $out = preg_replace('#(^|\s)@([a-z_A-Z0-9]+)#', '$1@<a href="user/$2">$2</a>', $out);
-  $out = preg_replace('#(\\#([a-z_A-Z0-9:_-]+))#', '<a href="search/?query=%23$2">$0</a>', $out);
+  $out = preg_replace('#(\\#([a-z_A-Z0-9:_-]+))#', '<a href="hash/$2">$0</a>', $out);
   $out = twitter_photo_replace($out);
   return $out;
 }
@@ -710,8 +710,8 @@ function theme_action_icons($status) {
     } else {
       $actions[] = "<a href='favourite/{$status->id}'><img src='images/star_grey.png' /></a>";
     }
+    $actions[] = "<a href='retweet/{$status->id}'><img src='images/retweet.png' /></a>";
   }
-  $actions[] = "<a href='retweet/{$status->id}'><img src='images/retweet.png' /></a>";
   return implode(' ', $actions);
 }
 

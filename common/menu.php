@@ -65,6 +65,9 @@ function theme_menu_both($menu) {
     $user = user_current_username();
     array_unshift($links, "<b><a href='user/$user'>$user</a></b>");
   }
+  if ($menu == 'bottom') {
+    $links[] = "<a href='{$_GET['q']}' accesskey='5'>refresh</a> 5";
+  }
   return "<div class='menu menu-$menu'>".implode(' | ', $links).'</div>';
 }
 
