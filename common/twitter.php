@@ -149,9 +149,9 @@ function twitter_parse_tags($input) {
 
 function twitter_photo_replace($text) {
   $tmp = strip_tags($text);
-  if (preg_match_all('#twitpic.com/[\d\w]+#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
-    foreach ($matches[0] as $match) {
-      $text = "<a href='http://{$match}'><img src='http://{$match}-thumb.jpg' class='twitpic' width='75' height='75' /></a><br>".$text;
+  if (preg_match_all('#twitpic.com/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+    foreach ($matches[1] as $match) {
+      $text = "<a href='http://twitpic.com/{$match}'><img src='http://twitpic.com/show/thumb/{$match}' class='twitpic' width='75' height='75' /></a><br>".$text;
     }
   }
   if (preg_match_all('#twitxr.com/[^ ]+/updates/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
@@ -228,7 +228,7 @@ function twitter_retweet_page($query) {
 }
 
 function twitter_refresh($page = NULL) {
-  if ($page) {
+  if (isset($page)) {
     $page = BASE_URL . $page;
   } else {
     $page = $_SERVER['HTTP_REFERER'];
@@ -290,7 +290,7 @@ function twitter_update() {
     $post_data = 'source=dabr&status='.urlencode($status);
     $b = twitter_process($request, $post_data);
   }
-  twitter_refresh($_POST['from'] ? $_POST['from'] : null);
+  twitter_refresh($_POST['from'] ? $_POST['from'] : '');
 }
 
 function twitter_public_page() {
@@ -361,8 +361,19 @@ function theme_directs_form($to) {
 function twitter_search_page() {
   $search_query = $_GET['query'];
   $content = theme('search_form', $search_query);
+  if (isset($_POST['query'])) {
+    $duration = time() + (3600 * 24 * 365);
+    setcookie('search_favourite', $_POST['query'], $duration, '/');
+    twitter_refresh('search');
+  }
+  if (!isset($search_query) && array_key_exists('search_favourite', $_COOKIE)) {
+    $search_query = $_COOKIE['search_favourite'];
+  }
   if ($search_query) {
     $tl = twitter_search($search_query);
+    if ($search_query !== $_COOKIE['search_favourite']) {
+      $content .= '<form action="search/bookmark" method="post"><input type="hidden" name="query" value="'.$search_query.'" /><input type="submit" value="Save as default search" /></form>';
+    }
     $content .= theme('timeline', $tl);
   }
   theme('page', 'Search', $content);
