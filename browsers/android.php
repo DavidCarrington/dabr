@@ -1,7 +1,7 @@
 <?php
 
 require 'desktop.php';
-function anroid_theme_external_link($url) {
+function android_theme_external_link($url) {
   return "<a href='$url'>$url</a>";
 }
 function android_theme_status_form($text = '') {
