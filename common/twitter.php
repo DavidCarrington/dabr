@@ -525,7 +525,7 @@ function twitter_date($format, $timestamp = null) {
   if (!isset($timestamp)) {
     $timestamp = time();
   }
-  return date($format, $timestamp + $offset);
+  return gmdate($format, $timestamp + $offset);
 }
 
 function twitter_standard_timeline($feed, $source) {
