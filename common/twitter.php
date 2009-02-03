@@ -288,6 +288,10 @@ function twitter_update() {
   if ($status) {
     $request = 'http://twitter.com/statuses/update.json';
     $post_data = 'source=dabr&status='.urlencode($status);
+    $in_reply_to_id = (int) $_POST['in_reply_to_id'];
+    if ($in_reply_to_id > 0) {
+      $post_data .= "&in_reply_to_status_id={$in_reply_to_id}";
+    }
     $b = twitter_process($request, $post_data);
   }
   twitter_refresh($_POST['from'] ? $_POST['from'] : '');
@@ -391,8 +395,16 @@ function twitter_search($search_query) {
 function twitter_user_page($query) {
   $screen_name = $query[1];
   if ($screen_name) {
+    $content = '';
+    if ($query[2] == 'reply') {
+      $in_reply_to_id = (int) $query[3];
+      $content .= "<p>In reply to tweet ID $in_reply_to_id...</p>";
+    } else {
+      $in_reply_to_id = 0;
+    }
     $user = twitter_user_info($screen_name);
-    $content = theme('user_header', $user);
+    $content .= theme('status_form', "@{$user->screen_name} ", $in_reply_to_id);
+    $content .= theme('user_header', $user);
     
     if (isset($user->status)) {
       $request = "http://twitter.com/statuses/user_timeline/{$screen_name}.json?page=".intval($_GET['page']);
@@ -441,9 +453,9 @@ function twitter_home_page() {
   theme('page', 'Home', $content);
 }
 
-function theme_status_form($text = '') {
+function theme_status_form($text = '', $in_reply_to_id = NULL) {
   if (user_is_authenticated()) {
-    return "<form method='POST' action='update'><input name='status' value='{$text}' maxlength='140' /> <input type='submit' value='Update' /></form>";
+    return "<form method='POST' action='update'><input name='status' value='{$text}' maxlength='140' /> <input name='in_reply_to_id' value='{$in_reply_to_id}' type='hidden' /><input type='submit' value='Update' /></form>";
   }
 }
 
@@ -471,9 +483,8 @@ function theme_retweet($status) {
 }
 
 function theme_user_header($user) {
-  $out = theme('status_form', "@{$user->screen_name} ");
   $name = theme('full_name', $user);
-  $out .= "<table><tr><td>".theme('avatar', $user->profile_image_url, 1)."</td>
+  $out = "<table><tr><td>".theme('avatar', $user->profile_image_url, 1)."</td>
 <td><b>{$name}</b>
 <small>
 <br>Bio: {$user->description}
@@ -711,7 +722,7 @@ function theme_action_icons($status) {
   $user = $status->from->screen_name;
   $actions = array();
   
-  $actions[] = "<a href='user/{$user}'><img src='images/reply.png' /></a>";
+  $actions[] = "<a href='user/{$user}/reply/{$status->id}'><img src='images/reply.png' /></a>";
   if ($status->user->screen_name != user_current_username()) {
     $actions[] = "<a href='directs/create/{$user}'><img src='images/dm.png' /></a>";
   }
