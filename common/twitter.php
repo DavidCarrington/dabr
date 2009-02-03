@@ -623,9 +623,12 @@ function theme_timeline($feed) {
     $link = theme('status_time_link', $status, !$status->is_direct);
     $actions = theme('action_icons', $status);
     $avatar = theme('avatar', $status->from->profile_image_url);
-    $source = $status->source ? "<small> from {$status->source}</small>" : '';
+    $source = $status->source ? " from {$status->source}" : '';
+    if ($status->in_reply_to_status_id) {
+      $source .= " in reply to <a href='status/{$status->in_reply_to_status_id}'>{$status->in_reply_to_screen_name}</a>";
+    }
     $row = array(
-      "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br>{$text} $source",
+      "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br>{$text} <small>$source</small>",
     );
     if ($page != 'user' && $avatar) {
       array_unshift($row, $avatar);
