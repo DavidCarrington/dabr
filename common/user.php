@@ -3,6 +3,7 @@
 function user_ensure_authenticated() {
   if (!user_is_authenticated()) {
     $content = theme('login');
+    $content .= file_get_contents('about.html');
     theme('page', 'Login', $content);
   }
 }
