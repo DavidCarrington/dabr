@@ -2,7 +2,7 @@
 
 require 'desktop.php';
 function android_theme_external_link($url) {
-  return "<a href='$url'>$url</a>";
+  return "<a href='$url' target='_new'>$url</a>";
 }
 function android_theme_status_form($text = '') {
   return desktop_theme_status_form($text);

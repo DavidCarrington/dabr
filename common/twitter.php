@@ -136,6 +136,7 @@ function twitter_fetch($url) {
 
 function twitter_parse_links_callback($matches) {
   $url = $matches[1];
+  if (substr($url, 0, strlen(BASE_URL)) == BASE_URL) return "<a href='$url'>$url</a>";
   return theme('external_link', $url);
 }
 
@@ -705,9 +706,7 @@ function theme_search_form($query) {
 }
 
 function theme_external_link($url) {
-  if (substr($url, 0, strlen(BASE_URL)) == BASE_URL) return "<a href='$url'>$url</a>";
-  $encoded = urlencode($url);
-  return "<a href='http://google.com/gwt/n?u={$encoded}'>{$url}</a>";
+  return "<a href='$url'>$url</a>";
 }
 
 function theme_pagination() {
