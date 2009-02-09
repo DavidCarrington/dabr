@@ -15,9 +15,7 @@ tr.reply.even td{background: #DD9}
 #menu li { float: left; }
 #menu a { display: block; padding: 0.5em; color: #fff; text-decoration: none; border-right: 1px solid #fff; font-size: 110%; }
 
-
 body.show-menu #menu-extras { display: block; }
-#menu-extras { display: none; border-top: 1px solid #eee; } 
-/* position: absolute; top: 3em; left: 5%; width: 90%;  */
+#menu-extras { display: none; border-top: 1px solid #eee; }
 #menu-extras li { float: none; }
 #menu-extras a { padding: 0.8em; border-bottom: 1px solid #eee; }

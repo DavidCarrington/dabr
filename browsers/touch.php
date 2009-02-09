@@ -1,21 +1,18 @@
 <?php
 
 require 'desktop.php';
-function android_theme_external_link($url) {
-  return "<a href='$url' target='_new'>$url</a>";
-}
-function android_theme_status_form($text = '') {
+function touch_theme_status_form($text = '') {
   return desktop_theme_status_form($text);
 }
-function android_theme_search_form($query) {
+function touch_theme_search_form($query) {
   return desktop_theme_search_form($query);
 }
 
-function android_theme_avatar($url, $force_large = false) {
+function touch_theme_avatar($url, $force_large = false) {
   return "<img src='$url' width='48' height='48' />";
 }
 
-function android_theme_page($title, $content) {
+function touch_theme_page($title, $content) {
   $body = theme('menu_top');
   $body .= $content;
   ob_start('ob_gzhandler');
@@ -29,7 +26,7 @@ function android_theme_page($title, $content) {
   exit();
 }
 
-function android_theme_menu_top() {
+function touch_theme_menu_top() {
   $links = array();
   $main_menu_titles = array('home', 'replies', 'directs', 'search');
   foreach (menu_visible_items() as $url => $page) {
@@ -49,14 +46,14 @@ function android_theme_menu_top() {
   return $html;
 }
 
-function android_theme_menu_bottom() {
+function touch_theme_menu_bottom() {
   return '';
 }
 
 
-function android_theme_css() {
-  $out = '<link rel="stylesheet" href="browsers/android.css" />';
-  $out .= '<script type="text/javascript">'.file_get_contents('browsers/android.js').'</script>';
+function touch_theme_css() {
+  $out = '<link rel="stylesheet" href="browsers/touch.css" />';
+  $out .= '<script type="text/javascript">'.file_get_contents('browsers/touch.js').'</script>';
   return $out;
 }
 ?>

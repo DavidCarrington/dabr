@@ -6,15 +6,12 @@ header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Cache-Control: post-check=0, pre-check=0', false); 
 header('Pragma: no-cache');
 
-if (file_exists('offline.html')) { readfile('offline.html'); exit(); }
-
 require 'config.php';
 require 'common/browser.php';
 require 'common/user.php';
 require 'common/menu.php';
 require 'common/theme.php';
 require 'common/twitter.php';
-require 'common/hashtag.php';
 
 menu_register(array(
   'about' => array(

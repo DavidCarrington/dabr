@@ -81,6 +81,10 @@ menu_register(array(
     'hidden' => true,
     'callback' => 'flickr_thumbnail',
   ),
+  'hash' => array(
+    'hidden' => true,
+    'callback' => 'twitter_hashtag_page',
+  ),
 ));
 
 function twitter_process($url, $post_data = false) {
@@ -452,6 +456,18 @@ function twitter_home_page() {
   $content = theme('status_form');
   $content .= theme('timeline', $tl);
   theme('page', 'Home', $content);
+}
+
+function twitter_hashtag_page($query) {
+  if (isset($query[1])) {
+    $hashtag = '#'.$query[1];
+    $content = theme('status_form', $hashtag.' ');
+    $tl = twitter_search($hashtag);
+    $content .= theme('timeline', $tl);
+    theme('page', $hashtag, $content);
+  } else {
+    theme('page', 'Hashtag', 'Hash hash!');
+  }
 }
 
 function theme_status_form($text = '', $in_reply_to_id = NULL) {
