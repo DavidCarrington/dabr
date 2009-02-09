@@ -706,7 +706,7 @@ function theme_search_form($query) {
 }
 
 function theme_external_link($url) {
-  return "<a href='$url'>$url</a>";
+  return "<a href='$url' target='_new'>$url</a>";
 }
 
 function theme_pagination() {
