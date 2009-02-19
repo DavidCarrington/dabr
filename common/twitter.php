@@ -107,6 +107,11 @@ menu_register(array(
     'hidden' => true,
     'callback' => 'generate_thumbnail',
   ),
+  'moblog' => array(
+    'security' => true,
+    'hidden' => true,
+    'callback' => 'generate_thumbnail',
+  ),
   'hash' => array(
     'security' => true,
     'hidden' => true,
@@ -198,6 +203,11 @@ function twitter_photo_replace($text) {
       $text = "<a href='http://{$matches[0][$key]}'><img src='$thumb' /></a><br>".$text;
     }
   }
+  if (preg_match_all('#moblog.net/view/([\d]+)/#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+    foreach ($matches[1] as $key => $match) {
+      $text = "<a href='http://{$matches[0][$key]}'><img src='moblog/$match' /></a><br>".$text;
+    }
+  }
   if (defined('FLICKR_API_KEY') && preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
       $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$match' /></a><br>".$text;
@@ -214,7 +224,7 @@ function twitter_photo_replace($text) {
 function generate_thumbnail($query) {
   $id = $query[1];
   if ($id) {
-      header('HTTP/1.1 301 Moved Permanently');
+    header('HTTP/1.1 301 Moved Permanently');
     if ($query[0] == 'flickr') {
       $url = "http://api.flickr.com/services/rest/?method=flickr.photos.getSizes&photo_id=$id&api_key=".FLICKR_API_KEY;
       $flickr_xml = twitter_fetch($url);
@@ -224,6 +234,16 @@ function generate_thumbnail($query) {
     if ($query[0] == 'mobypicture') {
       $url = "http://api.mobypicture.com/?action=getThumbUrl&t={$id}&s=thumbnail&k=".MOBYPICTURE_API_KEY;
       $thumb = twitter_fetch($url);
+      header('Location: '. $thumb);
+    }
+    if ($query[0] == 'moblog') {
+      $url = "http://moblog.net/view/{$id}/";
+      $html = twitter_fetch($url);
+      if (preg_match('#"(/media/[a-zA-Z0-9]/[^"]+)"#', $html, $matches)) {
+        $thumb = 'http://moblog.net' . str_replace(array('.j', '.J'), array('_tn.j', '_tn.J'), $matches[1]);
+        $pos = strrpos($thumb, '/');
+        $thumb = substr($thumb, 0, $pos) . '/thumbs' . substr($thumb, $pos);
+      }
       header('Location: '. $thumb);
     }
   }
@@ -320,7 +340,7 @@ function twitter_block_page($query) {
       $request = "http://twitter.com/blocks/destroy/{$user}.json";
     }
     twitter_process($request, 1);
-    twitter_refresh();
+    twitter_refresh("user/{$user}");
   }
 }
 
@@ -329,7 +349,7 @@ function twitter_confirmation_page($query) {
   $target = $query[2];
   $content = "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
   if ($action == 'block') {
-    $content .= "<ul><li>You won't show up in their list of friends</li><li>They won't see your updates on their home page</li><li>They won't be able to follow you</li><li>You <em>can</em> unblock them but you will need to follow them again afterwards</li></ul>";
+    $content .= "<ul><li>You won't show up in their list of friends</li><li>They won't see your updates on their home page</li><li>They won't be able to follow you</li><li>You <em>can</em> unblock them but you will need to follow them again afterwards</li></ul><p>Trying to block someone you've already got blocked will cause an error to occur, Twitter needs some fixing to get around this problem. There's also no current way to detect if they're blocked or not either.</p>";
   }
   $content .= "<p><a href='$action/$target'>Yes please</a></p>";
   theme('Page', 'Confirm', $content);
