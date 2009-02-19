@@ -140,9 +140,37 @@ function theme_page($title, $content) {
   exit();
 }
 
+function theme_colours() {
+  $info = $GLOBALS['colour_schemes'][setting_fetch('colours', 1)];
+  list($name, $bits) = explode('|', $info);
+  $colours = explode(',', $bits);
+  return (object) array(
+    'links' => $colours[0],
+    'bodybg' => $colours[1],
+    'bodyt' => $colours[2],
+    'small' => $colours[3],
+    'odd' => $colours[4],
+    'even' => $colours[5],
+    'replyodd' => $colours[6],
+    'replyeven' => $colours[7],
+    'menubg' => $colours[8],
+    'menut' => $colours[9],
+    'menua' => $colours[10],
+  );
+}
+
 function theme_css() {
-  return '<style type="text/css">a{color:#b50}table{border-collapse:collapse}form{margin:.3em;}td{vertical-align:top;padding:0.3em}img{border:0}small,small a{color:#555}body{background:#ddd;color:#111;margin:0;font:90% sans-serif}tr.odd td{background:#fff}tr.even td{background:#eee}tr.reply td{background:#FFA}tr.reply.even td{background: #DD9}.menu{color:#c40;background:#e81;padding: 2px}.menu a{color:#fff;text-decoration: none}
-</style>';
+  $c = theme('colours');
+  return "<style type='text/css'>
+  a{color:#{$c->links}}table{border-collapse:collapse}
+  form{margin:.3em;}td{vertical-align:top;padding:0.3em}img{border:0}small,small a{color:#{$c->small}}
+  body{background:#{$c->bodybg};
+  color:#{$c->bodyt};margin:0;font:90% sans-serif}tr.odd td{background:#{$c->odd}}tr.even td{background:#{$c->even}}
+  tr.reply td{background:#{$c->replyodd}
+  }tr.reply.even td{background: #{$c->replyeven}}
+  .menu{color:#{$c->menut};background:#{$c->menubg};padding: 2px}
+  .menu a{color:#{$c->menua};text-decoration: none}
+</style>";
 }
 
 ?>

@@ -1,9 +1,10 @@
 <?php
 
-require 'desktop.php';
+require 'desktop.php';
+
 function touch_theme_status_form($text = '') {
   return desktop_theme_status_form($text);
-}
+}
 function touch_theme_search_form($query) {
   return desktop_theme_search_form($query);
 }
@@ -19,7 +20,7 @@ function touch_theme_page($title, $content) {
   header('Content-Type: text/html; charset=utf-8');
   echo '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>',$title,'</title><base href="',BASE_URL,'" />
+<head><meta name="viewport" content="width=320"/><title>',$title,'</title><base href="',BASE_URL,'" />
 '.theme('css').'
 <body id="thepage">', $body, '</body>
 </html>';
@@ -39,7 +40,7 @@ function touch_theme_menu_top() {
     array_unshift($links['extras'], "<b><a href='user/$user'>$user</a></b>");
   }
   array_push($links['main'], '<a href="#" onclick="return toggleMenu()">more</a>');
-  $html = '<div id="menu">';
+  $html = '<div id="menu" class="menu">';
   $html .= theme('list', $links['main'], array('id' => 'menu-main'));
   $html .= theme('list', $links['extras'], array('id' => 'menu-extras'));
   $html .= '</div>';
@@ -53,7 +54,9 @@ function touch_theme_menu_bottom() {
 
 function touch_theme_css() {
   $out = '<link rel="stylesheet" href="browsers/touch.css" />';
+  //~ $out .= '<style type="text/css">body { word-wrap: break-word; text-overflow: ellipsis; } table {width: 320px;}</style>';
+  $out .= theme_css();
   $out .= '<script type="text/javascript">'.file_get_contents('browsers/touch.js').'</script>';
   return $out;
-}
+}
 ?>

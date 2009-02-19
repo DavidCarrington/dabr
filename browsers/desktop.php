@@ -1,7 +1,4 @@
-<?php
-function desktop_theme_external_link($url) {
-  return "<a href='$url'>$url</a>";
-}
+<?php
 function desktop_theme_status_form($text = '', $in_reply_to_id = NULL) {
   if (user_is_authenticated()) {
     return '<form method="POST" action="update" onsubmit="return confirmShortTweet();">
@@ -11,7 +8,7 @@ function desktop_theme_status_form($text = '', $in_reply_to_id = NULL) {
 <script type="text/javascript">
 function updateCount() {
   document.getElementById("remaining").innerHTML = 140 - document.getElementById("status").value.length;
-  setTimeout(updateCount, 200);
+  setTimeout(updateCount, 400);
 }
 function confirmShortTweet() {
   var len = document.getElementById("status").value.length;
@@ -21,10 +18,10 @@ function confirmShortTweet() {
 updateCount();
 </script>';
   }
-}
+}
 
 function desktop_theme_search_form($query) {
   $query = stripslashes(htmlentities($query));
   return "<form action='search' method='GET'><input name='query' value=\"$query\" style='width:100%; max-width: 300px' /><input type='submit' value='Search' /></form>";
-}
+}
 ?>

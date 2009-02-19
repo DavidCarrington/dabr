@@ -35,15 +35,18 @@ menu_register(array(
     'accesskey' => '2',
   ),
   'search' => array(
+    'security' => true,
     'callback' => 'twitter_search_page',
     'accesskey' => '3',
   ),
   'public' => array(
+    'security' => true,
     'callback' => 'twitter_public_page',
     'accesskey' => '4',
   ),
   'user' => array(
     'hidden' => true,
+    'security' => true,
     'callback' => 'twitter_user_page',
   ),
   'follow' => array(
@@ -56,7 +59,23 @@ menu_register(array(
     'security' => true,
     'callback' => 'twitter_follow_page',
   ),
+  'confirm' => array(
+    'hidden' => true,
+    'security' => true,
+    'callback' => 'twitter_confirmation_page',
+  ),
+  'block' => array(
+    'hidden' => true,
+    'security' => true,
+    'callback' => 'twitter_block_page',
+  ),
+  'unblock' => array(
+    'hidden' => true,
+    'security' => true,
+    'callback' => 'twitter_block_page',
+  ),
   'favourites' => array(
+    'security' => true,
     'callback' =>  'twitter_favourites_page',
   ),
   'followers' => array(
@@ -64,6 +83,7 @@ menu_register(array(
     'callback' => 'twitter_followers_page',
   ),
   'friends' => array(
+    'security' => true,
     'security' => true,
     'callback' => 'twitter_friends_page',
   ),
@@ -78,10 +98,17 @@ menu_register(array(
     'callback' => 'twitter_retweet_page',
   ),
   'flickr' => array(
+    'security' => true,
     'hidden' => true,
-    'callback' => 'flickr_thumbnail',
+    'callback' => 'generate_thumbnail',
+  ),
+  'mobypicture' => array(
+    'security' => true,
+    'hidden' => true,
+    'callback' => 'generate_thumbnail',
   ),
   'hash' => array(
+    'security' => true,
     'hidden' => true,
     'callback' => 'twitter_hashtag_page',
   ),
@@ -116,6 +143,7 @@ function twitter_process($url, $post_data = false) {
     default:
       $result = json_decode($response);
       $result = $result->error ? $result->error : $response;
+      if (strlen($result) > 500) $result = 'Something broke.';
       theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$result}</p><hr><p>$url</p>");
   }
 }
@@ -141,7 +169,12 @@ function twitter_fetch($url) {
 function twitter_parse_links_callback($matches) {
   $url = $matches[1];
   if (substr($url, 0, strlen(BASE_URL)) == BASE_URL) return "<a href='$url'>$url</a>";
-  return theme('external_link', $url);
+  if (setting_fetch('gwt') == 'on') {
+    $encoded = urlencode($url);
+    return "<a href='http://google.com/gwt/n?u={$encoded}' target='_blank'>{$url}</a>";
+  } else {
+    return theme('external_link', $url);
+  }
 }
 
 function twitter_parse_tags($input) {
@@ -165,24 +198,38 @@ function twitter_photo_replace($text) {
       $text = "<a href='http://{$matches[0][$key]}'><img src='$thumb' /></a><br>".$text;
     }
   }
-  if (FLICKR_API_KEY && preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+  if (defined('FLICKR_API_KEY') && preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
       $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$match' /></a><br>".$text;
+    }
+  }
+  if (defined('MOBYPICTURE_API_KEY') && preg_match_all('#mobypicture.com/\?([a-z0-9]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+    foreach ($matches[1] as $key => $match) {
+      $text = "<a href='http://{$matches[0][$key]}'><img src='mobypicture/$match' /></a><br>".$text;
     }
   }
   return $text;
 }
 
-function flickr_thumbnail($query) {
+function generate_thumbnail($query) {
   $id = $query[1];
   if ($id) {
-    header('HTTP/1.1 301 Moved Permanently') ;
-    header('Location: '. flickr_id_to_url($id));
+      header('HTTP/1.1 301 Moved Permanently');
+    if ($query[0] == 'flickr') {
+      $url = "http://api.flickr.com/services/rest/?method=flickr.photos.getSizes&photo_id=$id&api_key=".FLICKR_API_KEY;
+      $flickr_xml = twitter_fetch($url);
+      preg_match('#"(http://.*_s\.jpg)"#', $flickr_xml, $matches);
+      header('Location: '. $matches[1]);
+    }
+    if ($query[0] == 'mobypicture') {
+      $url = "http://api.mobypicture.com/?action=getThumbUrl&t={$id}&s=thumbnail&k=".MOBYPICTURE_API_KEY;
+      $thumb = twitter_fetch($url);
+      header('Location: '. $thumb);
+    }
   }
   exit();
 }
-
-function flickr_id_to_url($id) {
+function mobypicture_id_to_url($id) {
   if (!$id) return '';
   $url = "http://api.flickr.com/services/rest/?method=flickr.photos.getSizes&photo_id=$id&api_key=".FLICKR_API_KEY;
   $flickr_xml = twitter_fetch($url);
@@ -262,6 +309,30 @@ function twitter_follow_page($query) {
     twitter_process($request, 1);
     twitter_refresh('friends');
   }
+}
+
+function twitter_block_page($query) {
+  $user = $query[1];
+  if ($user) {
+    if($query[0] == 'block'){
+      $request = "http://twitter.com/blocks/create/{$user}.json";
+    } else {
+      $request = "http://twitter.com/blocks/destroy/{$user}.json";
+    }
+    twitter_process($request, 1);
+    twitter_refresh();
+  }
+}
+
+function twitter_confirmation_page($query) {
+  $action = $query[1];
+  $target = $query[2];
+  $content = "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
+  if ($action == 'block') {
+    $content .= "<ul><li>You won't show up in their list of friends</li><li>They won't see your updates on their home page</li><li>They won't be able to follow you</li><li>You <em>can</em> unblock them but you will need to follow them again afterwards</li></ul>";
+  }
+  $content .= "<p><a href='$action/$target'>Yes please</a></p>";
+  theme('Page', 'Confirm', $content);
 }
 
 function twitter_friends_page($query) {
@@ -508,9 +579,16 @@ function theme_user_header($user) {
 <br>Link: <a href='{$user->url}'>{$user->url}</a>
 <br>Location: {$user->location}
 </small>
-<br><a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a>
-| <a href='follow/{$user->screen_name}'>Follow</a>
-| <a href='unfollow/{$user->screen_name}'>Unfollow</a>
+<br><a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a> ";
+
+  if ($user->following == 1) {
+    $out .= "| <a href='unfollow/{$user->screen_name}'>Unfollow</a>";
+  } else {
+    $out .= "| <a href='follow/{$user->screen_name}'>Follow</a>";
+  }
+
+  $out.= " | <a href='confirm/block/{$user->screen_name}'>Block</a>
+ | <a href='unblock/{$user->screen_name}'>Unblock</a>
 | <a href='friends/{$user->screen_name}'>{$user->friends_count} friends</a>
 | <a href='favourites/{$user->screen_name}'>Favourites</a>
 | <a href='directs/create/{$user->screen_name}'>Direct Message</a>
@@ -544,7 +622,7 @@ function twitter_date($format, $timestamp = null) {
       } else {
         $user = twitter_user_info();
         $offset = $user->utc_offset;
-        setcookie('utc_offset', $offset, time() + 3000000);
+        setcookie('utc_offset', $offset, time() + 3000000, '/');
       }
     } else {
       $offset = 0;
@@ -722,7 +800,7 @@ function theme_search_form($query) {
 }
 
 function theme_external_link($url) {
-  return "<a href='$url' target='_new'>$url</a>";
+  return "<a href='$url' target='_blank'>$url</a>";
 }
 
 function theme_pagination() {

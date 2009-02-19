@@ -1,19 +1,13 @@
-a{color:#138}
 table{border-collapse:collapse}
 form{margin:.3em;}
 td{vertical-align:top;padding:0.3em}
 img{border:0}
-small,small a{color:#555}
-body{background:#ddd;color:#111;margin:0;font:90% sans-serif}
-tr.odd td{background:#fff}
-tr.even td{background:#eee}
-tr.reply td{background:#FFA}
-tr.reply.even td{background: #DD9}
+body{margin:0;font:90% sans-serif}
 
 #menu ul, #menu li { margin: 0; padding: 0; list-style: none; }
-#menu ul { overflow: auto; background: #138; }
+#menu ul { overflow: auto; }
 #menu li { float: left; }
-#menu a { display: block; padding: 0.5em; color: #fff; text-decoration: none; border-right: 1px solid #fff; font-size: 110%; }
+#menu a { display: block; padding: 0.5em; text-decoration: none; border-right: 1px solid #fff; font-size: 110%; }
 
 body.show-menu #menu-extras { display: block; }
 #menu-extras { display: none; border-top: 1px solid #eee; }

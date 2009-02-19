@@ -1,9 +1,11 @@
 <?php
 
 function browser_detect() {
+  if ($browser = setting_fetch('browser')) {
+    return browser_load($browser);
+  }
   if ($_SERVER['HTTP_X_NOKIA_BEARER'] == 'GPRS') {
-    browser_load('text');
-    return;
+    return browser_load('text');
   }
   if (array_key_exists('HTTP_X_DEVICE_USER_AGENT', $_SERVER)) {
     $user_agent = $_SERVER['HTTP_X_DEVICE_USER_AGENT'];
