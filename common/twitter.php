@@ -592,7 +592,8 @@ function theme_retweet($status) {
 
 function theme_user_header($user) {
   $name = theme('full_name', $user);
-  $out = "<table><tr><td>".theme('avatar', $user->profile_image_url, 1)."</td>
+  $full_avatar = str_replace('_normal.', '.', $user->profile_image_url);
+  $out = "<table><tr><td><a href='$full_avatar'>".theme('avatar', $user->profile_image_url, 1)."</a></td>
 <td><b>{$name}</b>
 <small>
 <br>Bio: {$user->description}
@@ -675,6 +676,7 @@ function twitter_standard_timeline($feed, $source) {
         $output[$status->id] = (object) array(
           'id' => $status->id,
           'text' => $status->text,
+          'source' => strpos($status->source, '&lt;') !== false ? html_entity_decode($status->source) : $status->source,
           'from' => (object) array(
             'id' => $status->from_user_id,
             'screen_name' => $status->from_user,
@@ -838,7 +840,9 @@ function theme_action_icons($status) {
   $user = $status->from->screen_name;
   $actions = array();
   
-  $actions[] = "<a href='user/{$user}/reply/{$status->id}'><img src='images/reply.png' /></a>";
+  if (!$status->is_direct) {
+    $actions[] = "<a href='user/{$user}/reply/{$status->id}'><img src='images/reply.png' /></a>";
+  }
   if ($status->user->screen_name != user_current_username()) {
     $actions[] = "<a href='directs/create/{$user}'><img src='images/dm.png' /></a>";
   }
