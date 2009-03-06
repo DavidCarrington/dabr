@@ -5,10 +5,13 @@ function text_theme_avatar($url, $force_large = false) {
 }
 
 function text_theme_action_icons($status) {
-  $user = $status->from_user ? $status->from_user : $status->user->screen_name;
+  $user = $status->from->screen_name;
   $actions = array();
   
-  if ($status->user->screen_name != $GLOBALS['user']['username']) {
+  if (!$status->is_direct) {
+    $actions[] = "<a href='user/{$user}/reply/{$status->id}'>@</a>";
+  }
+  if ($status->user->screen_name != user_current_username()) {
     $actions[] = "<a href='directs/create/{$user}'>DM</a>";
   }
   if (!$status->is_direct) {
