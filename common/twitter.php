@@ -117,7 +117,35 @@ menu_register(array(
     'hidden' => true,
     'callback' => 'twitter_hashtag_page',
   ),
+  'twitpic' => array(
+    'security' => true,
+    'callback' => 'twitter_twitpic_page',
+  ),
 ));
+
+function twitter_twitpic_page($query) {
+  if ($_POST['message']) {
+    $response = twitter_process('http://twitpic.com/api/uploadAndPost', array(
+      'media' => '@'.$_FILES['media']['tmp_name'],
+      'message' => $_POST['message'],
+      'username' => user_current_username(),
+      'password' => $GLOBALS['user']['password'],
+    ));
+    if (preg_match('#mediaid>(.*)</mediaid#', $response, $matches)) {
+      $id = $matches[1];
+      twitter_refresh("twitpic/confirm/$id");
+    } else {
+      twitter_refresh('twitpic/fail');
+    }
+  } elseif ($query[1] == 'confirm') {
+    $content = "<p>Upload success.</p><p><img src='http://twitpic.com/show/thumb/{$query[2]}' alt='' /></p>";
+  } elseif ($query[1] == 'fail') {
+    $content = '<p>Twitpic upload failed. No idea why!</p>';
+  } else {
+    $content = '<form method="post" action="twitpic" enctype="multipart/form-data">Image <input type="file" name="media" /><br />Message: <input type="text" name="message" maxlength="120" /><br /><input type="submit" value="Upload" /></form>';
+  }
+  return theme('page', 'Twitpic Upload', $content);
+}
 
 function twitter_process($url, $post_data = false) {
   $ch = curl_init($url);
@@ -141,7 +169,9 @@ function twitter_process($url, $post_data = false) {
 
   switch( intval( $response_info['http_code'] ) ) {
     case 200:
-      return json_decode($response);
+      $json = json_decode($response);
+      if ($json) return $json;
+      return $response;
     case 401:
       user_logout();
       theme('error', '<p>Error: Login credentials incorrect.</p>');
