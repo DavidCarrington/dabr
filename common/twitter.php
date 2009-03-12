@@ -127,7 +127,7 @@ function twitter_twitpic_page($query) {
   if ($_POST['message']) {
     $response = twitter_process('http://twitpic.com/api/uploadAndPost', array(
       'media' => '@'.$_FILES['media']['tmp_name'],
-      'message' => $_POST['message'],
+      'message' => stripslashes($_POST['message']),
       'username' => user_current_username(),
       'password' => $GLOBALS['user']['password'],
     ));
@@ -216,7 +216,9 @@ function twitter_parse_tags($input) {
   $out = preg_replace_callback('#([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?=\b)#is', 'twitter_parse_links_callback', $input);
   $out = preg_replace('#(^|\s)@([a-z_A-Z0-9]+)#', '$1@<a href="user/$2">$2</a>', $out);
   $out = preg_replace('#(\\#([a-z_A-Z0-9:_-]+))#', '<a href="hash/$2">$0</a>', $out);
-  $out = twitter_photo_replace($out);
+  if (setting_fetch('browser') != 'text') {
+    $out = twitter_photo_replace($out);
+  }
   return $out;
 }
 
