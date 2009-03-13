@@ -315,10 +315,21 @@ function twitter_status_page($query) {
   $id = (int) $query[1];
   if ($id) {
     $request = "http://twitter.com/statuses/show/{$id}.json";
-    $tl = twitter_process($request, $id);
-    $content = theme('status', $tl);
+    $status = twitter_process($request, $id);
+    $content = theme('status', $status);
+    $thread = twitter_thread_timeline($id);
+    if ($thread) {
+      $content .= '<p>And the experimental conversation view...</p>'.theme('timeline', $thread);
+      $content .= "<p>Don't like the thread order? Go to <a href='settings'>settings</a> to reverse it. Either way - the dates/times are not always accurate.</p>";
+    }
     theme('page', "Status $id", $content);
   }
+}
+
+function twitter_thread_timeline($thread_id) {
+  $request = "http://search.twitter.com/search/thread/{$thread_id}";
+  $tl = twitter_standard_timeline(twitter_process($request, 1), 'thread');
+  return $tl;
 }
 
 function twitter_retweet_page($query) {
@@ -656,10 +667,14 @@ function theme_avatar($url, $force_large = false) {
 
 function theme_status_time_link($status, $is_link = true) {
   $time = strtotime($status->created_at);
-  if (twitter_date('dmy') == twitter_date('dmy', $time)) {
-    $out = format_interval(time() - $time, 1). ' ago';
+  if ($time > 0) {
+    if (twitter_date('dmy') == twitter_date('dmy', $time)) {
+      $out = format_interval(time() - $time, 1). ' ago';
+    } else {
+      $out = twitter_date('H:i', $time);
+    }
   } else {
-    $out = twitter_date('H:i', $time);
+    $out = $status->created_at;
   }
   if ($is_link)
     $out = "<a href='status/{$status->id}'>$out</a>";
@@ -739,11 +754,55 @@ function twitter_standard_timeline($feed, $source) {
         $output[] = $new;
       }
       return $output;
+    
+    case 'thread':
+      // First pass: extract tweet info from the HTML
+      $html_tweets = explode('</li>', $feed);
+      foreach ($html_tweets as $tweet) {
+        $id = preg_match_one('#msgtxt(\d*)#', $tweet);
+        if (!$id) continue;
+        $output[$id] = (object) array(
+          'id' => $id,
+          'text' => strip_tags(preg_match_one('#</a>: (.*)</span>#', $tweet)),
+          'source' => preg_match_one('#>from (.*)</span>#', $tweet),
+          'from' => (object) array(
+            'id' => preg_match_one('#profile_images/(\d*)#', $tweet),
+            'screen_name' => preg_match_one('#twitter.com/([^"]+)#', $tweet),
+            'profile_image_url' => preg_match_one('#src="([^"]*)"#' , $tweet),
+          ),
+          'to' => (object) array(
+            'screen_name' => preg_match_one('#@([^<]+)#', $tweet),
+          ),
+          'created_at' => str_replace('about', '', preg_match_one('#info">\s(.*)#', $tweet)),
+        );
+      }
+      // Second pass: OPTIONALLY attempt to reverse the order of tweets
+      if (setting_fetch('reverse') == 'yes') {
+        $first = false;
+        foreach ($output as $id => $tweet) {
+          $date_string = str_replace('later', '', $tweet->created_at);
+          if ($first) {
+            $attempt = strtotime("+$date_string");
+            if ($attempt == 0) $attempt = time();
+            $previous = $current = $attempt - time() + $previous;
+          } else {
+            $previous = $current = $first = strtotime($date_string);
+          }
+          $output[$id]->created_at = date('r', $current);
+        }
+        $output = array_reverse($output);
+      }
+      return $output;
 
     default:
       echo "<h1>$source</h1><pre>";
       print_r($feed); die();
   }
+}
+
+function preg_match_one($pattern, $subject, $flags = NULL) {
+  preg_match($pattern, $subject, $matches, $flags);
+  return trim($matches[1]);
 }
 
 function twitter_user_info($username = null) {
@@ -760,13 +819,18 @@ function theme_timeline($feed) {
   $page = menu_current_page();
   $date_heading = false;
   foreach ($feed as $status) {
-    $date = twitter_date('l jS F Y', strtotime($status->created_at));
-    if ($date_heading !== $date) {
-      $date_heading = $date;
-      $rows[] = array(array(
-        'data' => "<small><b>$date</b></small>",
-        'colspan' => 2
-      ));
+    $time = strtotime($status->created_at);
+    if ($time > 0) {
+      $date = twitter_date('l jS F Y', strtotime($status->created_at));
+      if ($date_heading !== $date) {
+        $date_heading = $date;
+        $rows[] = array(array(
+          'data' => "<small><b>$date</b></small>",
+          'colspan' => 2
+        ));
+      }
+    } else {
+      $date = $status->created_at;
     }
     $text = twitter_parse_tags($status->text);
     $link = theme('status_time_link', $status, !$status->is_direct);
@@ -788,7 +852,9 @@ function theme_timeline($feed) {
     $rows[] = $row;
   }
   $content = theme('table', array(), $rows, array('class' => 'timeline'));
-  $content .= theme('pagination');
+  if (count($feed) >= 20) {
+    $content .= theme('pagination');
+  }
   return $content;
 }
 

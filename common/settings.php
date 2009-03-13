@@ -47,6 +47,7 @@ function settings_page($args) {
     $settings['browser'] = $_POST['browser'];
     $settings['gwt'] = $_POST['gwt'];
     $settings['colours'] = $_POST['colours'];
+    $settings['reverse'] = $_POST['reverse'];
     $duration = time() + (3600 * 24 * 365);
     setcookie('settings', base64_encode(serialize($settings)), $duration, '/');
     twitter_refresh('');
@@ -76,7 +77,9 @@ function settings_page($args) {
   $content .= theme('options', $modes, $GLOBALS['current_theme']);
   $content .= '</select></p><p>External links go:<br /><select name="gwt">';
   $content .= theme('options', $gwt, setting_fetch('gwt', $GLOBALS['current_theme'] == 'text' ? 'on' : 'off'));
-  $content .= '</select><small><br>Google Web Transcoder (GWT) converts third-party sites into small, speedy pages suitable for older phones and people with less bandwidth.</small></p><input type="submit" value="Save" /></form>';
+  $content .= '</select><small><br>Google Web Transcoder (GWT) converts third-party sites into small, speedy pages suitable for older phones and people with less bandwidth.</small></p>';
+  $content .= '<p><label><input type="checkbox" name="reverse" value="yes" '. (setting_fetch('reverse') == 'yes' ? ' checked="checked" ' : '') .' /> Attempt to reverse the conversation thread view.</label></p>';
+  $content .= '<input type="submit" value="Save" /></form>';
   
   $content .= '<hr><p>Visit <a href="reset">Reset</a> if things go horribly wrong - it will log you out and clear all settings.</p>';
   
