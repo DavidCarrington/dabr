@@ -607,7 +607,7 @@ function theme_status($status) {
   $out = theme('status_form', "@{$status->user->screen_name} ");
   $out .= "<p>$parsed</p>
 <table align='center'><tr><td>$avatar</td><td><a href='user/{$status->user->screen_name}'>{$status->user->screen_name}</a>
-<br>$time_since</table>";
+<br>$time_since</td></tr></table>";
   if (strtolower(user_current_username()) == strtolower($status->user->screen_name)) {
     $out .= "<form action='delete/{$status->id}' method='post'><input type='submit' value='Delete without confirmation' /></form>";
   }
