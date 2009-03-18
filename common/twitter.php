@@ -852,7 +852,7 @@ function theme_timeline($feed) {
     $rows[] = $row;
   }
   $content = theme('table', array(), $rows, array('class' => 'timeline'));
-  if (count($feed) >= 20) {
+  if (count($feed) >= 15) {
     $content .= theme('pagination');
   }
   return $content;
