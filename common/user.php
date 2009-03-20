@@ -63,6 +63,10 @@ function user_oauth_sign($url, $args = false) {
   if ($oauth_token && $oauth_token_secret) {
     $token = new OAuthConsumer($oauth_token, $oauth_token_secret);
   }
+  if ((int) $_GET['page'] > 0) {
+    $method = 'GET';
+    $args['page'] = $_GET['page'];
+  }
   
   $request = OAuthRequest::from_consumer_and_token($consumer, $token, $method, $url, $args);
   $request->sign_request($sig_method, $consumer, $token);

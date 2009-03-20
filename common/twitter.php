@@ -164,7 +164,7 @@ function twitter_process($url, $post_data = false) {
   
   $ch = curl_init($url);
 
-  if($post_data !== false) {
+  if($post_data !== false && !$_GET['page']) {
     curl_setopt ($ch, CURLOPT_POST, true);
     curl_setopt ($ch, CURLOPT_POSTFIELDS, $post_data);
   }
