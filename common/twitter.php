@@ -477,8 +477,8 @@ function twitter_directs_page($query) {
       theme('page', 'Create DM', $content);
     
     case 'send':
-      $to = urlencode(trim(stripslashes($_POST['to'])));
-      $message = urlencode(trim(stripslashes($_POST['message'])));
+      $to = trim(stripslashes($_POST['to']));
+      $message = trim(stripslashes($_POST['message']));
       $request = 'http://twitter.com/direct_messages/new.json';
       twitter_process($request, array('user' => $to, 'text' => $message));
       twitter_refresh('directs/sent');
