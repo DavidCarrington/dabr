@@ -8,8 +8,8 @@ header('Pragma: no-cache');
 
 require 'config.php';
 require 'common/browser.php';
-require 'common/user.php';
 require 'common/menu.php';
+require 'common/user.php';
 require 'common/theme.php';
 require 'common/twitter.php';
 require 'common/settings.php';

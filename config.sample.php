@@ -3,7 +3,12 @@
 // Cookie encryption key. Max 52 characters
 define('ENCRYPTION_KEY', 'Example Key - Change Me!');
 
-// Optional Flickr API key, for retrieving Flickr thumbnails
+// OAuth consumer and secret keys. Available from http://twitter.com/oauth_clients
+define('OAUTH_CONSUMER_KEY', '');
+define('OAUTH_CONSUMER_SECRET', '');
+
+// Optional API keys for retrieving thumbnails
+define('MOBYPICTURE_API_KEY', '');
 define('FLICKR_API_KEY', '');
 
 // Base URL, should point to your website, including a trailing slash

@@ -124,6 +124,9 @@ menu_register(array(
 ));
 
 function twitter_twitpic_page($query) {
+  if (user_type() == 'oauth') {
+    return theme('page', 'Error', '<p>You can\'t use Twitpic uploads while accessing Dabr using an OAuth login.</p>');
+  }
   if ($_POST['message']) {
     $response = twitter_process('http://twitpic.com/api/uploadAndPost', array(
       'media' => '@'.$_FILES['media']['tmp_name'],
@@ -148,6 +151,17 @@ function twitter_twitpic_page($query) {
 }
 
 function twitter_process($url, $post_data = false) {
+  if ($post_data === true) $post_data = array();
+  if (user_type() == 'oauth' && strpos($url, '/twitter.com') !== false) {
+    user_oauth_sign(&$url, &$post_data);
+  } elseif (strpos($url, 'twitter.com') !== false && is_array($post_data)) {
+    // Passing $post_data as an array to twitter.com (non-oauth) causes an error :(
+    $s = array();
+    foreach ($post_data as $name => $value)
+      $s[] = $name.'='.urlencode($value);
+    $post_data = implode('&', $s);
+  }
+  
   $ch = curl_init($url);
 
   if($post_data !== false) {
@@ -155,13 +169,14 @@ function twitter_process($url, $post_data = false) {
     curl_setopt ($ch, CURLOPT_POSTFIELDS, $post_data);
   }
 
-  if(user_is_authenticated())
+  if (user_type() != 'oauth' && user_is_authenticated())
     curl_setopt($ch, CURLOPT_USERPWD, user_current_username().':'.$GLOBALS['user']['password']);
 
   curl_setopt($ch, CURLOPT_VERBOSE, 1);
   curl_setopt($ch, CURLOPT_HEADER, 0);
   curl_setopt($ch, CURLOPT_USERAGENT, 'dabr');
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 
   $response = curl_exec($ch);
   $response_info=curl_getinfo($ch);
@@ -189,7 +204,12 @@ function twitter_isgd($text) {
 
 function twitter_isgd_callback($match) {
   $request = 'http://is.gd/api.php?longurl='.urlencode($match[0]);
-  return twitter_fetch($request);
+  $response = twitter_fetch($request);
+  if (substr($response, 0, 4) == 'http') {
+    return $response;
+  } else {
+    return $match[0];
+  }
 }
 
 function twitter_fetch($url) {
@@ -328,7 +348,7 @@ function twitter_status_page($query) {
 
 function twitter_thread_timeline($thread_id) {
   $request = "http://search.twitter.com/search/thread/{$thread_id}";
-  $tl = twitter_standard_timeline(twitter_process($request, 1), 'thread');
+  $tl = twitter_standard_timeline(twitter_process($request, true), 'thread');
   return $tl;
 }
 
@@ -336,7 +356,7 @@ function twitter_retweet_page($query) {
   $id = (int) $query[1];
   if ($id) {
     $request = "http://twitter.com/statuses/show/{$id}.json";
-    $tl = twitter_process($request, $id);
+    $tl = twitter_process($request);
     $content = theme('retweet', $tl);
     theme('page', 'Retweet', $content);
   }
@@ -356,7 +376,7 @@ function twitter_delete_page($query) {
   $id = (int) $query[1];
   if ($id) {
     $request = "http://twitter.com/statuses/destroy/{$id}.json?page=".intval($_GET['page']);
-    $tl = twitter_process($request, 1);
+    $tl = twitter_process($request, true);
     twitter_refresh('user/'.user_current_username());
   }
 }
@@ -369,7 +389,7 @@ function twitter_follow_page($query) {
     } else {
       $request = "http://twitter.com/friendships/destroy/{$user}.json";
     }
-    twitter_process($request, 1);
+    twitter_process($request, true);
     twitter_refresh('friends');
   }
 }
@@ -382,7 +402,7 @@ function twitter_block_page($query) {
     } else {
       $request = "http://twitter.com/blocks/destroy/{$user}.json";
     }
-    twitter_process($request, 1);
+    twitter_process($request, true);
     twitter_refresh("user/{$user}");
   }
 }
@@ -426,10 +446,10 @@ function twitter_update() {
   $status = twitter_isgd(stripslashes(trim($_POST['status'])));
   if ($status) {
     $request = 'http://twitter.com/statuses/update.json';
-    $post_data = 'source=dabr&status='.urlencode($status);
+    $post_data = array('source' => 'dabr', 'status' => $status);
     $in_reply_to_id = (int) $_POST['in_reply_to_id'];
     if ($in_reply_to_id > 0) {
-      $post_data .= "&in_reply_to_status_id={$in_reply_to_id}";
+      $post_data['in_reply_to_status_id'] = $in_reply_to_id;
     }
     $b = twitter_process($request, $post_data);
   }
@@ -467,7 +487,7 @@ function twitter_directs_page($query) {
       $to = urlencode(trim(stripslashes($_POST['to'])));
       $message = urlencode(trim(stripslashes($_POST['message'])));
       $request = 'http://twitter.com/direct_messages/new.json';
-      twitter_process($request, "user=$to&text=$message");
+      twitter_process($request, array('user' => $to, 'text' => $message));
       twitter_refresh('directs/sent');
     
     case 'sent':
@@ -578,7 +598,7 @@ function twitter_mark_favourite_page($query) {
   } else {
     $request = "http://twitter.com/favorites/create/$id.json";
   }
-  twitter_process($request, 1);
+  twitter_process($request, true);
   twitter_refresh();
 }
 
