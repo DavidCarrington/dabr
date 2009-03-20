@@ -43,6 +43,7 @@ function user_oauth() {
     
     // redirect user to authorisation URL
     $authorise_url = 'https://twitter.com/oauth/authorize?oauth_token='.$token['oauth_token'];
+    $authorise_url .= '&oauth_callback='.urlencode(BASE_URL.'oauth');
     header("Location: $authorise_url");
   }
 }
