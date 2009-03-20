@@ -301,13 +301,6 @@ function generate_thumbnail($query) {
   }
   exit();
 }
-function mobypicture_id_to_url($id) {
-  if (!$id) return '';
-  $url = "http://api.flickr.com/services/rest/?method=flickr.photos.getSizes&photo_id=$id&api_key=".FLICKR_API_KEY;
-  $flickr_xml = twitter_fetch($url);
-  preg_match('#"(http://.*_s\.jpg)"#', $flickr_xml, $matches);
-  return $matches[1];
-}
 
 function format_interval($timestamp, $granularity = 2) {
   $units = array(
