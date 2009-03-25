@@ -260,6 +260,11 @@ function twitter_photo_replace($text) {
       $text = "<a href='http://{$matches[0][$key]}'><img src='moblog/$match' /></a><br>".$text;
     }
   }
+  if (preg_match_all('#hellotxt.com/i/([\d\w]+)#i', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+    foreach ($matches[1] as $key => $match) {
+      $text = "<a href='http://{$matches[0][$key]}'><img src='http://hellotxt.com/image/{$match}.s.jpg' class='twitpic' width='75' height='75' /></a><br>".$text;
+    }
+  }
   if (defined('FLICKR_API_KEY') && preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
       $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$match' /></a><br>".$text;
@@ -280,7 +285,7 @@ function generate_thumbnail($query) {
     if ($query[0] == 'flickr') {
       $url = "http://api.flickr.com/services/rest/?method=flickr.photos.getSizes&photo_id=$id&api_key=".FLICKR_API_KEY;
       $flickr_xml = twitter_fetch($url);
-      preg_match('#"(http://.*_s\.jpg)"#', $flickr_xml, $matches);
+      preg_match('#"(http://.*_t\.jpg)"#', $flickr_xml, $matches);
       header('Location: '. $matches[1]);
     }
     if ($query[0] == 'mobypicture') {
