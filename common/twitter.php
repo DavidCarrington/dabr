@@ -262,7 +262,7 @@ function twitter_photo_replace($text) {
   }
   if (preg_match_all('#hellotxt.com/i/([\d\w]+)#i', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
-      $text = "<a href='http://{$matches[0][$key]}'><img src='http://hellotxt.com/image/{$match}.s.jpg' class='twitpic' width='75' height='75' /></a><br>".$text;
+      $text = "<a href='http://{$matches[0][$key]}'><img src='http://hellotxt.com/image/{$match}.s.jpg' /></a><br>".$text;
     }
   }
   if (defined('FLICKR_API_KEY') && preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
