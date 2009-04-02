@@ -235,7 +235,7 @@ function twitter_parse_links_callback($matches) {
 function twitter_parse_tags($input) {
   $out = preg_replace_callback('#([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?=\b)#is', 'twitter_parse_links_callback', $input);
   $out = preg_replace('#(^|\s)@([a-z_A-Z0-9]+)#', '$1@<a href="user/$2">$2</a>', $out);
-  $out = preg_replace('#(\\#([a-z_A-Z0-9:_-]+))#', '<a href="hash/$2">$0</a>', $out);
+  $out = preg_replace('#(^|\s)(\\#([a-z_A-Z0-9:_-]+))#', '$1<a href="hash/$3">$2</a>', $out);
   if (setting_fetch('browser') != 'text') {
     $out = twitter_photo_replace($out);
   }
