@@ -198,15 +198,18 @@ function twitter_process($url, $post_data = false) {
   }
 }
 
-function twitter_isgd($text) {
-  return preg_replace_callback('#(http://|www)[^ ]{33,1950}\b#', 'twitter_isgd_callback', $text);
+function twitter_url_shorten($text) {
+  if (!defined('BITLY_API_KEY')) return $text;
+  return preg_replace_callback('#(http://|www)[^ ]{33,1950}\b#', 'twitter_url_shorten_callback', $text);
 }
 
-function twitter_isgd_callback($match) {
-  $request = 'http://is.gd/api.php?longurl='.urlencode($match[0]);
-  $response = twitter_fetch($request);
-  if (substr($response, 0, 4) == 'http') {
-    return $response;
+function twitter_url_shorten_callback($match) {
+  $request = 'http://api.bit.ly/shorten?version=2.0.1&longUrl='.urlencode($match[0]).'&login='.BITLY_LOGIN.'&apiKey='.BITLY_API_KEY;
+  $json = json_decode(twitter_fetch($request));
+  if ($json->errorCode == 0) {
+    $results = (array) $json->results;
+    $result = array_pop($results);
+    return $result->shortUrl;
   } else {
     return $match[0];
   }
@@ -441,7 +444,7 @@ function twitter_followers_page($query) {
 }
 
 function twitter_update() {
-  $status = twitter_isgd(stripslashes(trim($_POST['status'])));
+  $status = twitter_url_shorten(stripslashes(trim($_POST['status'])));
   if ($status) {
     $request = 'http://twitter.com/statuses/update.json';
     $post_data = array('source' => 'dabr', 'status' => $status);

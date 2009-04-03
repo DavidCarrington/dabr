@@ -7,6 +7,10 @@ define('ENCRYPTION_KEY', 'Example Key - Change Me!');
 define('OAUTH_CONSUMER_KEY', '');
 define('OAUTH_CONSUMER_SECRET', '');
 
+// bit.ly login and API key for URL shortening
+define('BITLY_LOGIN', '');
+define('BITLY_API_KEY', '');
+
 // Optional API keys for retrieving thumbnails
 define('MOBYPICTURE_API_KEY', '');
 define('FLICKR_API_KEY', '');
