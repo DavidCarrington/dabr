@@ -194,7 +194,7 @@ function twitter_process($url, $post_data = false) {
       $result = json_decode($response);
       $result = $result->error ? $result->error : $response;
       if (strlen($result) > 500) $result = 'Something broke.';
-      theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$result}</p><hr><p>$url</p>");
+      theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
   }
 }
 
@@ -338,7 +338,9 @@ function twitter_status_page($query) {
     $request = "http://twitter.com/statuses/show/{$id}.json";
     $status = twitter_process($request, $id);
     $content = theme('status', $status);
-    $thread = twitter_thread_timeline($id);
+    if (!$status->user->protected) {
+      $thread = twitter_thread_timeline($id);
+    }
     if ($thread) {
       $content .= '<p>And the experimental conversation view...</p>'.theme('timeline', $thread);
       $content .= "<p>Don't like the thread order? Go to <a href='settings'>settings</a> to reverse it. Either way - the dates/times are not always accurate.</p>";
