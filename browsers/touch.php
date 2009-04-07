@@ -2,8 +2,8 @@
 
 require 'desktop.php';
 
-function touch_theme_status_form($text = '') {
-  return desktop_theme_status_form($text);
+function touch_theme_status_form($text = '', $in_reply_to_id = NULL) {
+  return desktop_theme_status_form($text, $in_reply_to_id);
 }
 function touch_theme_search_form($query) {
   return desktop_theme_search_form($query);
