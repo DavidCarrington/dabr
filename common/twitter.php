@@ -336,7 +336,7 @@ function twitter_status_page($query) {
   $id = (int) $query[1];
   if ($id) {
     $request = "http://twitter.com/statuses/show/{$id}.json";
-    $status = twitter_process($request, $id);
+    $status = twitter_process($request);
     $content = theme('status', $status);
     if (!$status->user->protected) {
       $thread = twitter_thread_timeline($id);
@@ -351,7 +351,7 @@ function twitter_status_page($query) {
 
 function twitter_thread_timeline($thread_id) {
   $request = "http://search.twitter.com/search/thread/{$thread_id}";
-  $tl = twitter_standard_timeline(twitter_process($request, true), 'thread');
+  $tl = twitter_standard_timeline(json_decode(twitter_fetch($request)), 'thread');
   return $tl;
 }
 

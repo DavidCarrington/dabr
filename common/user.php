@@ -1,7 +1,5 @@
 <?php
 
-require 'OAuth.php';
-
 menu_register(array(
   'oauth' => array(
     'callback' => 'user_oauth',
@@ -10,6 +8,8 @@ menu_register(array(
 ));
 
 function user_oauth() {
+  require_once 'OAuth.php';
+
   // Session used to keep track of secret token during authorisation step
   session_start();
   
@@ -49,6 +49,8 @@ function user_oauth() {
 }
 
 function user_oauth_sign($url, $args = false) {
+  require_once 'OAuth.php';
+  
   $method = $args !== false ? 'POST' : 'GET';
   
   $sig_method = new OAuthSignatureMethod_HMAC_SHA1();

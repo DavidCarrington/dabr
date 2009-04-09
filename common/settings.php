@@ -58,6 +58,7 @@ function settings_page($args) {
     'touch' => 'Touch phone',
     'desktop' => 'PC/Laptop',
     'text' => 'Text only',
+    'worksafe' => 'Work Safe',
   );
   
   $gwt = array(
