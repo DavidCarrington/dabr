@@ -48,7 +48,7 @@ function user_oauth() {
   }
 }
 
-function user_oauth_sign($url, $args = false) {
+function user_oauth_sign(&$url, &$args = false) {
   require_once 'OAuth.php';
   
   $method = $args !== false ? 'POST' : 'GET';

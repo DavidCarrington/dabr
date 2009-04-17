@@ -153,7 +153,7 @@ function twitter_twitpic_page($query) {
 function twitter_process($url, $post_data = false) {
   if ($post_data === true) $post_data = array();
   if (user_type() == 'oauth' && strpos($url, '/twitter.com') !== false) {
-    user_oauth_sign(&$url, &$post_data);
+    user_oauth_sign($url, $post_data);
   } elseif (strpos($url, 'twitter.com') !== false && is_array($post_data)) {
     // Passing $post_data as an array to twitter.com (non-oauth) causes an error :(
     $s = array();
@@ -200,7 +200,7 @@ function twitter_process($url, $post_data = false) {
 
 function twitter_url_shorten($text) {
   if (!defined('BITLY_API_KEY')) return $text;
-  return preg_replace_callback('#(http://|www)[^ ]{33,1950}\b#', 'twitter_url_shorten_callback', $text);
+  return preg_replace_callback('#((\w+://|www)[\w\#$%&~/.\-;:=,?@\[\]+]{33,1950})(?<![.,])#is', 'twitter_url_shorten_callback', $text);
 }
 
 function twitter_url_shorten_callback($match) {
@@ -236,7 +236,7 @@ function twitter_parse_links_callback($matches) {
 }
 
 function twitter_parse_tags($input) {
-  $out = preg_replace_callback('#([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?=\b)#is', 'twitter_parse_links_callback', $input);
+  $out = preg_replace_callback('#(\w+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?<![.,])#is', 'twitter_parse_links_callback', $input);
   $out = preg_replace('#(^|\s)@([a-z_A-Z0-9]+)#', '$1@<a href="user/$2">$2</a>', $out);
   $out = preg_replace('#(^|\s)(\\#([a-z_A-Z0-9:_-]+))#', '$1<a href="hash/$3">$2</a>', $out);
   if (setting_fetch('browser') != 'text') {
