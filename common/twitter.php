@@ -668,11 +668,8 @@ function theme_user_header($user) {
 </small>
 <br><a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a> ";
 
-  if ($user->following == 1) {
-    $out .= "| <a href='unfollow/{$user->screen_name}'>Unfollow</a>";
-  } else {
-    $out .= "| <a href='follow/{$user->screen_name}'>Follow</a>";
-  }
+  $out .= "| <a href='follow/{$user->screen_name}'>Follow</a>";
+  $out .= " | <a href='unfollow/{$user->screen_name}'>Unfollow</a>";
 
   $out.= " | <a href='confirm/block/{$user->screen_name}'>Block</a>
  | <a href='unblock/{$user->screen_name}'>Unblock</a>
