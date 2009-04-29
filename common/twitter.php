@@ -565,7 +565,12 @@ function twitter_user_page($query) {
       $in_reply_to_id = 0;
     }
     $user = twitter_user_info($screen_name);
-    $content .= theme('status_form', "@{$user->screen_name} ", $in_reply_to_id);
+    if ($user->screen_name != user_current_username()) {
+      $status = "@{$user->screen_name} ";
+    } else {
+      $status = '';
+    }
+    $content .= theme('status_form', $status, $in_reply_to_id);
     $content .= theme('user_header', $user);
     
     if (isset($user->status)) {
