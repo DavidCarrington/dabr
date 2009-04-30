@@ -574,7 +574,11 @@ function twitter_user_page($query) {
     $content .= theme('user_header', $user);
     
     if (isset($user->status)) {
-      $request = "http://twitter.com/statuses/user_timeline.json?screen_name={$screen_name}&page=".intval($_GET['page']);
+      if (user_type() == 'oauth') {
+        $request = "http://twitter.com/statuses/user_timeline/{$screen_name}.json?page=".intval($_GET['page']);
+      } else {
+        $request = "http://twitter.com/statuses/user_timeline.json?screen_name={$screen_name}&page=".intval($_GET['page']);
+      }
       $tl = twitter_process($request);
       $tl = twitter_standard_timeline($tl, 'user');
       $content .= theme('timeline', $tl);
@@ -832,8 +836,12 @@ function preg_match_one($pattern, $subject, $flags = NULL) {
 
 function twitter_user_info($username = null) {
   if (!$username)
-  $username = user_current_username();  
-  $request = "http://twitter.com/users/show.json?screen_name=$username";
+  $username = user_current_username();
+  if (user_type() == 'oauth') {
+    $request = "http://twitter.com/users/show/$username.json";
+  } else {
+    $request = "http://twitter.com/users/show.json?screen_name=$username";
+  }
   $user = twitter_process($request);
   return $user;
 }
