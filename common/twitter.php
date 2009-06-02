@@ -239,7 +239,7 @@ function twitter_parse_tags($input) {
   $out = preg_replace_callback('#(\w+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?<![.,])#is', 'twitter_parse_links_callback', $input);
   $out = preg_replace('#(^|\s)@([a-z_A-Z0-9]+)#', '$1@<a href="user/$2">$2</a>', $out);
   $out = preg_replace('#(^|\s)(\\#([a-z_A-Z0-9:_-]+))#', '$1<a href="hash/$3">$2</a>', $out);
-  if (setting_fetch('browser') != 'text') {
+  if (!in_array(setting_fetch('browser'), array('text', 'worksafe'))) {
     $out = twitter_photo_replace($out);
   }
   return $out;
@@ -249,7 +249,7 @@ function twitter_photo_replace($text) {
   $tmp = strip_tags($text);
   if (preg_match_all('#twitpic.com/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $match) {
-      $text = "<a href='http://twitpic.com/{$match}'><img src='http://twitpic.com/show/thumb/{$match}' class='twitpic' width='75' height='75' /></a><br>".$text;
+      $text = "<a href='http://twitpic.com/{$match}'><img src='http://twitpic.com/show/thumb/{$match}' class='twitpic' /></a><br>".$text;
     }
   }
   if (preg_match_all('#yfrog.com/([0-9a-zA-Z]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
