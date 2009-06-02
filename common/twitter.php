@@ -252,9 +252,9 @@ function twitter_photo_replace($text) {
       $text = "<a href='http://twitpic.com/{$match}'><img src='http://twitpic.com/show/thumb/{$match}' class='twitpic' /></a><br>".$text;
     }
   }
-  if (preg_match_all('#yfrog.com/([0-9a-zA-Z]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
-    foreach ($matches[1] as $key => $match) {
-      $text = "<a href='http://{$matches[0][$key]}'><img src='http://yfrog.com/{$match}.th.jpg' /></a><br>".$text;
+  if (preg_match_all('#yfrog.([a-zA-Z.]{2,5})/([0-9a-zA-Z]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+    foreach ($matches[2] as $key => $match) {
+      $text = "<a href='http://{$matches[0][$key]}'><img src='http://yfrog.{$matches[1][$key]}/{$match}.th.jpg' /></a><br>".$text;
     }
   }
   if (preg_match_all('#twitxr.com/[^ ]+/updates/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
