@@ -245,8 +245,26 @@ function twitter_parse_tags($input) {
   return $out;
 }
 
+function flickr_decode($num) {
+  $alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
+  $decoded = 0;
+  $multi = 1;
+  while (strlen($num) > 0) {
+    $digit = $num[strlen($num)-1];
+    $decoded += $multi * strpos($alphabet, $digit);
+    $multi = $multi * strlen($alphabet);
+    $num = substr($num, 0, -1);
+  }
+  return $decoded;
+}
+
 function twitter_photo_replace($text) {
   $tmp = strip_tags($text);
+  if (preg_match_all('#twitgoo.com/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+    foreach ($matches[1] as $match) {
+      $text = "<a href='http://twitpic.com/{$match}'><img src='http://twitgoo.com/show/thumb/{$match}' class='twitpic' /></a><br>".$text;
+    }
+  }
   if (preg_match_all('#twitpic.com/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $match) {
       $text = "<a href='http://twitpic.com/{$match}'><img src='http://twitpic.com/show/thumb/{$match}' class='twitpic' /></a><br>".$text;
@@ -273,9 +291,17 @@ function twitter_photo_replace($text) {
       $text = "<a href='http://{$matches[0][$key]}'><img src='http://hellotxt.com/image/{$match}.s.jpg' /></a><br>".$text;
     }
   }
-  if (defined('FLICKR_API_KEY') && preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
-    foreach ($matches[1] as $key => $match) {
-      $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$match' /></a><br>".$text;
+  if (defined('FLICKR_API_KEY')) {
+    if(preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+      foreach ($matches[1] as $key => $match) {
+        $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$match' /></a><br>".$text;
+      }
+    }
+    if(preg_match_all('#flic.kr/p/([\w\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+      foreach ($matches[1] as $key => $match) {
+        $id = flickr_decode($match);
+        $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$id' /></a><br>".$text;
+      }
     }
   }
   if (defined('MOBYPICTURE_API_KEY') && preg_match_all('#mobypicture.com/\?([a-z0-9]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
