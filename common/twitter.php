@@ -774,13 +774,13 @@ function twitter_standard_timeline($feed, $source) {
         $new = $status;
         $new->from = $new->user;
         unset($new->user);
-        $output[$new->id] = $new;
+        $output[(string) $new->id] = $new;
       }
       return $output;
     
     case 'search':
       foreach ($feed->results as $status) {
-        $output[$status->id] = (object) array(
+        $output[(string) $status->id] = (object) array(
           'id' => $status->id,
           'text' => $status->text,
           'source' => strpos($status->source, '&lt;') !== false ? html_entity_decode($status->source) : $status->source,
