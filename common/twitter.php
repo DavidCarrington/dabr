@@ -199,11 +199,14 @@ function twitter_process($url, $post_data = false) {
 }
 
 function twitter_url_shorten($text) {
-  if (!defined('BITLY_API_KEY')) return $text;
   return preg_replace_callback('#((\w+://|www)[\w\#$%&~/.\-;:=,?@\[\]+]{33,1950})(?<![.,])#is', 'twitter_url_shorten_callback', $text);
 }
 
 function twitter_url_shorten_callback($match) {
+  if (preg_match('#http://www.flickr.com/photos/[^/]+/(\d+)/#', $match[0], $matches)) {
+    return 'http://flic.kr/p/'.flickr_encode($matches[1]);
+  }
+  if (!defined('BITLY_API_KEY')) return $match[0];
   $request = 'http://api.bit.ly/shorten?version=2.0.1&longUrl='.urlencode($match[0]).'&login='.BITLY_LOGIN.'&apiKey='.BITLY_API_KEY;
   $json = json_decode(twitter_fetch($request));
   if ($json->errorCode == 0) {
@@ -258,11 +261,25 @@ function flickr_decode($num) {
   return $decoded;
 }
 
+function flickr_encode($num) {
+  $alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
+  $base_count = strlen($alphabet);
+  $encoded = '';
+  while ($num >= $base_count) {
+    $div = $num/$base_count;
+    $mod = ($num-($base_count*intval($div)));
+    $encoded = $alphabet[$mod] . $encoded;
+    $num = intval($div);
+  }
+  if ($num) $encoded = $alphabet[$num] . $encoded;
+  return $encoded;
+}
+
 function twitter_photo_replace($text) {
   $tmp = strip_tags($text);
   if (preg_match_all('#twitgoo.com/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $match) {
-      $text = "<a href='http://twitpic.com/{$match}'><img src='http://twitgoo.com/show/thumb/{$match}' class='twitpic' /></a><br>".$text;
+      $text = "<a href='http://twitgoo.com/{$match}'><img src='http://twitgoo.com/show/thumb/{$match}' class='twitpic' /></a><br>".$text;
     }
   }
   if (preg_match_all('#twitpic.com/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
@@ -319,7 +336,12 @@ function generate_thumbnail($query) {
     if ($query[0] == 'flickr') {
       $url = "http://api.flickr.com/services/rest/?method=flickr.photos.getSizes&photo_id=$id&api_key=".FLICKR_API_KEY;
       $flickr_xml = twitter_fetch($url);
-      preg_match('#"(http://.*_t\.jpg)"#', $flickr_xml, $matches);
+      if (setting_fetch('browser') == 'mobile') {
+        $pattern = '#"(http://.*_t\.jpg)"#';
+      } else {
+        $pattern = '#"(http://.*_m\.jpg)"#';
+      }
+      preg_match($pattern, $flickr_xml, $matches);
       header('Location: '. $matches[1]);
     }
     if ($query[0] == 'mobypicture') {
@@ -502,8 +524,6 @@ function twitter_replies_page() {
   $request = 'http://twitter.com/statuses/replies.json?page='.intval($_GET['page']);
   $tl = twitter_process($request);
   $tl = twitter_standard_timeline($tl, 'replies');
-  $tl += twitter_search('@'.user_current_username());
-  krsort($tl);
   $content = theme('status_form');
   $content .= theme('timeline', $tl);
   theme('page', 'Replies', $content);
