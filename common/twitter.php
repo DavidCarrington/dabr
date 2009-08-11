@@ -470,7 +470,7 @@ function twitter_confirmation_page($query) {
   $target = $query[2];
   $content = "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
   if ($action == 'block') {
-    $content .= "<ul><li>You won't show up in their list of friends</li><li>They won't see your updates on their home page</li><li>They won't be able to follow you</li><li>You <em>can</em> unblock them but you will need to follow them again afterwards</li></ul><p>Trying to block someone you've already got blocked will cause an error to occur, Twitter needs some fixing to get around this problem. There's also no current way to detect if they're blocked or not either.</p>";
+    $content .= "<ul><li>You won't show up in their list of friends</li><li>They won't see your updates on their home page</li><li>They won't be able to follow you</li><li>You <em>can</em> unblock them but you will need to follow them again afterwards</li></ul><p>There's no current way to detect if a user is blocked or not.</p>";
   }
   $content .= "<p><a href='$action/$target'>Yes please</a></p>";
   theme('Page', 'Confirm', $content);
