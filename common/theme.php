@@ -135,6 +135,7 @@ function theme_page($title, $content) {
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head><title>',$_SERVER['SERVER_NAME'],' - ',$title,'</title><base href="',BASE_URL,'" />
 '.theme('css').'
+</head>
 <body>', $body, '</body>
 </html>';
   exit();

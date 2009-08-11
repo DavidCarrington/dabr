@@ -1,7 +1,7 @@
 <?php
 function desktop_theme_status_form($text = '', $in_reply_to_id = NULL) {
   if (user_is_authenticated()) {
-    return '<form method="POST" action="update" onsubmit="return confirmShortTweet();">
+    return '<form method="post" action="update" onsubmit="return confirmShortTweet();">
   <textarea id="status" name="status" rows="3" style="width:100%; max-width: 400px;">'.$text.'</textarea>
   <div><input name="in_reply_to_id" value="'.$in_reply_to_id.'" type="hidden" /><input type="submit" value="Update" /> <span id="remaining">140</span></div>
 </form>
@@ -22,6 +22,6 @@ updateCount();
 
 function desktop_theme_search_form($query) {
   $query = stripslashes(htmlentities($query));
-  return "<form action='search' method='GET'><input name='query' value=\"$query\" style='width:100%; max-width: 300px' /><input type='submit' value='Search' /></form>";
+  return "<form action='search' method='get'><input name='query' value=\"$query\" style='width:100%; max-width: 300px' /><input type='submit' value='Search' /></form>";
 }
 ?>

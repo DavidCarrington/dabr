@@ -279,51 +279,51 @@ function twitter_photo_replace($text) {
   $tmp = strip_tags($text);
   if (preg_match_all('#twitgoo.com/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $match) {
-      $text = "<a href='http://twitgoo.com/{$match}'><img src='http://twitgoo.com/show/thumb/{$match}' class='twitpic' /></a><br>".$text;
+      $text = "<a href='http://twitgoo.com/{$match}'><img src='http://twitgoo.com/show/thumb/{$match}' class='twitpic' /></a><br />".$text;
     }
   }
   if (preg_match_all('#twitpic.com/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $match) {
-      $text = "<a href='http://twitpic.com/{$match}'><img src='http://twitpic.com/show/thumb/{$match}' class='twitpic' /></a><br>".$text;
+      $text = "<a href='http://twitpic.com/{$match}'><img src='http://twitpic.com/show/thumb/{$match}' class='twitpic' /></a><br />".$text;
     }
   }
   if (preg_match_all('#yfrog.([a-zA-Z.]{2,5})/([0-9a-zA-Z]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[2] as $key => $match) {
-      $text = "<a href='http://{$matches[0][$key]}'><img src='http://yfrog.{$matches[1][$key]}/{$match}.th.jpg' /></a><br>".$text;
+      $text = "<a href='http://{$matches[0][$key]}'><img src='http://yfrog.{$matches[1][$key]}/{$match}.th.jpg' /></a><br />".$text;
     }
   }
   if (preg_match_all('#twitxr.com/[^ ]+/updates/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
       $thumb = 'http://twitxr.com/thumbnails/'.substr($match, -2).'/'.$match.'_th.jpg';
-      $text = "<a href='http://{$matches[0][$key]}'><img src='$thumb' /></a><br>".$text;
+      $text = "<a href='http://{$matches[0][$key]}'><img src='$thumb' /></a><br />".$text;
     }
   }
   if (preg_match_all('#moblog.net/view/([\d]+)/#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
-      $text = "<a href='http://{$matches[0][$key]}'><img src='moblog/$match' /></a><br>".$text;
+      $text = "<a href='http://{$matches[0][$key]}'><img src='moblog/$match' /></a><br />".$text;
     }
   }
   if (preg_match_all('#hellotxt.com/i/([\d\w]+)#i', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
-      $text = "<a href='http://{$matches[0][$key]}'><img src='http://hellotxt.com/image/{$match}.s.jpg' /></a><br>".$text;
+      $text = "<a href='http://{$matches[0][$key]}'><img src='http://hellotxt.com/image/{$match}.s.jpg' /></a><br />".$text;
     }
   }
   if (defined('FLICKR_API_KEY')) {
     if(preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
       foreach ($matches[1] as $key => $match) {
-        $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$match' /></a><br>".$text;
+        $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$match' /></a><br />".$text;
       }
     }
     if(preg_match_all('#flic.kr/p/([\w\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
       foreach ($matches[1] as $key => $match) {
         $id = flickr_decode($match);
-        $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$id' /></a><br>".$text;
+        $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$id' /></a><br />".$text;
       }
     }
   }
   if (defined('MOBYPICTURE_API_KEY') && preg_match_all('#mobypicture.com/\?([a-z0-9]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
-      $text = "<a href='http://{$matches[0][$key]}'><img src='mobypicture/$match' /></a><br>".$text;
+      $text = "<a href='http://{$matches[0][$key]}'><img src='mobypicture/$match' /></a><br />".$text;
     }
   }
   return $text;
@@ -386,7 +386,7 @@ function format_interval($timestamp, $granularity = 2) {
 }
 
 function twitter_status_page($query) {
-  $id = (int) $query[1];
+  $id = (float) $query[1];
   if ($id) {
     $request = "http://twitter.com/statuses/show/{$id}.json";
     $status = twitter_process($request);
@@ -409,7 +409,7 @@ function twitter_thread_timeline($thread_id) {
 }
 
 function twitter_retweet_page($query) {
-  $id = (int) $query[1];
+  $id = (float) $query[1];
   if ($id) {
     $request = "http://twitter.com/statuses/show/{$id}.json";
     $tl = twitter_process($request);
@@ -429,7 +429,7 @@ function twitter_refresh($page = NULL) {
 }
 
 function twitter_delete_page($query) {
-  $id = (int) $query[1];
+  $id = (float) $query[1];
   if ($id) {
     $request = "http://twitter.com/statuses/destroy/{$id}.json?page=".intval($_GET['page']);
     $tl = twitter_process($request, true);
@@ -503,7 +503,7 @@ function twitter_update() {
   if ($status) {
     $request = 'http://twitter.com/statuses/update.json';
     $post_data = array('source' => 'dabr', 'status' => $status);
-    $in_reply_to_id = (int) $_POST['in_reply_to_id'];
+    $in_reply_to_id = (float) $_POST['in_reply_to_id'];
     if ($in_reply_to_id > 0) {
       $post_data['in_reply_to_status_id'] = $in_reply_to_id;
     }
@@ -569,9 +569,9 @@ function theme_directs_form($to) {
   if ($to) {
     $html_to = "Sending direct message to <b>$to</b><input name='to' value='$to' type='hidden'>";
   } else {
-    $html_to = "To: <input name='to'><br>Message:";
+    $html_to = "To: <input name='to'><br />Message:";
   }
-  $content = "<form action='directs/send' method='post'>$html_to<br><textarea name='message' style='width: 100%' rows='3'></textarea><br><input type='submit' value='Send'></form>";
+  $content = "<form action='directs/send' method='post'>$html_to<br /><textarea name='message' style='width: 100%' rows='3'></textarea><br /><input type='submit' value='Send'></form>";
   return $content;
 }
 
@@ -610,7 +610,7 @@ function twitter_user_page($query) {
   if ($screen_name) {
     $content = '';
     if ($query[2] == 'reply') {
-      $in_reply_to_id = (int) $query[3];
+      $in_reply_to_id = (float) $query[3];
       $content .= "<p>In reply to tweet ID $in_reply_to_id...</p>";
     } else {
       $in_reply_to_id = 0;
@@ -655,7 +655,7 @@ function twitter_favourites_page($query) {
 }
 
 function twitter_mark_favourite_page($query) {
-  $id = (int) $query[1];
+  $id = (float) $query[1];
   if ($query[0] == 'unfavourite') {
     $request = "http://twitter.com/favorites/destroy/$id.json";
   } else {
@@ -689,7 +689,7 @@ function twitter_hashtag_page($query) {
 
 function theme_status_form($text = '', $in_reply_to_id = NULL) {
   if (user_is_authenticated()) {
-    return "<form method='POST' action='update'><input name='status' value='{$text}' maxlength='140' /> <input name='in_reply_to_id' value='{$in_reply_to_id}' type='hidden' /><input type='submit' value='Update' /></form>";
+    return "<form method='post' action='update'><input name='status' value='{$text}' maxlength='140' /> <input name='in_reply_to_id' value='{$in_reply_to_id}' type='hidden' /><input type='submit' value='Update' /></form>";
   }
 }
 
@@ -701,7 +701,7 @@ function theme_status($status) {
   $out = theme('status_form', "@{$status->user->screen_name} ");
   $out .= "<p>$parsed</p>
 <table align='center'><tr><td>$avatar</td><td><a href='user/{$status->user->screen_name}'>{$status->user->screen_name}</a>
-<br>$time_since</td></tr></table>";
+<br />$time_since</td></tr></table>";
   if (strtolower(user_current_username()) == strtolower($status->user->screen_name)) {
     $out .= "<form action='delete/{$status->id}' method='post'><input type='submit' value='Delete without confirmation' /></form>";
   }
@@ -712,7 +712,7 @@ function theme_retweet($status) {
   $text = "RT @{$status->user->screen_name}: {$status->text}";
   $length = strlen($text);
   $from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
-  $content = "<form action='update' method='post'><input type='hidden' name='from' value='$from' /><textarea name='status' cols='30' rows='5'>$text</textarea><br><input type='submit' value='Retweet'> Length before editing: $length</form>";
+  $content = "<form action='update' method='post'><input type='hidden' name='from' value='$from' /><textarea name='status' cols='30' rows='5'>$text</textarea><br /><input type='submit' value='Retweet'> Length before editing: $length</form>";
   return $content;
 }
 
@@ -722,11 +722,11 @@ function theme_user_header($user) {
   $out = "<table><tr><td><a href='$full_avatar'>".theme('avatar', $user->profile_image_url, 1)."</a></td>
 <td><b>{$name}</b>
 <small>
-<br>Bio: {$user->description}
-<br>Link: <a href='{$user->url}'>{$user->url}</a>
-<br>Location: {$user->location}
+<br />Bio: {$user->description}
+<br />Link: <a href='{$user->url}'>{$user->url}</a>
+<br />Location: {$user->location}
 </small>
-<br><a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a> ";
+<br /><a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a> ";
 
   $out .= "| <a href='follow/{$user->screen_name}'>Follow</a>";
   $out .= " | <a href='unfollow/{$user->screen_name}'>Unfollow</a>";
@@ -794,13 +794,13 @@ function twitter_standard_timeline($feed, $source) {
         $new = $status;
         $new->from = $new->user;
         unset($new->user);
-        $output[(string) $new->id] = $new;
+        $output[(float) $new->id] = $new;
       }
       return $output;
     
     case 'search':
       foreach ($feed->results as $status) {
-        $output[(string) $status->id] = (object) array(
+        $output[(float) $status->id] = (object) array(
           'id' => $status->id,
           'text' => $status->text,
           'source' => strpos($status->source, '&lt;') !== false ? html_entity_decode($status->source) : $status->source,
@@ -925,7 +925,7 @@ function theme_timeline($feed) {
       $source .= " in reply to <a href='status/{$status->in_reply_to_status_id}'>{$status->in_reply_to_screen_name}</a>";
     }
     $row = array(
-      "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br>{$text} <small>$source</small>",
+      "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br />{$text} <small>$source</small>",
     );
     if ($page != 'user' && $avatar) {
       array_unshift($row, $avatar);
@@ -957,7 +957,7 @@ function theme_followers($feed) {
     $name = theme('full_name', $user);
     $rows[] = array(
       theme('avatar', $user->profile_image_url),
-      "{$name} - {$user->location}<small><br>{$user->description}</small>",
+      "{$name} - {$user->location}<small><br />{$user->description}</small>",
     );
   }
   $content = theme('table', array(), $rows, array('class' => 'followers'));
@@ -986,7 +986,7 @@ function theme_search_results($feed) {
 
     $row = array(
       theme('avatar', $status->profile_image_url),
-      "<a href='user/{$status->from_user}'>{$status->from_user}</a> $actions - {$link}<br>{$text}",
+      "<a href='user/{$status->from_user}'>{$status->from_user}</a> $actions - {$link}<br />{$text}",
     );
     if (twitter_is_reply($status)) {
       $row = array('class' => 'reply', 'data' => $row);
@@ -1000,7 +1000,7 @@ function theme_search_results($feed) {
 
 function theme_search_form($query) {
   $query = stripslashes(htmlentities($query));
-  return "<form action='search' method='GET'><input name='query' value=\"$query\" /><input type='submit' value='Search' /></form>";
+  return "<form action='search' method='get'><input name='query' value=\"$query\" /><input type='submit' value='Search' /></form>";
 }
 
 function theme_external_link($url) {
