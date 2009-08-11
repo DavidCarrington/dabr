@@ -53,7 +53,7 @@ function worksafe_theme_timeline($feed) {
       $from = "<small>in reply to <a href='status/{$status->in_reply_to_status_id}'>{$status->in_reply_to_screen_name}</a></small>";
     }
     $row = array(
-      "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link $source<br><span class='text'>{$text} {$from}</span>",
+      "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link $source<br /><span class='text'>{$text} {$from}</span>",
     );
     if ($page != 'user' && $avatar) {
       array_unshift($row, $avatar);

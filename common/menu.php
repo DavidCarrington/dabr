@@ -58,6 +58,7 @@ function theme_menu_both($menu) {
   $links = array();
   foreach (menu_visible_items() as $url => $page) {
     $title = $url ? $url : 'home';
+    if (!$url) $url = BASE_URL; // Shouldn't be required, due to <base> element but some browsers are stupid.
     if ($menu == 'bottom' && isset($page['accesskey'])) {
       $links[] = "<a href='$url' accesskey='{$page['accesskey']}'>$title</a> {$page['accesskey']}";
     } else {

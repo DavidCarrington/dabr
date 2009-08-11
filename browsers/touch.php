@@ -22,6 +22,7 @@ function touch_theme_page($title, $content) {
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head><meta name="viewport" content="width=320"/><title>',$title,'</title><base href="',BASE_URL,'" />
 '.theme('css').'
+</head>
 <body id="thepage">', $body, '</body>
 </html>';
   exit();

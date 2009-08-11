@@ -78,11 +78,11 @@ function settings_page($args) {
   $content .= theme('options', $modes, $GLOBALS['current_theme']);
   $content .= '</select></p><p>External links go:<br /><select name="gwt">';
   $content .= theme('options', $gwt, setting_fetch('gwt', $GLOBALS['current_theme'] == 'text' ? 'on' : 'off'));
-  $content .= '</select><small><br>Google Web Transcoder (GWT) converts third-party sites into small, speedy pages suitable for older phones and people with less bandwidth.</small></p>';
+  $content .= '</select><small><br />Google Web Transcoder (GWT) converts third-party sites into small, speedy pages suitable for older phones and people with less bandwidth.</small></p>';
   $content .= '<p><label><input type="checkbox" name="reverse" value="yes" '. (setting_fetch('reverse') == 'yes' ? ' checked="checked" ' : '') .' /> Attempt to reverse the conversation thread view.</label></p>';
-  $content .= '<input type="submit" value="Save" /></form>';
+  $content .= '<p><input type="submit" value="Save" /></p></form>';
   
-  $content .= '<hr><p>Visit <a href="reset">Reset</a> if things go horribly wrong - it will log you out and clear all settings.</p>';
+  $content .= '<hr /><p>Visit <a href="reset">Reset</a> if things go horribly wrong - it will log you out and clear all settings.</p>';
   
   return theme('page', 'Settings', $content);
 }
