@@ -18,7 +18,8 @@ function user_oauth() {
   
   if ($oauth_token = $_GET['oauth_token']) {
     // Generate ACCESS token request
-    $response = twitter_process('https://twitter.com/oauth/access_token');
+    $params = array('oauth_verifier' => $_GET['oauth_verifier']);
+    $response = twitter_process('https://twitter.com/oauth/access_token', $params);
     parse_str($response, $token);
     
     // Store ACCESS tokens in COOKIE
@@ -35,7 +36,8 @@ function user_oauth() {
     
   } else {
     // Generate AUTH token request
-    $response = twitter_process('https://twitter.com/oauth/request_token');
+    $params = array('oauth_callback' => BASE_URL.'oauth');
+    $response = twitter_process('https://twitter.com/oauth/request_token', $params);
     parse_str($response, $token);
     
     // Save secret token to session to validate the result that comes back from Twitter
@@ -43,7 +45,6 @@ function user_oauth() {
     
     // redirect user to authorisation URL
     $authorise_url = 'https://twitter.com/oauth/authorize?oauth_token='.$token['oauth_token'];
-    $authorise_url .= '&oauth_callback='.urlencode(BASE_URL.'oauth');
     header("Location: $authorise_url");
   }
 }
