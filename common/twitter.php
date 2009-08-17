@@ -388,8 +388,8 @@ function format_interval($timestamp, $granularity = 2) {
 }
 
 function twitter_status_page($query) {
-  $id = (float) $query[1];
-  if ($id) {
+  $id = (string) $query[1];
+  if (is_numeric($id)) {
     $request = "http://twitter.com/statuses/show/{$id}.json";
     $status = twitter_process($request);
     $content = theme('status', $status);
@@ -411,8 +411,8 @@ function twitter_thread_timeline($thread_id) {
 }
 
 function twitter_retweet_page($query) {
-  $id = (float) $query[1];
-  if ($id) {
+  $id = (string) $query[1];
+  if (is_numeric($id)) {
     $request = "http://twitter.com/statuses/show/{$id}.json";
     $tl = twitter_process($request);
     $content = theme('retweet', $tl);
@@ -431,8 +431,8 @@ function twitter_refresh($page = NULL) {
 }
 
 function twitter_delete_page($query) {
-  $id = (float) $query[1];
-  if ($id) {
+  $id = (string) $query[1];
+  if (is_numeric($id)) {
     $request = "http://twitter.com/statuses/destroy/{$id}.json?page=".intval($_GET['page']);
     $tl = twitter_process($request, true);
     twitter_refresh('user/'.user_current_username());
@@ -505,8 +505,8 @@ function twitter_update() {
   if ($status) {
     $request = 'http://twitter.com/statuses/update.json';
     $post_data = array('source' => 'dabr', 'status' => $status);
-    $in_reply_to_id = (float) $_POST['in_reply_to_id'];
-    if ($in_reply_to_id > 0) {
+    $in_reply_to_id = (string) $_POST['in_reply_to_id'];
+    if (is_numeric($in_reply_to_id)) {
       $post_data['in_reply_to_status_id'] = $in_reply_to_id;
     }
     $b = twitter_process($request, $post_data);
@@ -612,8 +612,10 @@ function twitter_user_page($query) {
   if ($screen_name) {
     $content = '';
     if ($query[2] == 'reply') {
-      $in_reply_to_id = (float) $query[3];
-      $content .= "<p>In reply to tweet ID $in_reply_to_id...</p>";
+      $in_reply_to_id = (string) $query[3];
+      if (is_numeric($in_reply_to_id)) {
+        $content .= "<p>In reply to tweet ID $in_reply_to_id...</p>";
+      }
     } else {
       $in_reply_to_id = 0;
     }
@@ -657,7 +659,8 @@ function twitter_favourites_page($query) {
 }
 
 function twitter_mark_favourite_page($query) {
-  $id = (float) $query[1];
+  $id = (string) $query[1];
+  if (!is_numeric($id)) return;
   if ($query[0] == 'unfavourite') {
     $request = "http://twitter.com/favorites/destroy/$id.json";
   } else {
@@ -796,13 +799,13 @@ function twitter_standard_timeline($feed, $source) {
         $new = $status;
         $new->from = $new->user;
         unset($new->user);
-        $output[(float) $new->id] = $new;
+        $output[(string) $new->id] = $new;
       }
       return $output;
     
     case 'search':
       foreach ($feed->results as $status) {
-        $output[(float) $status->id] = (object) array(
+        $output[(string) $status->id] = (object) array(
           'id' => $status->id,
           'text' => $status->text,
           'source' => strpos($status->source, '&lt;') !== false ? html_entity_decode($status->source) : $status->source,
