@@ -146,6 +146,26 @@ function twitter_trends_page($query)
   theme('page', 'Trends', $content);
 }
 
+function js_counter($name)
+{
+	$script = '<script type="text/javascript">
+	function updateCount() 
+	{
+		document.getElementById("remaining").innerHTML = 140 - document.getElementById("' . $name . '").value.length;
+		setTimeout(updateCount, 400);
+	}
+
+	function confirmShortTweet() 
+	{
+		var len = document.getElementById("' . $name . '").value.length;
+		if (len < 30) return confirm("That\'s a short tweet.\nContinue?");
+		return true;
+	}
+	updateCount();
+</script>';
+	return $script;
+}
+
 function twitter_twitpic_page($query) {
   if (user_type() == 'oauth') {
     return theme('page', 'Error', '<p>You can\'t use Twitpic uploads while accessing Dabr using an OAuth login.</p>');
@@ -596,8 +616,9 @@ function theme_directs_form($to) {
   } else {
     $html_to = "To: <input name='to'><br />Message:";
   }
-  $content = "<form action='directs/send' method='post'>$html_to<br /><textarea name='message' style='width: 100%' rows='3'></textarea><br /><input type='submit' value='Send'></form>";
-  return $content;
+   $content = "<form action='directs/send' method='post'>$html_to<br><textarea name='message' cols='50' rows='3' id='message'></textarea><br><input type='submit' value='Send'><span id='remaining'>140</span></form>";
+   $content .= js_counter("message");
+   return $content;
 }
 
 function twitter_search_page() {
@@ -740,7 +761,8 @@ function theme_retweet($status) {
   $text = "RT @{$status->user->screen_name}: {$status->text}";
   $length = strlen($text);
   $from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
-  $content = "<form action='update' method='post'><input type='hidden' name='from' value='$from' /><textarea name='status' cols='30' rows='5'>$text</textarea><br /><input type='submit' value='Retweet'> Length before editing: $length</form>";
+  $content = "<form action='update' method='post'><input type='hidden' name='from' value='$from' /><textarea name='status' cols='50' rows='3' id='status'>$text</textarea><br><input type='submit' value='Retweet'><span id='remaining'>" . (140 - $length) ."</span></form>";
+  $content .= js_counter("status");  
   return $content;
 }
 
