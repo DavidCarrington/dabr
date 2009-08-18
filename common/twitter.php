@@ -121,7 +121,30 @@ menu_register(array(
     'security' => true,
     'callback' => 'twitter_twitpic_page',
   ),
+    'trends' => array(
+    'security' => true,
+    'callback' => 'twitter_trends_page',
+  ),
 ));
+
+function twitter_trends_page($query) 
+{
+  $trend_type = $query[1];
+  if($trend_type == '') $trend_type = 'current';
+  $request = 'http://search.twitter.com/trends/' . $trend_type . '.json';
+  $trends = twitter_process($request);
+  $search_url = 'search?query=';
+  foreach($trends->trends as $temp) {
+    foreach($temp as $trend) {
+      $row = array('<strong><a href="' . $search_url . urlencode($trend->query) . '">' . $trend->name . '</a></strong>');
+      $rows[] = $row;
+    }
+  }
+  //$headers = array('<p><a href="trends">Current</a> | <a href="trends/daily">Daily</a> | <a href="trends/weekly">Weekly</a></p>'); //output for daily and weekly not great at the moment
+  $headers = array();
+  $content = theme('table', $headers, $rows, array('class' => 'timeline'));
+  theme('page', 'Trends', $content);
+}
 
 function twitter_twitpic_page($query) {
   if (user_type() == 'oauth') {
