@@ -647,7 +647,7 @@ function twitter_search($search_query) {
   if ($page == 0) $page = 1;
   $request = 'http://search.twitter.com/search.json?q=' . urlencode($search_query).'&page='.$page;
   $tl = twitter_process($request);
-  $tl = twitter_standard_timeline($tl, 'search');
+  $tl = twitter_standard_timeline($tl->results, 'search');
   return $tl;
 }
 
@@ -850,7 +850,7 @@ function twitter_standard_timeline($feed, $source) {
       return $output;
     
     case 'search':
-      foreach ($feed->results as $status) {
+      foreach ($feed as $status) {
         $output[(string) $status->id] = (object) array(
           'id' => $status->id,
           'text' => $status->text,
