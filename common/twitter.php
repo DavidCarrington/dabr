@@ -834,6 +834,7 @@ function twitter_date($format, $timestamp = null) {
 
 function twitter_standard_timeline($feed, $source) {
   $output = array();
+  if (!is_array($feed)) return $output;
   switch ($source) {
     case 'favourites':
     case 'friends':
