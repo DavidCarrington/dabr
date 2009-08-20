@@ -127,6 +127,18 @@ menu_register(array(
   ),
 ));
 
+function twitter_block_exists($query) 
+{
+	//http://apiwiki.twitter.com/Twitter-REST-API-Method%3A-blocks-blocking-ids
+	//Get an array of all ids the authenticated user is blocking
+	$request = 'http://twitter.com/blocks/blocking/ids.json';
+	$blocked = twitter_process($request);
+	
+	//bool in_array  ( mixed $needle  , array $haystack  [, bool $strict  ] )		
+	//If the authenticate user has blocked $query it will appear in the array
+	return in_array($query,$blocked);
+}
+
 function twitter_trends_page($query) 
 {
   $trend_type = $query[1];
@@ -513,7 +525,7 @@ function twitter_confirmation_page($query) {
   $target = $query[2];
   $content = "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
   if ($action == 'block') {
-    $content .= "<ul><li>You won't show up in their list of friends</li><li>They won't see your updates on their home page</li><li>They won't be able to follow you</li><li>You <em>can</em> unblock them but you will need to follow them again afterwards</li></ul><p>There's no current way to detect if a user is blocked or not.</p>";
+    $content .= "<ul><li>You won't show up in their list of friends</li><li>They won't see your updates on their home page</li><li>They won't be able to follow you</li><li>You <em>can</em> unblock them but you will need to follow them again afterwards</li></ul>";
   }
   $content .= "<p><a href='$action/$target'>Yes please</a></p>";
   theme('Page', 'Confirm', $content);
@@ -780,10 +792,16 @@ function theme_user_header($user) {
 
   $out .= "| <a href='follow/{$user->screen_name}'>Follow</a>";
   $out .= " | <a href='unfollow/{$user->screen_name}'>Unfollow</a>";
-
-  $out.= " | <a href='confirm/block/{$user->screen_name}'>Block</a>
- | <a href='unblock/{$user->screen_name}'>Unblock</a>
-| <a href='friends/{$user->screen_name}'>{$user->friends_count} friends</a>
+  
+  if (twitter_block_exists($user->id))
+  {
+	$out.= " | <a href='unblock/{$user->screen_name}'>Unblock</a>";
+  }
+  else
+  {  
+	$out.= " | <a href='confirm/block/{$user->screen_name}'>Block</a>";
+  }
+  $out.= " | <a href='friends/{$user->screen_name}'>{$user->friends_count} friends</a>
 | <a href='favourites/{$user->screen_name}'>Favourites</a>
 | <a href='directs/create/{$user->screen_name}'>Direct Message</a>
 </td></table>";
