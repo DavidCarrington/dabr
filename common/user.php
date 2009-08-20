@@ -109,7 +109,7 @@ function user_is_authenticated() {
   
   if (!$GLOBALS['user']['username']) {
     if ($_POST['username'] && $_POST['password']) {
-      $GLOBALS['user']['username'] = $_POST['username'];
+      $GLOBALS['user']['username'] = trim($_POST['username']);
       $GLOBALS['user']['password'] = $_POST['password'];
       $GLOBALS['user']['type'] = 'normal';
       _user_save_cookie($_POST['stay-logged-in'] == 'yes');
