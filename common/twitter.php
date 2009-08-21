@@ -520,15 +520,30 @@ function twitter_block_page($query) {
   }
 }
 
-function twitter_confirmation_page($query) {
-  $action = $query[1];
-  $target = $query[2];
-  $content = "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
-  if ($action == 'block') {
-    $content .= "<ul><li>You won't show up in their list of friends</li><li>They won't see your updates on their home page</li><li>They won't be able to follow you</li><li>You <em>can</em> unblock them but you will need to follow them again afterwards</li></ul>";
-  }
-  $content .= "<p><a href='$action/$target'>Yes please</a></p>";
-  theme('Page', 'Confirm', $content);
+function twitter_confirmation_page($query) 
+{
+	// the URL /confirm can be passed parameters like so /confirm/param1/param2/param3 etc.
+	$action = $query[1];
+	$target = $query[2];	//The name of the user we are doing this action on
+	$target_id = $query[3];	//The targets's ID.  Needed to check if they are being blocked.
+
+	if (twitter_block_exists($target_id)) //Is the target blocked by the user?
+	{
+		$content  = "<p>Are you really sure you want to <strong>Unblock $target</strong>?</p>";
+		$content .= "<ul><li>They will see your updates on their home page if they follow you again.</li><li>You <em>can</em> block them again if you want.</li></ul>";		
+		$content .= "<a href='unblock/$target'>Unblock $target</a>";
+		theme('Page', 'Confirm', $content);
+	}
+	else
+	{
+		$content = "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
+		if ($action == 'block') 
+		{
+			$content .= "<ul><li>You won't show up in their list of friends</li><li>They won't see your updates on their home page</li><li>They won't be able to follow you</li><li>You <em>can</em> unblock them but you will need to follow them again afterwards</li></ul>";
+		}
+		$content .= "<p><a href='$action/$target'>Yes please</a></p>";
+		theme('Page', 'Confirm', $content);
+	}
 }
 
 function twitter_friends_page($query) {
@@ -793,14 +808,9 @@ function theme_user_header($user) {
   $out .= "| <a href='follow/{$user->screen_name}'>Follow</a>";
   $out .= " | <a href='unfollow/{$user->screen_name}'>Unfollow</a>";
   
-  if (twitter_block_exists($user->id))
-  {
-	$out.= " | <a href='unblock/{$user->screen_name}'>Unblock</a>";
-  }
-  else
-  {  
-	$out.= " | <a href='confirm/block/{$user->screen_name}'>Block</a>";
-  }
+	//We need to pass the User Name and the User ID.  The Name is presented in the UI, the ID is used in checking
+	$out.= " | <a href='confirm/block/{$user->screen_name}/{$user->id}'>Block | Unblock</a>";
+
   $out.= " | <a href='friends/{$user->screen_name}'>{$user->friends_count} friends</a>
 | <a href='favourites/{$user->screen_name}'>Favourites</a>
 | <a href='directs/create/{$user->screen_name}'>Direct Message</a>
