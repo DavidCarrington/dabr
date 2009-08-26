@@ -333,57 +333,59 @@ function flickr_encode($num) {
 }
 
 function twitter_photo_replace($text) {
+  $images = array();
   $tmp = strip_tags($text);
   if (preg_match_all('#twitgoo.com/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $match) {
-      $text = "<a href='http://twitgoo.com/{$match}'><img src='http://twitgoo.com/show/thumb/{$match}' class='twitpic' /></a><br />".$text;
+      $images[] = theme('external_link', "http://twitgoo.com/{$match}", "<img src='http://twitgoo.com/show/thumb/{$match}' class='twitpic' />");
     }
   }
   if (preg_match_all('#twitpic.com/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $match) {
-      $text = "<a href='http://twitpic.com/{$match}'><img src='http://twitpic.com/show/thumb/{$match}' class='twitpic' /></a><br />".$text;
+       $images[] = theme('external_link', "http://twitpic.com/{$match}", "<img src='http://twitpic.com/show/thumb/{$match}' class='twitpic' />");
     }
   }
   if (preg_match_all('#yfrog.([a-zA-Z.]{2,5})/([0-9a-zA-Z]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[2] as $key => $match) {
-      $text = "<a href='http://{$matches[0][$key]}'><img src='http://yfrog.{$matches[1][$key]}/{$match}.th.jpg' /></a><br />".$text;
+       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='http://yfrog.{$matches[1][$key]}/{$match}.th.jpg' />");
     }
   }
   if (preg_match_all('#twitxr.com/[^ ]+/updates/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
       $thumb = 'http://twitxr.com/thumbnails/'.substr($match, -2).'/'.$match.'_th.jpg';
-      $text = "<a href='http://{$matches[0][$key]}'><img src='$thumb' /></a><br />".$text;
+       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='$thumb' />");
     }
   }
   if (preg_match_all('#moblog.net/view/([\d]+)/#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
-      $text = "<a href='http://{$matches[0][$key]}'><img src='moblog/$match' /></a><br />".$text;
+       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='moblog/$match' />");
     }
   }
   if (preg_match_all('#hellotxt.com/i/([\d\w]+)#i', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
-      $text = "<a href='http://{$matches[0][$key]}'><img src='http://hellotxt.com/image/{$match}.s.jpg' /></a><br />".$text;
+       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='http://hellotxt.com/image/{$match}.s.jpg' />");
     }
   }
   if (defined('FLICKR_API_KEY')) {
     if(preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
       foreach ($matches[1] as $key => $match) {
-        $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$match' /></a><br />".$text;
+         $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='flickr/$match' />");
       }
     }
     if(preg_match_all('#flic.kr/p/([\w\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
       foreach ($matches[1] as $key => $match) {
         $id = flickr_decode($match);
-        $text = "<a href='http://{$matches[0][$key]}'><img src='flickr/$id' /></a><br />".$text;
+         $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='flickr/$id' />");
       }
     }
   }
   if (defined('MOBYPICTURE_API_KEY') && preg_match_all('#mobypicture.com/\?([a-z0-9]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
-      $text = "<a href='http://{$matches[0][$key]}'><img src='mobypicture/$match' /></a><br />".$text;
+       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='mobypicture/$match' />");
     }
   }
-  return $text;
+  if (empty($images)) return $text;
+  return implode('<br />', $images).'<br />'.$text;
 }
 
 function generate_thumbnail($query) {
@@ -796,11 +798,12 @@ function theme_retweet($status) {
 function theme_user_header($user) {
   $name = theme('full_name', $user);
   $full_avatar = str_replace('_normal.', '.', $user->profile_image_url);
+  $link = theme('external_link', $user->url);
   $out = "<table><tr><td><a href='$full_avatar'>".theme('avatar', $user->profile_image_url, 1)."</a></td>
 <td><b>{$name}</b>
 <small>
 <br />Bio: {$user->description}
-<br />Link: <a href='{$user->url}'>{$user->url}</a>
+<br />Link: {$link}</a>
 <br />Location: {$user->location}
 </small>
 <br /><a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a> ";
@@ -1082,8 +1085,9 @@ function theme_search_form($query) {
   return "<form action='search' method='get'><input name='query' value=\"$query\" /><input type='submit' value='Search' /></form>";
 }
 
-function theme_external_link($url) {
-  return "<a href='$url' target='_blank'>$url</a>";
+function theme_external_link($url, $content = null) {
+  if (!$content) $content = $url;
+  return "<a href='$url' target='_blank'>$content</a>";
 }
 
 function theme_pagination() {
