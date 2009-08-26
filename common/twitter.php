@@ -803,11 +803,11 @@ function theme_user_header($user) {
   $date_joined = date('jS M Y', $raw_date_joined);
   $days_on_twitter = (time() - $raw_date_joined) / 86400;
   $tweets_per_day = round($user->statuses_count / $days_on_twitter, 1);
-  $out = "<table><tr><td><a href='$full_avatar'>".theme('avatar', $user->profile_image_url, 1)."</a></td>
+  $out = "<table><tr><td>".theme('external_link', $full_avatar, theme('avatar', $user->profile_image_url, 1))."</td>
 <td><b>{$name}</b>
 <small>
 <br />Bio: {$user->description}
-<br />Link: {$link}</a>
+<br />Link: {$link}
 <br />Location: {$user->location}
 <br />Joined: {$date_joined} (~$tweets_per_day tweets per day)
 </small>
