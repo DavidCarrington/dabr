@@ -799,23 +799,33 @@ function theme_user_header($user) {
   $name = theme('full_name', $user);
   $full_avatar = str_replace('_normal.', '.', $user->profile_image_url);
   $link = theme('external_link', $user->url);
+  $raw_date_joined = strtotime($user->created_at);
+  $date_joined = date('jS M Y', $raw_date_joined);
+  $days_on_twitter = (time() - $raw_date_joined) / 86400;
+  $tweets_per_day = round($user->statuses_count / $days_on_twitter, 1);
   $out = "<table><tr><td><a href='$full_avatar'>".theme('avatar', $user->profile_image_url, 1)."</a></td>
 <td><b>{$name}</b>
 <small>
 <br />Bio: {$user->description}
 <br />Link: {$link}</a>
 <br />Location: {$user->location}
+<br />Joined: {$date_joined} (~$tweets_per_day tweets per day)
 </small>
-<br /><a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a> ";
+<br />
+{$user->statuses_count} tweets |
+<a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a> ";
 
-  $out .= "| <a href='follow/{$user->screen_name}'>Follow</a>";
-  $out .= " | <a href='unfollow/{$user->screen_name}'>Unfollow</a>";
+  if ($user->following !== true) {
+    $out .= "| <a href='follow/{$user->screen_name}'>Follow</a>";
+  } else {
+    $out .= " | <a href='unfollow/{$user->screen_name}'>Unfollow</a>";
+  }
   
 	//We need to pass the User Name and the User ID.  The Name is presented in the UI, the ID is used in checking
 	$out.= " | <a href='confirm/block/{$user->screen_name}/{$user->id}'>Block | Unblock</a>";
 
   $out.= " | <a href='friends/{$user->screen_name}'>{$user->friends_count} friends</a>
-| <a href='favourites/{$user->screen_name}'>Favourites</a>
+| <a href='favourites/{$user->screen_name}'>{$user->favourites_count} favourites</a>
 | <a href='directs/create/{$user->screen_name}'>Direct Message</a>
 </td></table>";
   return $out;
