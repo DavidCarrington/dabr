@@ -488,11 +488,21 @@ function twitter_refresh($page = NULL) {
 }
 
 function twitter_delete_page($query) {
+  twitter_ensure_post_action();
+  
   $id = (string) $query[1];
   if (is_numeric($id)) {
     $request = "http://twitter.com/statuses/destroy/{$id}.json?page=".intval($_GET['page']);
     $tl = twitter_process($request, true);
     twitter_refresh('user/'.user_current_username());
+  }
+}
+
+function twitter_ensure_post_action() {
+  // This function is used to make sure the user submitted their action as an HTTP POST request
+  // It slightly increases security for actions such as Delete and Block
+  if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    die('Error: Invalid HTTP request method for this action.');
   }
 }
 
@@ -510,6 +520,7 @@ function twitter_follow_page($query) {
 }
 
 function twitter_block_page($query) {
+  twitter_ensure_post_action();
   $user = $query[1];
   if ($user) {
     if($query[0] == 'block'){
@@ -529,23 +540,28 @@ function twitter_confirmation_page($query)
 	$target = $query[2];	//The name of the user we are doing this action on
 	$target_id = $query[3];	//The targets's ID.  Needed to check if they are being blocked.
 
-	if (twitter_block_exists($target_id)) //Is the target blocked by the user?
-	{
-		$content  = "<p>Are you really sure you want to <strong>Unblock $target</strong>?</p>";
-		$content .= "<ul><li>They will see your updates on their home page if they follow you again.</li><li>You <em>can</em> block them again if you want.</li></ul>";		
-		$content .= "<a href='unblock/$target'>Unblock $target</a>";
-		theme('Page', 'Confirm', $content);
-	}
-	else
-	{
-		$content = "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
-		if ($action == 'block') 
-		{
-			$content .= "<ul><li>You won't show up in their list of friends</li><li>They won't see your updates on their home page</li><li>They won't be able to follow you</li><li>You <em>can</em> unblock them but you will need to follow them again afterwards</li></ul>";
-		}
-		$content .= "<p><a href='$action/$target'>Yes please</a></p>";
-		theme('Page', 'Confirm', $content);
-	}
+  switch ($action) {
+    case 'block':
+      if (twitter_block_exists($target_id)) //Is the target blocked by the user?
+      {
+        $action = 'unblock';
+        $content  = "<p>Are you really sure you want to <strong>Unblock $target</strong>?</p>";
+        $content .= '<ul><li>They will see your updates on their home page if they follow you again.</li><li>You <em>can</em> block them again if you want.</li></ul>';		
+      }
+      else
+      {
+        $content = "<p>Are you really sure you want to <strong>$action $target</strong>?</p>";
+        $content .= "<ul><li>You won't show up in their list of friends</li><li>They won't see your updates on their home page</li><li>They won't be able to follow you</li><li>You <em>can</em> unblock them but you will need to follow them again afterwards</li></ul>";
+      }
+      break;
+    
+    case 'delete':
+      $content = '<p>Are you really sure you want to delete your tweet?</p>';
+      $content .= "<ul><li>Tweet ID: <strong>$target</strong></li><li>There is no way to undo this action.</li></ul>";
+      break;
+  }    
+  $content .= "<form action='$action/$target' method='post'><p><input type='submit' value='Yes please' /></form>";
+  theme('Page', 'Confirm', $content);
 }
 
 function twitter_friends_page($query) {
@@ -573,6 +589,7 @@ function twitter_followers_page($query) {
 }
 
 function twitter_update() {
+  twitter_ensure_post_action();
   $status = twitter_url_shorten(stripslashes(trim($_POST['status'])));
   if ($status) {
     $request = 'http://twitter.com/statuses/update.json';
@@ -619,6 +636,7 @@ function twitter_directs_page($query) {
       theme('page', 'Create DM', $content);
     
     case 'send':
+      twitter_ensure_post_action();
       $to = trim(stripslashes($_POST['to']));
       $message = trim(stripslashes($_POST['message']));
       $request = 'http://twitter.com/direct_messages/new.json';
@@ -843,35 +861,20 @@ function theme_avatar($url, $force_large = false) {
   return "<img src='$url' height='$size' width='$size' />";
 }
 
-function theme_status_time_link($status, $is_link = true, $is_me = false) 
-{
-	$time = strtotime($status->created_at);
-	if ($time > 0) 
-	{
-		if (twitter_date('dmy') == twitter_date('dmy', $time)) 
-		{
-		$out = format_interval(time() - $time, 1). ' ago';
-		} 
-		else 
-		{
-			$out = twitter_date('H:i', $time);
-		}
-	} 
-	else 	
-	{
-		$out = $status->created_at;
-	}
-	
-	if ($is_link)
-	{
-		if ($is_me)
-		{
-			$out = "<a href='status/{$status->id}'><img src='images/trash.gif' /> $out</a>";
-		}
-		$out = "<a href='status/{$status->id}'>$out</a>";
-	}
-	
-	return "<small>$out</small>";
+function theme_status_time_link($status, $is_link = true) {
+  $time = strtotime($status->created_at);
+  if ($time > 0) {
+    if (twitter_date('dmy') == twitter_date('dmy', $time)) {
+      $out = format_interval(time() - $time, 1). ' ago';
+    } else {
+      $out = twitter_date('H:i', $time);
+    }
+  } else {
+    $out = $status->created_at;
+  }
+  if ($is_link)
+    $out = "<a href='status/{$status->id}'>$out</a>";
+  return "<small>$out</small>";
 }
 
 function twitter_date($format, $timestamp = null) {
@@ -1016,42 +1019,22 @@ function theme_timeline($feed) {
   $rows = array();
   $page = menu_current_page();
   $date_heading = false;
-  $username = user_current_username();
-  //echo "<!-- username is $username -->";
-  
-  foreach ($feed as $status) 
-  {
-    //If this tweet was written by the user, we can display a delete icon.
-	$name = $status->from->screen_name;
-	$username = user_current_username();
-	//echo "<!-- screenname is $name -->";
-	
-	$time = strtotime($status->created_at);
-    if ($time > 0) 
-	{
+  foreach ($feed as $status) {
+    $time = strtotime($status->created_at);
+    if ($time > 0) {
       $date = twitter_date('l jS F Y', strtotime($status->created_at));
-      if ($date_heading !== $date) 
-	  {
+      if ($date_heading !== $date) {
         $date_heading = $date;
         $rows[] = array(array(
           'data' => "<small><b>$date</b></small>",
           'colspan' => 2
         ));
       }
-    } 
-	else 
-	{
+    } else {
       $date = $status->created_at;
     }
     $text = twitter_parse_tags($status->text);
-	if ($name == $username)
-	{
-		$link = theme('status_time_link', $status, !$status->is_direct, true);
-	}
-	else
-	{
-		$link = theme('status_time_link', $status, !$status->is_direct);
-	}
+    $link = theme('status_time_link', $status, !$status->is_direct);
     $actions = theme('action_icons', $status);
     $avatar = theme('avatar', $status->from->profile_image_url);
     $source = $status->source ? " from {$status->source}" : '';
