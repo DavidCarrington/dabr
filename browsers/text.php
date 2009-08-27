@@ -20,6 +20,8 @@ function text_theme_action_icons($status) {
     } else {
       $actions[] = "<a href='favourite/{$status->id}'>FAV</a>";
     }
+  } else {
+    $actions[] = "<a href='directs/delete/{$status->id}'>DEL</a>";
   }
   $actions[] = "<a href='retweet/{$status->id}'>RT</a>";
   return implode(' ', $actions);

@@ -606,6 +606,13 @@ function twitter_replies_page() {
 function twitter_directs_page($query) {
   $action = strtolower(trim($query[1]));
   switch ($action) {
+    case 'delete':
+      $id = $query[2];
+      if (!is_numeric($id)) return;
+      $request = "http://twitter.com/direct_messages/destroy/$id.json";
+      twitter_process($request, true);
+      twitter_refresh();
+      
     case 'create':
       $to = $query[2];
       $content = theme('directs_form', $to);
@@ -1128,6 +1135,8 @@ function theme_action_icons($status) {
       $actions[] = "<a href='favourite/{$status->id}'><img src='images/star_grey.png' /></a>";
     }
     $actions[] = "<a href='retweet/{$status->id}'><img src='images/retweet.png' /></a>";
+  } else {
+    $actions[] = "<a href='directs/delete/{$status->id}'><img src='images/trash.gif' /></a>";
   }
   return implode(' ', $actions);
 }
