@@ -843,20 +843,35 @@ function theme_avatar($url, $force_large = false) {
   return "<img src='$url' height='$size' width='$size' />";
 }
 
-function theme_status_time_link($status, $is_link = true) {
-  $time = strtotime($status->created_at);
-  if ($time > 0) {
-    if (twitter_date('dmy') == twitter_date('dmy', $time)) {
-      $out = format_interval(time() - $time, 1). ' ago';
-    } else {
-      $out = twitter_date('H:i', $time);
-    }
-  } else {
-    $out = $status->created_at;
-  }
-  if ($is_link)
-    $out = "<a href='status/{$status->id}'>$out</a>";
-  return "<small>$out</small>";
+function theme_status_time_link($status, $is_link = true, $is_me = false) 
+{
+	$time = strtotime($status->created_at);
+	if ($time > 0) 
+	{
+		if (twitter_date('dmy') == twitter_date('dmy', $time)) 
+		{
+		$out = format_interval(time() - $time, 1). ' ago';
+		} 
+		else 
+		{
+			$out = twitter_date('H:i', $time);
+		}
+	} 
+	else 	
+	{
+		$out = $status->created_at;
+	}
+	
+	if ($is_link)
+	{
+		if ($is_me)
+		{
+			$out = "<a href='status/{$status->id}'><img src='images/trash.gif' /> $out</a>";
+		}
+		$out = "<a href='status/{$status->id}'>$out</a>";
+	}
+	
+	return "<small>$out</small>";
 }
 
 function twitter_date($format, $timestamp = null) {
@@ -1001,22 +1016,42 @@ function theme_timeline($feed) {
   $rows = array();
   $page = menu_current_page();
   $date_heading = false;
-  foreach ($feed as $status) {
-    $time = strtotime($status->created_at);
-    if ($time > 0) {
+  $username = user_current_username();
+  //echo "<!-- username is $username -->";
+  
+  foreach ($feed as $status) 
+  {
+    //If this tweet was written by the user, we can display a delete icon.
+	$name = $status->from->screen_name;
+	$username = user_current_username();
+	//echo "<!-- screenname is $name -->";
+	
+	$time = strtotime($status->created_at);
+    if ($time > 0) 
+	{
       $date = twitter_date('l jS F Y', strtotime($status->created_at));
-      if ($date_heading !== $date) {
+      if ($date_heading !== $date) 
+	  {
         $date_heading = $date;
         $rows[] = array(array(
           'data' => "<small><b>$date</b></small>",
           'colspan' => 2
         ));
       }
-    } else {
+    } 
+	else 
+	{
       $date = $status->created_at;
     }
     $text = twitter_parse_tags($status->text);
-    $link = theme('status_time_link', $status, !$status->is_direct);
+	if ($name == $username)
+	{
+		$link = theme('status_time_link', $status, !$status->is_direct, true);
+	}
+	else
+	{
+		$link = theme('status_time_link', $status, !$status->is_direct);
+	}
     $actions = theme('action_icons', $status);
     $avatar = theme('avatar', $status->from->profile_image_url);
     $source = $status->source ? " from {$status->source}" : '';
