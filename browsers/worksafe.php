@@ -15,6 +15,7 @@ function worksafe_theme_css() {
 table { width: 100%; }
 body, input, textarea { color: #666; font-family: sans-serif; font-size: 11px; }
 a { color: #447; text-decoration: none; }
+a img { border: 0; }
 tr.odd { background: #eee; }
 td { padding: 0.3em; }
 textarea, input { background: #eee; border: 1px solid #aaa; }
