@@ -1136,27 +1136,38 @@ function theme_pagination() {
   return '<p>'.implode(' | ', $links).'</p>';
 }
 
+
 function theme_action_icons($status) {
-  $user = $status->from->screen_name;
+  $from = $status->from->screen_name;
+  $current_user = user_current_username();
   $actions = array();
   
   if (!$status->is_direct) {
-    $actions[] = "<a href='user/{$user}/reply/{$status->id}'><img src='images/reply.png' /></a>";
+    $actions[] = theme('action_icon', "user/{$from}/reply/{$status->id}", 'images/reply.png', '@');
   }
-  if ($status->user->screen_name != user_current_username()) {
-    $actions[] = "<a href='directs/create/{$user}'><img src='images/dm.png' /></a>";
+  if ($from != $current_user) {
+    $actions[] = theme('action_icon', "directs/create/{$from}", 'images/dm.png', 'DM');
   }
   if (!$status->is_direct) {
     if ($status->favorited == '1') {
-      $actions[] = "<a href='unfavourite/{$status->id}'><img src='images/star.png' /></a>";
+      $actions[] = theme('action_icon', "unfavourite/{$status->id}", 'images/star.png', 'UNFAV');
     } else {
-      $actions[] = "<a href='favourite/{$status->id}'><img src='images/star_grey.png' /></a>";
+      $actions[] = theme('action_icon', "unfavourite/{$status->id}", 'images/star_grey.png', 'FAV');
     }
-    $actions[] = "<a href='retweet/{$status->id}'><img src='images/retweet.png' /></a>";
+    $actions[] = theme('action_icon', "retweet/{$status->id}", 'images/retweet.png', 'RT');
+    if ($from == $current_user) {
+      $actions[] = theme('action_icon', "confirm/delete/{$status->id}", 'images/trash.gif', 'DEL');
+    }
   } else {
-    $actions[] = "<a href='directs/delete/{$status->id}'><img src='images/trash.gif' /></a>";
+    $actions[] = theme('action_icon', "directs/delete/{$status->id}", 'images/trash.gif', 'DEL');
   }
+
   return implode(' ', $actions);
+}
+
+function theme_action_icon($url, $image_url, $text) {
+  // alt attribute left off to reduce bandwidth by about 720 bytes per page
+  return "<a href='$url'><img src='$image_url' /></a>";
 }
 
 ?>
