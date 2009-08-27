@@ -830,7 +830,14 @@ function theme_user_header($user) {
   $tweets_per_day = round($user->statuses_count / $days_on_twitter, 1);
   $out = "<table><tr><td>".theme('external_link', $full_avatar, theme('avatar', $user->profile_image_url, 1))."</td>
 <td><b>{$name}</b>
-<small>
+<small>";
+  if ($user->verified == true) {
+    $out .= '<br /><strong>Verified Account</strong>';
+  }
+  if ($user->protected == true) {
+    $out .= '<br /><strong>Private/Protected Tweets</strong>';
+  }
+  $out .= "
 <br />Bio: {$user->description}
 <br />Link: {$link}
 <br />Location: {$user->location}
