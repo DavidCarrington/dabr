@@ -1159,7 +1159,7 @@ function theme_action_icons($status) {
     if ($status->favorited == '1') {
       $actions[] = theme('action_icon', "unfavourite/{$status->id}", 'images/star.png', 'UNFAV');
     } else {
-      $actions[] = theme('action_icon', "unfavourite/{$status->id}", 'images/star_grey.png', 'FAV');
+      $actions[] = theme('action_icon', "favourite/{$status->id}", 'images/star_grey.png', 'FAV');
     }
     $actions[] = theme('action_icon', "retweet/{$status->id}", 'images/retweet.png', 'RT');
     if ($from == $current_user) {
