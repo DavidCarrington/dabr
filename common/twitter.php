@@ -127,6 +127,15 @@ menu_register(array(
   ),
 ));
 
+function friendship_exists($user_a)
+{
+	//This function shows if _a is following _b
+	$request = "http://twitter.com/friendships/exists.json?user_a=" . $user_a . "&user_b=" . user_current_username();
+	//The response will either be 'true' or 'false'. No need for any processing.
+	return twitter_process($request);
+
+}
+
 function twitter_block_exists($query) 
 {
 	//http://apiwiki.twitter.com/Twitter-REST-API-Method%3A-blocks-blocking-ids
@@ -666,9 +675,14 @@ function theme_directs_menu() {
 
 function theme_directs_form($to) {
   if ($to) {
-    $html_to = "Sending direct message to <b>$to</b><input name='to' value='$to' type='hidden'>";
+	
+	if (friendship_exists($to) != 1)
+	{
+		$html_to = "<em>Warning</em> <b>" . $to . "</b> is not following you. You cannot send them a Direct Message :-(<br/>";
+	}
+    $html_to .= "Sending direct message to <b>$to</b><input name='to' value='$to' type='hidden'>";
   } else {
-    $html_to = "To: <input name='to'><br />Message:";
+    $html_to .= "To: <input name='to'><br />Message:";
   }
    $content = "<form action='directs/send' method='post'>$html_to<br><textarea name='message' cols='50' rows='3' id='message'></textarea><br><input type='submit' value='Send'><span id='remaining'>140</span></form>";
    $content .= js_counter("message");
