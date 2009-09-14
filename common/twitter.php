@@ -236,7 +236,7 @@ function twitter_process($url, $post_data = false) {
   if (user_type() != 'oauth' && user_is_authenticated())
     curl_setopt($ch, CURLOPT_USERPWD, user_current_username().':'.$GLOBALS['user']['password']);
 
-  curl_setopt($ch, CURLOPT_VERBOSE, 1);
+  curl_setopt($ch, CURLOPT_VERBOSE, 0);
   curl_setopt($ch, CURLOPT_HEADER, 0);
   curl_setopt($ch, CURLOPT_TIMEOUT, 10);
   curl_setopt($ch, CURLOPT_USERAGENT, 'dabr');
