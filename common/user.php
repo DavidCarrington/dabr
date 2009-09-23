@@ -54,6 +54,14 @@ function user_oauth_sign(&$url, &$args = false) {
   
   $method = $args !== false ? 'POST' : 'GET';
   
+  // Move GET parameters out of $url and into $args
+  if (preg_match_all('#[?&]([^=]+)=([^&]+)#', $url, $matches, PREG_SET_ORDER)) {
+    foreach ($matches as $match) {
+      $args[$match[1]] = $match[2];
+    }
+    $url = substr($url, 0, strpos($url, '?'));
+  }
+  
   $sig_method = new OAuthSignatureMethod_HMAC_SHA1();
   $consumer = new OAuthConsumer(OAUTH_CONSUMER_KEY, OAUTH_CONSUMER_SECRET);
   $token = NULL;
@@ -66,10 +74,6 @@ function user_oauth_sign(&$url, &$args = false) {
   if ($oauth_token && $oauth_token_secret) {
     $token = new OAuthConsumer($oauth_token, $oauth_token_secret);
   }
-  if ((int) $_GET['page'] > 0) {
-    $method = 'GET';
-    $args['page'] = $_GET['page'];
-  }
   
   $request = OAuthRequest::from_consumer_and_token($consumer, $token, $method, $url, $args);
   $request->sign_request($sig_method, $consumer, $token);
@@ -77,6 +81,7 @@ function user_oauth_sign(&$url, &$args = false) {
   switch ($method) {
     case 'GET':
       $url = $request->to_url();
+      $args = false;
       return;
     case 'POST':
       $url = $request->get_normalized_http_url();
