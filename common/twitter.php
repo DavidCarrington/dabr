@@ -739,7 +739,7 @@ function twitter_user_page($query) {
       $in_reply_to_id = 0;
     }
     $user = twitter_user_info($screen_name);
-    if (user_is_current_user($user->screen_name)) {
+    if (!user_is_current_user($user->screen_name)) {
       $status = "@{$user->screen_name} ";
     } else {
       $status = '';
