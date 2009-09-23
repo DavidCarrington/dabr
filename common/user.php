@@ -126,6 +126,10 @@ function user_current_username() {
   return $GLOBALS['user']['username'];
 }
 
+function user_is_current_user($username) {
+  return (strcasecmp($username, user_current_username()) == 0);
+}
+
 function user_type() {
   return $GLOBALS['user']['type'];
 }

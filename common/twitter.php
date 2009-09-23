@@ -737,7 +737,7 @@ function twitter_user_page($query) {
       $in_reply_to_id = 0;
     }
     $user = twitter_user_info($screen_name);
-    if ($user->screen_name != user_current_username()) {
+    if (user_is_current_user($user->screen_name)) {
       $status = "@{$user->screen_name} ";
     } else {
       $status = '';
@@ -824,7 +824,7 @@ function theme_status($status) {
   $out .= "<p>$parsed</p>
 <table align='center'><tr><td>$avatar</td><td><a href='user/{$status->user->screen_name}'>{$status->user->screen_name}</a>
 <br />$time_since</td></tr></table>";
-  if (strtolower(user_current_username()) == strtolower($status->user->screen_name)) {
+  if (user_is_current_user($status->user->screen_name)) {
     $out .= "<form action='delete/{$status->id}' method='post'><input type='submit' value='Delete without confirmation' /></form>";
   }
   return $out;
@@ -1090,7 +1090,7 @@ function twitter_is_reply($status) {
     return false;
   }
   $user = user_current_username();
-  return preg_match("#@$user#", $status->text);
+  return preg_match("#@$user#i", $status->text);
 }
 
 function theme_followers($feed) {
@@ -1165,13 +1165,12 @@ function theme_pagination() {
 
 function theme_action_icons($status) {
   $from = $status->from->screen_name;
-  $current_user = user_current_username();
   $actions = array();
   
   if (!$status->is_direct) {
     $actions[] = theme('action_icon', "user/{$from}/reply/{$status->id}", 'images/reply.png', '@');
   }
-  if ($from != $current_user) {
+  if (user_is_current_user($from)) {
     $actions[] = theme('action_icon', "directs/create/{$from}", 'images/dm.png', 'DM');
   }
   if (!$status->is_direct) {
@@ -1181,7 +1180,7 @@ function theme_action_icons($status) {
       $actions[] = theme('action_icon', "favourite/{$status->id}", 'images/star_grey.png', 'FAV');
     }
     $actions[] = theme('action_icon', "retweet/{$status->id}", 'images/retweet.png', 'RT');
-    if ($from == $current_user) {
+    if (user_is_current_user($from)) {
       $actions[] = theme('action_icon', "confirm/delete/{$status->id}", 'images/trash.gif', 'DEL');
     }
   } else {
