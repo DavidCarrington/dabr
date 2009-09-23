@@ -127,13 +127,22 @@ menu_register(array(
   ),
 ));
 
-function friendship_exists($user_a)
-{
-	//This function shows if _a is following _b
-	$request = "http://twitter.com/friendships/exists.json?user_a=" . $user_a . "&user_b=" . user_current_username();
-	//The response will either be 'true' or 'false'. No need for any processing.
-	return twitter_process($request);
-
+function friendship_exists($user_a) {
+	//This function shows if _a is following the authenticated user
+	//Currently broken with OAuth
+	if (user_type() != 'oauth') {
+		$request = 'http://twitter.com/friendships/show.json?target_screen_name=' . $user_a;
+		$following = twitter_process($request);
+		
+		if ($following->relationship->target->following == 1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	//As OAuth isn't working properly, we'll assume the friendship does exist.
+	return true;
 }
 
 function twitter_block_exists($query) 
@@ -1170,7 +1179,7 @@ function theme_action_icons($status) {
   if (!$status->is_direct) {
     $actions[] = theme('action_icon', "user/{$from}/reply/{$status->id}", 'images/reply.png', '@');
   }
-  if (user_is_current_user($from)) {
+  if (!user_is_current_user($from)) {
     $actions[] = theme('action_icon', "directs/create/{$from}", 'images/dm.png', 'DM');
   }
   if (!$status->is_direct) {
