@@ -486,7 +486,7 @@ function twitter_status_page($query) {
 
 function twitter_thread_timeline($thread_id) {
   $request = "http://search.twitter.com/search/thread/{$thread_id}";
-  $tl = twitter_standard_timeline(json_decode(twitter_fetch($request)), 'thread');
+  $tl = twitter_standard_timeline(twitter_fetch($request), 'thread');
   return $tl;
 }
 
@@ -935,7 +935,7 @@ function twitter_date($format, $timestamp = null) {
 
 function twitter_standard_timeline($feed, $source) {
   $output = array();
-  if (!is_array($feed)) return $output;
+  if (!is_array($feed) && $source != 'thread') return $output;
   switch ($source) {
     case 'favourites':
     case 'friends':
