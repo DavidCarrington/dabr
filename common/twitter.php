@@ -126,7 +126,7 @@ menu_register(array(
     'callback' => 'twitter_trends_page',
   ),
 ));
-
+/*
 function long_url($shortURL)
 {
 	$url = "http://www.longurlplease.com/api/v1.1?q=" . $shortURL;
@@ -147,6 +147,7 @@ function long_url($shortURL)
 	
 	return $url_long;
 }
+*/
 
 function friendship_exists($user_a) {
   $request = 'http://twitter.com/friendships/show.json?target_screen_name=' . $user_a;
@@ -936,7 +937,7 @@ function twitter_date($format, $timestamp = null) {
     if (user_is_authenticated()) {
       if (array_key_exists('utc_offset', $_COOKIE)) {
         $offset = $_COOKIE['utc_offset'];
-      } else {
+      } else {function long_url($shortURL)
         $user = twitter_user_info();
         $offset = $user->utc_offset;
         setcookie('utc_offset', $offset, time() + 3000000, '/');
@@ -1171,7 +1172,18 @@ function theme_search_form($query) {
 
 function theme_external_link($url, $content = null) {
   if (!$content) $content = $url;
-  return "<a href='$url' target='_blank'>".long_url($url)."</a>";
+	return "<a href='$url' target='_blank'>$content</a>";
+  /*
+	//Long URL functionality.  Also uncomment function long_url($shortURL)
+		if (!$content) 
+	{	
+		return "<a href='$url' target='_blank'>".long_url($url)."</a>";
+	}
+	else
+	{
+		return "<a href='$url' target='_blank'>$content</a>";
+	}
+	*/
 }
 
 function theme_pagination() {
