@@ -127,6 +127,27 @@ menu_register(array(
   ),
 ));
 
+function long_url($shortURL)
+{
+	$url = "http://www.longurlplease.com/api/v1.1?q=" . $shortURL;
+	$curl_handle=curl_init();
+	curl_setopt($curl_handle,CURLOPT_RETURNTRANSFER,1);
+	curl_setopt($curl_handle,CURLOPT_URL,$url);
+	$url_json = curl_exec($curl_handle);
+	curl_close($curl_handle);
+
+	$url_array = json_decode($url_json,true);
+	
+	$url_long = $url_array["$shortURL"];
+	
+	if ($url_long == null)
+	{
+		return $shortURL;
+	}
+	
+	return $url_long;
+}
+
 function friendship_exists($user_a) {
   $request = 'http://twitter.com/friendships/show.json?target_screen_name=' . $user_a;
   $following = twitter_process($request);
@@ -346,6 +367,14 @@ function flickr_encode($num) {
 function twitter_photo_replace($text) {
   $images = array();
   $tmp = strip_tags($text);
+  //YouTube video IDs contain a-Z, 0-9, and the - and _ characters. This displays a mobile friendly thumbnail and links to the mobile YouTube page
+  if (preg_match_all('#youtube\.com\/watch\?v=([_-\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) 
+  {
+    foreach ($matches[1] as $match) 
+	{
+      $images[] = theme('external_link', "http://m.youtube.com/watch?v={$match}", "<img src='http://i.ytimg.com/vi/{$match}/1.jpg' class='twitpic' />");
+    }
+  }
   if (preg_match_all('#twitgoo.com/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $match) {
       $images[] = theme('external_link', "http://twitgoo.com/{$match}", "<img src='http://twitgoo.com/show/thumb/{$match}' class='twitpic' />");
@@ -1142,7 +1171,7 @@ function theme_search_form($query) {
 
 function theme_external_link($url, $content = null) {
   if (!$content) $content = $url;
-  return "<a href='$url' target='_blank'>$content</a>";
+  return "<a href='$url' target='_blank'>".long_url($url)."</a>";
 }
 
 function theme_pagination() {
