@@ -937,7 +937,7 @@ function twitter_date($format, $timestamp = null) {
     if (user_is_authenticated()) {
       if (array_key_exists('utc_offset', $_COOKIE)) {
         $offset = $_COOKIE['utc_offset'];
-      } else {function long_url($shortURL)
+      } else {
         $user = twitter_user_info();
         $offset = $user->utc_offset;
         setcookie('utc_offset', $offset, time() + 3000000, '/');
