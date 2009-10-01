@@ -412,6 +412,11 @@ function twitter_photo_replace($text) {
        $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='http://ts1.in/mini/{$match}' />");
     }
   }
+  if (preg_match_all('#moby.to/\??([\w\d]+)#i', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+    foreach ($matches[1] as $key => $match) {
+       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='http://moby.to/?{$match}:square' />");
+    }
+  }
   if (defined('FLICKR_API_KEY')) {
     if(preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
       foreach ($matches[1] as $key => $match) {
