@@ -102,11 +102,6 @@ menu_register(array(
     'hidden' => true,
     'callback' => 'generate_thumbnail',
   ),
-  'mobypicture' => array(
-    'security' => true,
-    'hidden' => true,
-    'callback' => 'generate_thumbnail',
-  ),
   'moblog' => array(
     'security' => true,
     'hidden' => true,
@@ -368,73 +363,43 @@ function flickr_encode($num) {
 function twitter_photo_replace($text) {
   $images = array();
   $tmp = strip_tags($text);
-  //YouTube video IDs contain a-Z, 0-9, and the - and _ characters. This displays a mobile friendly thumbnail and links to the mobile YouTube page
-  if (preg_match_all('#youtube\.com\/watch\?v=([_-\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) 
-  {
-    foreach ($matches[1] as $match) 
-	{
-      $images[] = theme('external_link', "http://m.youtube.com/watch?v={$match}", "<img src='http://i.ytimg.com/vi/{$match}/1.jpg' class='twitpic' />");
+  
+  // List of supported services. Array format: pattern, link, thumbnail url
+  $services = array(
+    array('#youtube\.com\/watch\?v=([_-\d\w]+)#i', 'http://m.youtube.com/watch?v=%s', 'http://i.ytimg.com/vi/%s/1.jpg'),
+    array('#twitpic.com/([\d\w]+)#i', 'http://twitpic.com/%s', 'http://twitpic.com/show/thumb/%s'),
+    array('#twitgoo.com/([\d\w]+)#i', 'http://twitgoo.com/%s', 'http://twitgoo.com/show/thumb/%s'),
+    array('#yfrog.com/([\w\d]+)#i', 'http://yfrog.com/%s', 'http://yfrog.com/%s.th.jpg'),
+    array('#moblog.net/view/([\d]+)/#', 'http://moblog.net/view/%s/', 'moblog/%s'),
+    array('#hellotxt.com/i/([\d\w]+)#i', 'http://hellotxt.com/i/%s', 'http://hellotxt.com/image/%s.s.jpg'),
+    array('#ts1.in/(\d+)#i', 'http://ts1.in/%s', 'http://ts1.in/mini/%s'),
+    array('#moby.to/\??([\w\d]+)#i', 'http://moby.to/%s', 'http://moby.to/?%s:square'),
+    array('#mobypicture.com/\?([\w\d]+)#i', 'http://mobypicture.com/?%s', 'http://mobypicture.com/?%s:square'),
+  );
+  
+  // Only enable Flickr service if API key is available
+  if (defined('FLICKR_API_KEY')) {
+    $services[] = array('#flickr.com/[^ ]+/([\d]+)#i', 'http://flickr.com/%s', 'flickr/%s');
+    $services[] = array('#flic.kr/p/([\w\d]+)#i', 'http://flic.kr/p/%s', 'flickr/%s');
+  }
+  
+  // Loop through each service and show images for matching URLs
+  foreach ($services as $service) {
+    if (preg_match_all($service[0], $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+      foreach ($matches[1] as $key => $match) {
+        $images[] = theme('external_link', sprintf($service[1], $match), '<img src="'.sprintf($service[2], $match).'" />');
+      }
     }
   }
-  if (preg_match_all('#twitgoo.com/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
-    foreach ($matches[1] as $match) {
-      $images[] = theme('external_link', "http://twitgoo.com/{$match}", "<img src='http://twitgoo.com/show/thumb/{$match}' class='twitpic' />");
-    }
-  }
-  if (preg_match_all('#twitpic.com/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
-    foreach ($matches[1] as $match) {
-       $images[] = theme('external_link', "http://twitpic.com/{$match}", "<img src='http://twitpic.com/show/thumb/{$match}' class='twitpic' />");
-    }
-  }
-  if (preg_match_all('#yfrog.([a-zA-Z.]{2,5})/([0-9a-zA-Z]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
-    foreach ($matches[2] as $key => $match) {
-       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='http://yfrog.{$matches[1][$key]}/{$match}.th.jpg' />");
-    }
-  }
+ 
+  // Twitxr is handled differently because of their folder structure
   if (preg_match_all('#twitxr.com/[^ ]+/updates/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
       $thumb = 'http://twitxr.com/thumbnails/'.substr($match, -2).'/'.$match.'_th.jpg';
-       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='$thumb' />");
+      $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='$thumb' />");
     }
   }
-  if (preg_match_all('#moblog.net/view/([\d]+)/#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
-    foreach ($matches[1] as $key => $match) {
-       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='moblog/$match' />");
-    }
-  }
-  if (preg_match_all('#hellotxt.com/i/([\d\w]+)#i', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
-    foreach ($matches[1] as $key => $match) {
-       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='http://hellotxt.com/image/{$match}.s.jpg' />");
-    }
-  }
-  if (preg_match_all('#ts1.in/(\d+)#i', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
-    foreach ($matches[1] as $key => $match) {
-       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='http://ts1.in/mini/{$match}' />");
-    }
-  }
-  if (preg_match_all('#moby.to/\??([\w\d]+)#i', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
-    foreach ($matches[1] as $key => $match) {
-       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='http://moby.to/?{$match}:square' />");
-    }
-  }
-  if (defined('FLICKR_API_KEY')) {
-    if(preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
-      foreach ($matches[1] as $key => $match) {
-         $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='flickr/$match' />");
-      }
-    }
-    if(preg_match_all('#flic.kr/p/([\w\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
-      foreach ($matches[1] as $key => $match) {
-        $id = flickr_decode($match);
-         $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='flickr/$id' />");
-      }
-    }
-  }
-  if (defined('MOBYPICTURE_API_KEY') && preg_match_all('#mobypicture.com/\?([a-z0-9]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
-    foreach ($matches[1] as $key => $match) {
-       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='mobypicture/$match' />");
-    }
-  }
+  
   if (empty($images)) return $text;
   return implode('<br />', $images).'<br />'.$text;
 }
@@ -444,6 +409,7 @@ function generate_thumbnail($query) {
   if ($id) {
     header('HTTP/1.1 301 Moved Permanently');
     if ($query[0] == 'flickr') {
+      if (!is_numeric($id)) $id = flickr_decode($id);
       $url = "http://api.flickr.com/services/rest/?method=flickr.photos.getSizes&photo_id=$id&api_key=".FLICKR_API_KEY;
       $flickr_xml = twitter_fetch($url);
       if (setting_fetch('browser') == 'mobile') {
@@ -453,11 +419,6 @@ function generate_thumbnail($query) {
       }
       preg_match($pattern, $flickr_xml, $matches);
       header('Location: '. $matches[1]);
-    }
-    if ($query[0] == 'mobypicture') {
-      $url = "http://api.mobypicture.com/?action=getThumbUrl&t={$id}&s=thumbnail&k=".MOBYPICTURE_API_KEY;
-      $thumb = twitter_fetch($url);
-      header('Location: '. $thumb);
     }
     if ($query[0] == 'moblog') {
       $url = "http://moblog.net/view/{$id}/";
