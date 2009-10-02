@@ -13,3 +13,5 @@ body.show-menu #menu-extras { display: block; }
 #menu-extras { display: none; border-top: 1px solid #eee; }
 #menu-extras li { float: none; }
 #menu-extras a { padding: 0.8em; border-bottom: 1px solid #eee; }
+
+.timeline a img { padding: 1px 2px; }

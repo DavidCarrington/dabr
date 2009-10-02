@@ -52,6 +52,13 @@ function touch_theme_menu_bottom() {
   return '';
 }
 
+function touch_theme_status_time_link($status, $is_link = true) {
+  $out = theme_status_time_link($status, $is_link);
+  $out = str_replace(array(' ago', ' years', ' days', ' hours', ' min', ' sec'),
+                     array('', 'y', 'd', 'h', 'm', 's'), $out);
+  return $out;
+}
+
 
 function touch_theme_css() {
   $out = '<link rel="stylesheet" href="browsers/touch.css" />';
