@@ -160,7 +160,7 @@ function twitter_block_exists($query)
 	//http://apiwiki.twitter.com/Twitter-REST-API-Method%3A-blocks-blocking-ids
 	//Get an array of all ids the authenticated user is blocking
 	$request = 'http://twitter.com/blocks/blocking/ids.json';
-	$blocked = twitter_process($request);
+	$blocked = (array) twitter_process($request);
 	
 	//bool in_array  ( mixed $needle  , array $haystack  [, bool $strict  ] )		
 	//If the authenticate user has blocked $query it will appear in the array
@@ -1085,7 +1085,7 @@ function twitter_is_reply($status) {
 
 function theme_followers($feed) {
   $rows = array();
-  if (count($feed) == 0) return '<p>No users to display.</p>';
+  if (count($feed) == 0 || $feed == '[]') return '<p>No users to display.</p>';
   foreach ($feed as $user) {
     $name = theme('full_name', $user);
     $rows[] = array(
