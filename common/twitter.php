@@ -364,30 +364,30 @@ function twitter_photo_replace($text) {
   $images = array();
   $tmp = strip_tags($text);
   
-  // List of supported services. Array format: pattern, link, thumbnail url
+  // List of supported services. Array format: pattern => thumbnail url
   $services = array(
-    array('#youtube\.com\/watch\?v=([_-\d\w]+)#i', 'http://m.youtube.com/watch?v=%s', 'http://i.ytimg.com/vi/%s/1.jpg'),
-    array('#twitpic.com/([\d\w]+)#i', 'http://twitpic.com/%s', 'http://twitpic.com/show/thumb/%s'),
-    array('#twitgoo.com/([\d\w]+)#i', 'http://twitgoo.com/%s', 'http://twitgoo.com/show/thumb/%s'),
-    array('#yfrog.com/([\w\d]+)#i', 'http://yfrog.com/%s', 'http://yfrog.com/%s.th.jpg'),
-    array('#moblog.net/view/([\d]+)/#', 'http://moblog.net/view/%s/', 'moblog/%s'),
-    array('#hellotxt.com/i/([\d\w]+)#i', 'http://hellotxt.com/i/%s', 'http://hellotxt.com/image/%s.s.jpg'),
-    array('#ts1.in/(\d+)#i', 'http://ts1.in/%s', 'http://ts1.in/mini/%s'),
-    array('#moby.to/\??([\w\d]+)#i', 'http://moby.to/%s', 'http://moby.to/?%s:square'),
-    array('#mobypicture.com/\?([\w\d]+)#i', 'http://mobypicture.com/?%s', 'http://mobypicture.com/?%s:square'),
+    '#youtube\.com\/watch\?v=([_-\d\w]+)#i' => 'http://i.ytimg.com/vi/%s/1.jpg',
+    '#twitpic.com/([\d\w]+)#i' => 'http://twitpic.com/show/thumb/%s',
+    '#twitgoo.com/([\d\w]+)#i' => 'http://twitgoo.com/show/thumb/%s',
+    '#yfrog.com/([\w\d]+)#i' => 'http://yfrog.com/%s.th.jpg',
+    '#moblog.net/view/([\d]+)/#' => 'moblog/%s',
+    '#hellotxt.com/i/([\d\w]+)#i' => 'http://hellotxt.com/image/%s.s.jpg',
+    '#ts1.in/(\d+)#i' => 'http://ts1.in/mini/%s',
+    '#moby.to/\??([\w\d]+)#i' => 'http://moby.to/?%s:square',
+    '#mobypicture.com/\?([\w\d]+)#i' => 'http://mobypicture.com/?%s:square',
   );
   
   // Only enable Flickr service if API key is available
   if (defined('FLICKR_API_KEY')) {
-    $services[] = array('#flickr.com/[^ ]+/([\d]+)#i', 'http://flickr.com/%s', 'flickr/%s');
-    $services[] = array('#flic.kr/p/([\w\d]+)#i', 'http://flic.kr/p/%s', 'flickr/%s');
+    $services['#flickr.com/[^ ]+/([\d]+)#i'] = 'flickr/%s';
+    $services['#flic.kr/p/([\w\d]+)#i'] = 'flickr/%s';
   }
   
   // Loop through each service and show images for matching URLs
-  foreach ($services as $service) {
-    if (preg_match_all($service[0], $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
+  foreach ($services as $pattern => $thumbnail_url) {
+    if (preg_match_all($pattern, $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
       foreach ($matches[1] as $key => $match) {
-        $images[] = theme('external_link', sprintf($service[1], $match), '<img src="'.sprintf($service[2], $match).'" />');
+        $images[] = theme('external_link', 'http://'.$matches[0][$key], '<img src="'.sprintf($thumbnail_url, $match).'" />');
       }
     }
   }
