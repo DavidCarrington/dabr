@@ -826,7 +826,7 @@ function theme_status($status) {
 
 function theme_retweet($status) {
   $text = "RT @{$status->user->screen_name}: {$status->text}";
-  $length = strlen($text);
+  $length = mb_strlen($text,'UTF-8');
   $from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
   $content = "<form action='update' method='post'><input type='hidden' name='from' value='$from' /><textarea name='status' cols='50' rows='3' id='status'>$text</textarea><br><input type='submit' value='Retweet'><span id='remaining'>" . (140 - $length) ."</span></form>";
   $content .= js_counter("status");  
@@ -1132,7 +1132,7 @@ function theme_search_results($feed) {
 }
 
 function theme_search_form($query) {
-  $query = stripslashes(htmlentities($query));
+  $query = stripslashes(htmlentities($query,ENT_QUOTES,"UTF-8"));
   return "<form action='search' method='get'><input name='query' value=\"$query\" /><input type='submit' value='Search' /></form>";
 }
 
