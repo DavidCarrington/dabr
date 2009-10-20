@@ -826,7 +826,7 @@ function theme_status($status) {
 
 function theme_retweet($status) {
   $text = "RT @{$status->user->screen_name}: {$status->text}";
-  $length = mb_strlen($text,'UTF-8');
+  $length = function_exists('mb_strlen') ? mb_strlen($text,'UTF-8') : strlen($text);
   $from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
   $content = "<form action='update' method='post'><input type='hidden' name='from' value='$from' /><textarea name='status' cols='50' rows='3' id='status'>$text</textarea><br><input type='submit' value='Retweet'><span id='remaining'>" . (140 - $length) ."</span></form>";
   $content .= js_counter("status");  
