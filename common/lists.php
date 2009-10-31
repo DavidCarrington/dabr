@@ -60,7 +60,7 @@ function lists_page($query) {
     $mem = theme('lists', $memberships);
     if ($mem) {
       $count = count($memberships->lists);
-      $content .= "<h3><strong>$username</strong> appears in $count lists:</h3>";
+      $content .= "<h3>Lists <strong>$username</strong> appears in:</h3>";
       $content .= $mem;
     }
   }
@@ -79,7 +79,7 @@ function theme_lists($json) {
     $rows[] = array(
       "<a href='{$url}'>{$list->full_name}</a>",
       "<a href='{$url}/members'>{$list->member_count}</a>",
-      (int) $list->subsciber_count,
+      (int) $list->subscriber_count,
     );
   }
   return theme('table', $headers, $rows);
