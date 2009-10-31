@@ -274,10 +274,12 @@ function twitter_process($url, $post_data = false) {
     case 401:
       user_logout();
       theme('error', '<p>Error: Login credentials incorrect.</p>');
+    case 0:
+      theme('error', '<h2>Twitter timed out</h3><p>Dabr gave up on waiting for Twitter to respond. They\'re probably overloaded right now, try again in a minute.</p>');
     default:
       $result = json_decode($response);
       $result = $result->error ? $result->error : $response;
-      if (strlen($result) > 500) $result = 'Something broke.';
+      if (strlen($result) > 500) $result = 'Something broke on Twitter\'s end.';
       theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
   }
 }
@@ -873,6 +875,7 @@ function theme_user_header($user) {
   $out.= " | <a href='friends/{$user->screen_name}'>{$user->friends_count} friends</a>
 | <a href='favourites/{$user->screen_name}'>{$user->favourites_count} favourites</a>
 | <a href='directs/create/{$user->screen_name}'>Direct Message</a>
+| <a href='lists/{$user->screen_name}'>Lists</a>
 </td></table>";
   return $out;
 }
