@@ -74,6 +74,11 @@ menu_register(array(
     'security' => true,
     'callback' => 'twitter_block_page',
   ),
+  'spam' => array(
+    'hidden' => true,
+    'security' => true,
+    'callback' => 'twitter_spam_page',
+  ),
   'favourites' => array(
     'security' => true,
     'callback' =>  'twitter_favourites_page',
@@ -121,9 +126,13 @@ menu_register(array(
     'callback' => 'twitter_trends_page',
   ),
 ));
-/*
+
 function long_url($shortURL)
 {
+	if (!defined('LONGURL_KEY'))
+	{
+		return $shortURL;
+	}
 	$url = "http://www.longurlplease.com/api/v1.1?q=" . $shortURL;
 	$curl_handle=curl_init();
 	curl_setopt($curl_handle,CURLOPT_RETURNTRANSFER,1);
@@ -142,7 +151,7 @@ function long_url($shortURL)
 	
 	return $url_long;
 }
-*/
+
 
 function friendship_exists($user_a) {
   $request = 'http://twitter.com/friendships/show.json?target_screen_name=' . $user_a;
@@ -515,7 +524,7 @@ function twitter_delete_page($query) {
 
 function twitter_ensure_post_action() {
   // This function is used to make sure the user submitted their action as an HTTP POST request
-  // It slightly increases security for actions such as Delete and Block
+  // It slightly increases security for actions such as Delete, Block and Spam
   if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     die('Error: Invalid HTTP request method for this action.');
   }
@@ -548,6 +557,24 @@ function twitter_block_page($query) {
   }
 }
 
+function twitter_spam_page($query) 
+{
+	//http://apiwiki.twitter.com/Twitter-REST-API-Method%3A-report_spam
+	//We need to post this data
+	twitter_ensure_post_action();
+	$user = $query[1];
+
+	//The data we need to post
+	$post_data = array("screen_name" => $user);
+
+	$request = "http://twitter.com/report_spam.json";
+	twitter_process($request, $post_data);
+
+	//Where should we return the user to?  Back to the user
+	twitter_refresh("user/{$user}");
+}
+
+
 function twitter_confirmation_page($query) 
 {
 	// the URL /confirm can be passed parameters like so /confirm/param1/param2/param3 etc.
@@ -574,8 +601,16 @@ function twitter_confirmation_page($query)
       $content = '<p>Are you really sure you want to delete your tweet?</p>';
       $content .= "<ul><li>Tweet ID: <strong>$target</strong></li><li>There is no way to undo this action.</li></ul>";
       break;
+
+    case 'spam':
+      $content  = "<p>Are you really sure you want to report <strong>$target</strong> as a spammer?</p>";
+      $content .= "<p>They will also be blocked from following you.</p>";
+      break;
+
   }    
-  $content .= "<form action='$action/$target' method='post'><p><input type='submit' value='Yes please' /></form>";
+  $content .= "<form action='$action/$target' method='post'>
+						<input type='submit' value='Yes please' />
+					</form>";
   theme('Page', 'Confirm', $content);
 }
 
@@ -871,7 +906,7 @@ function theme_user_header($user) {
   
 	//We need to pass the User Name and the User ID.  The Name is presented in the UI, the ID is used in checking
 	$out.= " | <a href='confirm/block/{$user->screen_name}/{$user->id}'>Block | Unblock</a>";
-
+	$out .= " | <a href='confirm/spam/{$user->screen_name}/{$user->id}'>Report Spam</a>";
   $out.= " | <a href='friends/{$user->screen_name}'>{$user->friends_count} friends</a>
 | <a href='favourites/{$user->screen_name}'>{$user->favourites_count} favourites</a>
 | <a href='directs/create/{$user->screen_name}'>Direct Message</a>
