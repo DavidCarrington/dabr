@@ -1176,11 +1176,8 @@ function theme_search_form($query) {
 }
 
 function theme_external_link($url, $content = null) {
-  if (!$content) $content = $url;
-	return "<a href='$url' target='_blank'>$content</a>";
-  /*
 	//Long URL functionality.  Also uncomment function long_url($shortURL)
-		if (!$content) 
+	if (!$content) 
 	{	
 		return "<a href='$url' target='_blank'>".long_url($url)."</a>";
 	}
@@ -1188,7 +1185,7 @@ function theme_external_link($url, $content = null) {
 	{
 		return "<a href='$url' target='_blank'>$content</a>";
 	}
-	*/
+	
 }
 
 function theme_pagination() {
