@@ -1129,7 +1129,9 @@ function theme_followers($feed) {
     $name = theme('full_name', $user);
     $rows[] = array(
       theme('avatar', $user->profile_image_url),
-      "{$name} - {$user->location}<small><br />{$user->description}</small>",
+      "{$name} - {$user->location}<br />" .
+		"<small>{$user->description}<br />" .
+		"Info: {$user->statuses_count} tweets, {$user->friends_count} friends, {$user->followers_count} followers,</small>"
     );
   }
   $content = theme('table', array(), $rows, array('class' => 'followers'));
