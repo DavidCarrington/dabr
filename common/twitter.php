@@ -871,14 +871,19 @@ function theme_retweet($status) {
   return $content;
 }
 
+function twitter_tweets_per_day($user, $rounding = 1) {
+  // Helper function to calculate an average count of tweets per day
+  $days_on_twitter = (time() - strtotime($user->created_at)) / 86400;
+  return round($user->statuses_count / $days_on_twitter, $rounding);
+}
+
 function theme_user_header($user) {
   $name = theme('full_name', $user);
   $full_avatar = str_replace('_normal.', '.', $user->profile_image_url);
   $link = theme('external_link', $user->url);
   $raw_date_joined = strtotime($user->created_at);
   $date_joined = date('jS M Y', $raw_date_joined);
-  $days_on_twitter = (time() - $raw_date_joined) / 86400;
-  $tweets_per_day = round($user->statuses_count / $days_on_twitter, 1);
+  $tweets_per_day = twitter_tweets_per_day($user, 1);
   $out = "<table><tr><td>".theme('external_link', $full_avatar, theme('avatar', $user->profile_image_url, 1))."</td>
 <td><b>{$name}</b>
 <small>";
@@ -1127,11 +1132,12 @@ function theme_followers($feed) {
   if (count($feed) == 0 || $feed == '[]') return '<p>No users to display.</p>';
   foreach ($feed as $user) {
     $name = theme('full_name', $user);
+    $tweets_per_day = twitter_tweets_per_day($user);
     $rows[] = array(
       theme('avatar', $user->profile_image_url),
       "{$name} - {$user->location}<br />" .
-		"<small>{$user->description}<br />" .
-		"Info: {$user->statuses_count} tweets, {$user->friends_count} friends, {$user->followers_count} followers,</small>"
+      "<small>{$user->description}<br />" .
+      "Info: {$user->statuses_count} tweets, {$user->friends_count} friends, {$user->followers_count} followers, ~{$tweets_per_day} tweets per day</small>"
     );
   }
   $content = theme('table', array(), $rows, array('class' => 'followers'));
