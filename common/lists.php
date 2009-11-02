@@ -1,29 +1,47 @@
 <?php
 
 menu_register(array(
-  'lists' => array(
-    'security' => true,
-    'callback' => 'lists_controller',
-  ),
+	'lists' => array(
+		'security' => true,
+		'callback' => 'lists_controller',
+	),
 ));
 
 
 
-/* API Calls */
+/*
+	API Calls
+
+	Note that some calls are XML and not JSON like the rest of Dabr. This is because 32-bit
+	PHP installs cannot handle the 64-bit Lists API cursors used for paging.
+
+*/
+
+function lists_paginated_process($url) {
+	// Adds cursor/pagination parameters to a query
+	$cursor = $_GET['cursor'];
+	if (is_numeric($cursor)) {
+		$url .= '?cursor='.$_GET['cursor'];
+	}
+	return simplexml_load_string(twitter_process($url));
+}
 
 function twitter_lists_tweets($user, $list) {
 	// Tweets belonging to a list
-	return twitter_process("http://twitter.com/{$user}/lists/{$list}/statuses.json");
+	$url = "http://twitter.com/{$user}/lists/{$list}/statuses.json";
+	$page = intval($_GET['page']);
+	if ($page > 0) $url .= '?page='.$page;
+	return twitter_process($url);
 }
 
 function twitter_lists_user_lists($user) {
 	// Lists a user has created
-	return twitter_process("http://twitter.com/{$user}/lists.json");
+	return lists_paginated_process("http://twitter.com/{$user}/lists.xml");
 }
 
 function twitter_lists_user_memberships($user) {
 	// Lists a user belongs to
-	return twitter_process("http://twitter.com/{$user}/lists/memberships.json");
+	return lists_paginated_process("http://twitter.com/{$user}/lists/memberships.xml");
 }
 
 function twitter_lists_list_members($user, $list) {
@@ -71,7 +89,6 @@ function lists_controller($query) {
 	// Attempt to call the correct page based on $method
 	switch ($method) {
 		case '':
-			// TODO: show a summary page?
 		case 'lists':
 			// Show which lists a user has created
 			return lists_lists_page($user);
@@ -104,16 +121,16 @@ function lists_controller($query) {
 function lists_lists_page($user) {
 	// Show a user's lists
 	$lists = twitter_lists_user_lists($user);
-	// TODO: Show a tabs to switch between this page and memberships like Twitter.com
-	$content = theme('lists', $lists);
+	$content = "<p><a href='lists/{$user}/memberships'>Lists following {$user}</a> | <strong>Lists {$user} follows</strong></p>";
+	$content .= theme('lists', $lists);
 	theme('page', "{$user}'s lists", $content);
 }
 
 function lists_membership_page($user) {
 	// Show lists a user belongs to
 	$lists = twitter_lists_user_memberships($user);
-	$content = theme('status_form');
-    $content .= theme('lists', $lists);
+	$content = "<p><strong>Lists following {$user}</strong> | <a href='lists/{$user}'>Lists {$user} follows</a></p>";
+	$content .= theme('lists', $lists);
 	theme('page', 'List memberhips', $content);
 }
 
@@ -148,19 +165,30 @@ function lists_list_subscribers_page($user, $list) {
 /* Theme functions */
 
 function theme_lists($json) {
-  if (count($json->lists) == 0) {
-    return "<p>No lists to display</p>";
-  }
-  $rows = array();
-  $headers = array('List', 'Members', 'Subscribers');	
-  foreach ($json->lists as $list) {
-    // print_R($list); die();
-    $url = "lists/{$list->user->screen_name}/{$list->slug}";
-    $rows[] = array(
-      "<a href='{$url}'>{$list->full_name}</a>",
-      "<a href='{$url}/members'>{$list->member_count}</a>",
-      "<a href='{$url}/subscribers'>{$list->subscriber_count}</a>",
-    );
-  }
-  return theme('table', $headers, $rows);
+	if (count($json->lists) == 0) {
+		return "<p>No lists to display</p>";
+	}
+	$rows = array();
+	$headers = array('List', 'Members', 'Subscribers');	
+	foreach ($json->lists->list as $list) {
+		$url = "lists/{$list->user->screen_name}/{$list->slug}";
+		$rows[] = array(
+			"<a href='user/{$list->user->screen_name}'>@{$list->user->screen_name}</a>/<a href='{$url}'><strong>{$list->slug}</strong></a>",
+			"<a href='{$url}/members'>{$list->member_count}</a>",
+			"<a href='{$url}/subscribers'>{$list->subscriber_count}</a>",
+		);
+	}
+	$content = theme('table', $headers, $rows);
+	$content .= theme('list_pagination', $json);
+	return $content;
+}
+
+function theme_list_pagination($json) {
+	if ($cursor = (string) $json->next_cursor) {
+		$links[] = "<a href='{$_GET['q']}?cursor={$cursor}'>Next</a>";
+	}
+	if ($cursor = (string) $json->previous_cursor) {
+		$links[] = "<a href='{$_GET['q']}?cursor={$cursor}'>Previous</a>";
+	}
+	if (count($links) > 0) return '<p>'.implode(' | ', $links).'</p>';
 }
