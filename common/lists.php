@@ -46,14 +46,12 @@ function twitter_lists_user_memberships($user) {
 
 function twitter_lists_list_members($user, $list) {
 	// Members of a list
-	$url = "http://twitter.com/{$user}/{$list}/members.json";
-	return twitter_process($url);
+	return lists_paginated_process("http://twitter.com/{$user}/{$list}/members.xml");
 }
 
 function twitter_lists_list_subscribers($user, $list) {
 	// Subscribers of a list
-	$url = "http://twitter.com/{$user}/{$list}/subscribers.json";
-	return twitter_process($url);
+	return lists_paginated_process("http://twitter.com/{$user}/{$list}/subscribers.xml");
 }
 
 
@@ -151,14 +149,16 @@ function lists_list_members_page($user, $list) {
 	$p = twitter_lists_list_members($user, $list);
 	
 	// TODO: use a different theme() function? Add a "delete member" link for each member
-	$content = theme('followers', $p->users);
+	$content = theme('followers', $p->users->user, 1);
+	$content .= theme('list_pagination', $p);
 	theme('page', "Members of {$user}/{$list}", $content);
 }
 
 function lists_list_subscribers_page($user, $list) {
 	// Show subscribers of a list
 	$p = twitter_lists_list_subscribers($user, $list);
-	$content = theme('followers', $p->users);
+	$content = theme('followers', $p->users->user, 1);
+	$content .= theme('list_pagination', $p);
 	theme('page', "Subscribers of {$user}/{$list}", $content);
 }
 

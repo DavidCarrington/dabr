@@ -1128,7 +1128,7 @@ function twitter_is_reply($status) {
   return preg_match("#@$user#i", $status->text);
 }
 
-function theme_followers($feed) {
+function theme_followers($feed, $hide_pagination = false) {
   $rows = array();
   if (count($feed) == 0 || $feed == '[]') return '<p>No users to display.</p>';
   foreach ($feed as $user) {
@@ -1142,7 +1142,8 @@ function theme_followers($feed) {
     );
   }
   $content = theme('table', array(), $rows, array('class' => 'followers'));
-  $content .= theme('pagination');
+  if (!$hide_pagination)
+    $content .= theme('pagination');
   return $content;
 }
 
