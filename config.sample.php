@@ -13,7 +13,6 @@ define('BITLY_API_KEY', '');
 
 // Optional API keys for retrieving thumbnails
 define('FLICKR_API_KEY', '');
-define('MOBYPICTURE_API_KEY', '');
 
 // Optional: Allows you to turn shortened URLs into long URLs http://www.longurlplease.com/docs
 // Uncomment to enable.
