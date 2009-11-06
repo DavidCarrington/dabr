@@ -139,6 +139,8 @@ function lists_list_tweets_page($user, $list) {
 	$tweets = twitter_lists_tweets($user, $list);
 	$tl = twitter_standard_timeline($tweets, 'public');
 	$content = theme('status_form');
+  $list_url = "lists/{$user}/{$list}";
+  $content .= "<p>Tweets in <a href='user/{$user}'>@{$user}</a>/<strong>{$list}</strong> | <a href='{$list_url}/members'>View Members</a> | <a href='{$list_url}/subscribers'>View Subscribers</a></p>";
 	$content .= theme('timeline', $tl);
 	theme('page', "List {$user}/{$list}", $content);
 }
