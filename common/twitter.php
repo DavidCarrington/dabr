@@ -7,6 +7,7 @@ menu_register(array(
   ),
   'status' => array(
     'hidden' => true,
+    'security' => true,
     'callback' => 'twitter_status_page',
   ),
   'update' => array(
