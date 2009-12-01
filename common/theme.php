@@ -142,7 +142,7 @@ function theme_page($title, $content) {
 }
 
 function theme_colours() {
-  $info = $GLOBALS['colour_schemes'][setting_fetch('colours', 1)];
+  $info = $GLOBALS['colour_schemes'][setting_fetch('colours', 5)];
   list($name, $bits) = explode('|', $info);
   $colours = explode(',', $bits);
   return (object) array(
