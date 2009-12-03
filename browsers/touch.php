@@ -16,6 +16,7 @@ function touch_theme_avatar($url, $force_large = false) {
 function touch_theme_page($title, $content) {
   $body = theme('menu_top');
   $body .= $content;
+  $body .= theme('google_analytics');
   ob_start('ob_gzhandler');
   header('Content-Type: text/html; charset=utf-8');
   echo '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">

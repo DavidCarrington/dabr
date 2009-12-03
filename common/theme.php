@@ -129,6 +129,7 @@ function theme_page($title, $content) {
   $body = theme('menu_top');
   $body .= $content;
   $body .= theme('menu_bottom');
+  $body .= theme('google_analytics');
   ob_start('ob_gzhandler');
   header('Content-Type: text/html; charset=utf-8');
   echo '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
@@ -172,6 +173,13 @@ function theme_css() {
   .menu{color:#{$c->menut};background:#{$c->menubg};padding: 2px}
   .menu a{color:#{$c->menua};text-decoration: none}
 </style>";
+}
+
+function theme_google_analytics() {
+  global $GA_ACCOUNT;
+  if (!$GA_ACCOUNT) return '';
+  $googleAnalyticsImageUrl = googleAnalyticsGetImageUrl();
+  return "<img src='{$googleAnalyticsImageUrl}' />";
 }
 
 ?>
