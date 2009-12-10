@@ -15,6 +15,11 @@ menu_register(array(
     'security' => true,
     'callback' => 'twitter_update',
   ),
+  'twitter-retweet' => array(
+    'hidden' => true,
+    'security' => true,
+    'callback' => 'twitter_retweet',
+  ),
   'replies' => array(
     'security' => true,
     'callback' => 'twitter_replies_page',
@@ -655,6 +660,16 @@ function twitter_update() {
   twitter_refresh($_POST['from'] ? $_POST['from'] : '');
 }
 
+function twitter_retweet($query) {
+  twitter_ensure_post_action();
+  $id = $query[1];
+  if (is_numeric($id)) {
+    $request = 'http://twitter.com/statuses/retweet/'.$id.'.xml';
+    twitter_process($request, true);
+  }
+  twitter_refresh($_POST['from'] ? $_POST['from'] : '');
+}
+
 function twitter_public_page() {
   $request = 'http://twitter.com/statuses/public_timeline.json?page='.intval($_GET['page']);
   $content = theme('status_form');
@@ -823,7 +838,7 @@ function twitter_mark_favourite_page($query) {
 
 function twitter_home_page() {
   user_ensure_authenticated();
-  $request = 'http://twitter.com/statuses/friends_timeline.json?page='.intval($_GET['page']);
+  $request = 'http://twitter.com/statuses/home_timeline.json?count=20&page='.intval($_GET['page']);
   $tl = twitter_process($request);
   $tl = twitter_standard_timeline($tl, 'friends');
   $content = theme('status_form');
@@ -868,8 +883,11 @@ function theme_retweet($status) {
   $text = "RT @{$status->user->screen_name}: {$status->text}";
   $length = function_exists('mb_strlen') ? mb_strlen($text,'UTF-8') : strlen($text);
   $from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
-  $content = "<form action='update' method='post'><input type='hidden' name='from' value='$from' /><textarea name='status' cols='50' rows='3' id='status'>$text</textarea><br><input type='submit' value='Retweet'><span id='remaining'>" . (140 - $length) ."</span></form>";
+  $content = "<p>Old style \"organic\" retweet:</p><form action='update' method='post'><input type='hidden' name='from' value='$from' /><textarea name='status' cols='50' rows='3' id='status'>$text</textarea><br><input type='submit' value='Retweet'><span id='remaining'>" . (140 - $length) ."</span></form>";
   $content .= js_counter("status");  
+	if($status->user->protected == 0){
+    $content.="<br />Or Twitter's new style retweets<br /><form action='twitter-retweet/{$status->id}' method='post'><input type='hidden' name='from' value='$from' /><input type='submit' value='Twitter Retweet'></form>";
+  }
   return $content;
 }
 
@@ -1095,17 +1113,28 @@ function theme_timeline($feed) {
     } else {
       $date = $status->created_at;
     }
-    $text = twitter_parse_tags($status->text);
-    $link = theme('status_time_link', $status, !$status->is_direct);
-    $actions = theme('action_icons', $status);
-    $avatar = theme('avatar', $status->from->profile_image_url);
-    $source = $status->source ? " from {$status->source}" : '';
     if ($status->in_reply_to_status_id) {
       $source .= " in reply to <a href='status/{$status->in_reply_to_status_id}'>{$status->in_reply_to_screen_name}</a>";
     }
-    $row = array(
-      "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br />{$text} <small>$source</small>",
-    );
+    if($status->retweeted_status){
+      $avatar = theme('avatar',$status->retweeted_status->user->profile_image_url);
+      $source = $status->retweeted_status->source ? " from {$status->retweeted_status->source}" : '';
+      $text = twitter_parse_tags($status->retweeted_status->text);
+      $row = array(
+        "<b><a href='user/{$status->retweeted_status->user->screen_name}'>{$status->retweeted_status->user->screen_name}</a></b> $actions $link<br />{$text} <small>$source</small><br /><small>retweeted to you by <a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></small>",
+      );
+    }
+    else{
+      $text = twitter_parse_tags($status->text);
+      $link = theme('status_time_link', $status, !$status->is_direct);
+      $actions = theme('action_icons', $status);
+      $avatar = theme('avatar', $status->from->profile_image_url);
+      $source = $status->source ? " from {$status->source}" : '';
+      $row = array(
+        "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br />{$text} <small>$source</small>",
+      );
+    }
+
     if ($page != 'user' && $avatar) {
       array_unshift($row, $avatar);
     }
