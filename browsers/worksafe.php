@@ -53,9 +53,12 @@ function worksafe_theme_timeline($feed) {
     if ($status->in_reply_to_status_id) {
       $from = "<small>in reply to <a href='status/{$status->in_reply_to_status_id}'>{$status->in_reply_to_screen_name}</a></small>";
     }
-    $row = array(
-      "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link $source<br /><span class='text'>{$text} {$from}</span>",
-    );
+		$html = "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link $source<br /><span class='text'>{$text} {$from}</span>";
+		if ($status->retweeted_by) {
+      $retweeted_by = $status->retweeted_by->user->screen_name;
+      $html .= "<br /><small>retweeted to you by <a href='user/{$retweeted_by}'>{$retweeted_by}</a></small>";
+    }
+    $row = array($html);
     if ($page != 'user' && $avatar) {
       array_unshift($row, $avatar);
     }

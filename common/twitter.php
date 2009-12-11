@@ -883,10 +883,10 @@ function theme_retweet($status) {
   $text = "RT @{$status->user->screen_name}: {$status->text}";
   $length = function_exists('mb_strlen') ? mb_strlen($text,'UTF-8') : strlen($text);
   $from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
-  $content = "<p>Old style \"organic\" retweet:</p><form action='update' method='post'><input type='hidden' name='from' value='$from' /><textarea name='status' cols='50' rows='3' id='status'>$text</textarea><br><input type='submit' value='Retweet'><span id='remaining'>" . (140 - $length) ."</span></form>";
+  $content = "<p>Old style editable retweet:</p><form action='update' method='post'><input type='hidden' name='from' value='$from' /><textarea name='status' cols='50' rows='3' id='status'>$text</textarea><br><input type='submit' value='Retweet'><span id='remaining'>" . (140 - $length) ."</span></form>";
   $content .= js_counter("status");  
 	if($status->user->protected == 0){
-    $content.="<br />Or Twitter's new style retweets<br /><form action='twitter-retweet/{$status->id}' method='post'><input type='hidden' name='from' value='$from' /><input type='submit' value='Twitter Retweet'></form>";
+    $content.="<br />Or Twitter's new style retweet<br /><form action='twitter-retweet/{$status->id}' method='post'><input type='hidden' name='from' value='$from' /><input type='submit' value='Twitter Retweet'></form>";
   }
   return $content;
 }
@@ -993,6 +993,12 @@ function twitter_standard_timeline($feed, $source) {
     case 'user':
       foreach ($feed as $status) {
         $new = $status;
+        if ($new->retweeted_status) {
+          $retweet = $new->retweeted_status;
+          unset($new->retweeted_status);
+          $retweet->retweeted_by = $new;
+          $new = $retweet;
+        }
         $new->from = $new->user;
         unset($new->user);
         $output[(string) $new->id] = $new;
@@ -1113,30 +1119,20 @@ function theme_timeline($feed) {
     } else {
       $date = $status->created_at;
     }
-    if($status->retweeted_status){
-      $avatar = theme('avatar',$status->retweeted_status->user->profile_image_url);
-      $source = $status->retweeted_status->source ? " from {$status->retweeted_status->source}" : '';
-      if ($status->retweeted_status->in_reply_to_status_id) {
-        $source .= " in reply to <a href='status/{$status->retweeted_status->in_reply_to_status_id}'>{$status->retweeted_status->in_reply_to_screen_name}</a>";
-      }
-      $text = twitter_parse_tags($status->retweeted_status->text);
-      $row = array(
-        "<b><a href='user/{$status->retweeted_status->user->screen_name}'>{$status->retweeted_status->user->screen_name}</a></b> $actions $link<br />{$text} <small>$source</small><br /><small>retweeted to you by <a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></small>",
-      );
+    $text = twitter_parse_tags($status->text);
+    $link = theme('status_time_link', $status, !$status->is_direct);
+    $actions = theme('action_icons', $status);
+    $avatar = theme('avatar', $status->from->profile_image_url);
+    $source = $status->source ? " from {$status->source}" : '';
+    if ($status->in_reply_to_status_id) {
+      $source .= " in reply to <a href='status/{$status->in_reply_to_status_id}'>{$status->in_reply_to_screen_name}</a>";
     }
-    else{
-      $text = twitter_parse_tags($status->text);
-      $link = theme('status_time_link', $status, !$status->is_direct);
-      $actions = theme('action_icons', $status);
-      $avatar = theme('avatar', $status->from->profile_image_url);
-      $source = $status->source ? " from {$status->source}" : '';
-      if ($status->in_reply_to_status_id) {
-        $source .= " in reply to <a href='status/{$status->in_reply_to_status_id}'>{$status->in_reply_to_screen_name}</a>";
-      }
-      $row = array(
-        "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br />{$text} <small>$source</small>",
-      );
+    $html = "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br />{$text} <small>$source</small>";
+    if ($status->retweeted_by) {
+      $retweeted_by = $status->retweeted_by->user->screen_name;
+      $html .= "<br /><small>retweeted to you by <a href='user/{$retweeted_by}'>{$retweeted_by}</a></small>";
     }
+    $row = array($html);
 
     if ($page != 'user' && $avatar) {
       array_unshift($row, $avatar);
