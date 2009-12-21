@@ -20,10 +20,12 @@ menu_register(array(
 function lists_paginated_process($url) {
 	// Adds cursor/pagination parameters to a query
 	$cursor = $_GET['cursor'];
-	if (is_numeric($cursor)) {
-		$url .= '?cursor='.$_GET['cursor'];
+	if (!is_numeric($cursor)) {
+		$cursor = -1;
 	}
-	return simplexml_load_string(twitter_process($url));
+	$url .= '?cursor='.$cursor;
+	$xml = twitter_process($url);
+	return simplexml_load_string($xml);
 }
 
 function twitter_lists_tweets($user, $list) {

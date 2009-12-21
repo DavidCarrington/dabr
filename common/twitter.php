@@ -627,8 +627,8 @@ function twitter_friends_page($query) {
     user_ensure_authenticated();
     $user = user_current_username();
   }
-  $request = "http://twitter.com/statuses/friends/{$user}.json?page=".intval($_GET['page']);
-  $tl = twitter_process($request);
+  $request = "http://twitter.com/statuses/friends/{$user}.xml";
+  $tl = lists_paginated_process($request);
   $content = theme('followers', $tl);
   theme('page', 'Friends', $content);
 }
@@ -639,8 +639,8 @@ function twitter_followers_page($query) {
     user_ensure_authenticated();
     $user = user_current_username();
   }
-  $request = "http://twitter.com/statuses/followers/{$user}.json?page=".intval($_GET['page']);
-  $tl = twitter_process($request);
+  $request = "http://twitter.com/statuses/followers/{$user}.xml";
+  $tl = lists_paginated_process($request);
   $content = theme('followers', $tl);
   theme('page', 'Followers', $content);
 }
@@ -1160,7 +1160,9 @@ function twitter_is_reply($status) {
 function theme_followers($feed, $hide_pagination = false) {
   $rows = array();
   if (count($feed) == 0 || $feed == '[]') return '<p>No users to display.</p>';
-  foreach ($feed as $user) {
+
+  foreach ($feed->users->user as $user) {
+	
     $name = theme('full_name', $user);
     $tweets_per_day = twitter_tweets_per_day($user);
     $rows[] = array(
@@ -1172,7 +1174,7 @@ function theme_followers($feed, $hide_pagination = false) {
   }
   $content = theme('table', array(), $rows, array('class' => 'followers'));
   if (!$hide_pagination)
-    $content .= theme('pagination');
+    $content .= theme('list_pagination', $feed);
   return $content;
 }
 
