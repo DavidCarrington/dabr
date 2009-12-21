@@ -394,6 +394,7 @@ function twitter_photo_replace($text) {
     '#moby.to/\??([\w\d]+)#i' => 'http://moby.to/%s:square',
     '#mobypicture.com/\?([\w\d]+)#i' => 'http://mobypicture.com/?%s:square',
     '#twic.li/([\w\d]{2,7})#' => 'http://twic.li/api/photo.jpg?id=%s&size=small',
+    '#tweetphoto.com/(\d+)#' => 'http://TweetPhotoAPI.com/api/TPAPI.svc/json/imagefromurl?size=thumbnail&url=http://tweetphoto.com/%s',
   );
   
   // Only enable Flickr service if API key is available
