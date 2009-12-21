@@ -1,0 +1,19 @@
+table{border-collapse:collapse}
+form{margin:.3em;}
+td{vertical-align:top;padding:0.3em}
+img{border:0}
+body{margin:0;font-family:sans-serif}
+
+#menu ul, #menu li { margin: 0; padding: 0; list-style: none; }
+#menu ul { overflow: auto; }
+#menu li { float: left; }
+#menu a { display: block; padding: 0.5em; text-decoration: none; border-right: 1px solid #fff; font-size: 110%; }
+
+body.show-menu #menu-extras { display: block; }
+#menu-extras { display: none; border-top: 1px solid #eee; }
+#menu-extras li { float: none; }
+#menu-extras a { padding: 0.8em; border-bottom: 1px solid #eee; }
+
+.timeline a img { padding: 1px 2px; }
+
+img.bigger { height: 22px; width: 22px; }

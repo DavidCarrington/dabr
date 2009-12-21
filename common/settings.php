@@ -60,6 +60,7 @@ function settings_page($args) {
     'desktop' => 'PC/Laptop',
     'text' => 'Text only',
     'worksafe' => 'Work Safe',
+    'bigtouch' => 'Big Touch',
   );
   
   $gwt = array(
