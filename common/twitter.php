@@ -419,6 +419,15 @@ function twitter_photo_replace($text) {
       $images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='$thumb' />");
     }
   }
+
+	// AudioBoo is handled differently because we link directly to an MP3, not an image
+	if (preg_match_all('#boo.fm/b([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) 
+	{
+		foreach ($matches[1] as $key => $match) 
+		{
+			$images[] = theme('external_link', "http://{$matches[0][$key]}.mp3", "[Listen to MP3]");
+		}
+	}
   
   if (empty($images)) return $text;
   return implode('<br />', $images).'<br />'.$text;
