@@ -340,15 +340,29 @@ function twitter_parse_links_callback($matches) {
   }
 }
 
-function twitter_parse_tags($input) {
-  $out = preg_replace_callback('#(\w+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?<![.,])#is', 'twitter_parse_links_callback', $input);
-  $out = preg_replace('#(^|\s)@([a-z_A-Z0-9]+)/([\w\d-]+)#', '$1@<a href="user/$2">$2</a>/<a href="lists/$2/$3">$3</a>', $out);
-  $out = preg_replace('#(^|\s)@([a-z_A-Z0-9]+)#', '$1@<a href="user/$2">$2</a>', $out);
-  $out = preg_replace('#(^|\s)(\\#([a-z_A-Z0-9:_-]+))#', '$1<a href="hash/$3">$2</a>', $out);
-  if (!in_array(setting_fetch('browser'), array('text', 'worksafe'))) {
-    $out = twitter_photo_replace($out);
-  }
-  return $out;
+function twitter_parse_tags($input) 
+{
+	//Links
+	$out = preg_replace_callback('#(\w+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?<![.,])#is', 'twitter_parse_links_callback', $input);
+
+	//Lists (@dabr/mobile)
+ 	$out = preg_replace('#(^|\s)@([a-z_A-Z0-9]+)/([\w\d-]+)#', '$1@<a href="user/$2">$2</a>/<a href="lists/$2/$3">$3</a>', $out);
+
+	//Users
+	$out = preg_replace('#(^|\s)@([a-z_A-Z0-9]+)#', '$1@<a href="user/$2">$2</a>', $out);
+
+	//Hashtags (#FollowFriday)
+	$out = preg_replace('#(^|\s)(\\#([a-z_A-Z0-9:_-]+))#', '$1<a href="hash/$3">$2</a>', $out);
+
+	//If this is worksafe mode - don't display any images
+	if (!in_array(setting_fetch('browser'), array('text', 'worksafe'))) 
+	{
+		//Add in images
+		$out = twitter_photo_replace($out);
+	}
+
+	//Return the completed string
+	return $out;
 }
 
 function flickr_decode($num) {
