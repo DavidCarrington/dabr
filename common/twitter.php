@@ -428,7 +428,18 @@ function twitter_photo_replace($text) {
 			$images[] = theme('external_link', "http://{$matches[0][$key]}.mp3", "[Listen to MP3]");
 		}
 	}
-  
+
+	// match phz.in (short phreadz)  urls
+	if (preg_match_all('#phz.in/([\d\w]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) 
+	{
+		foreach ($matches[1] as $match) 
+		{
+			//Images from Phreadz aren't always suitable for mobile, so we use http://tinysrc.mobi/ to convert them
+			$thumb = "http://i.tinysrc.mobi/x50/http://api.phreadz.com/thumb/" . $match . "?t=code";
+			$images[] = theme('external_link', "http://phz.in/" . $match, "<img src='$thumb' />");
+		}
+	}  
+
   if (empty($images)) return $text;
   return implode('<br />', $images).'<br />'.$text;
 }
