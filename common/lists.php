@@ -151,7 +151,7 @@ function lists_list_members_page($user, $list) {
 	$p = twitter_lists_list_members($user, $list);
 	
 	// TODO: use a different theme() function? Add a "delete member" link for each member
-	$content = theme('followers', $p->users->user, 1);
+	$content = theme('followers', $p, 1);
 	$content .= theme('list_pagination', $p);
 	theme('page', "Members of {$user}/{$list}", $content);
 }
