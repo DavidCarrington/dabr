@@ -399,6 +399,7 @@ function twitter_photo_replace($text) {
   // List of supported services. Array format: pattern => thumbnail url
   $services = array(
     '#youtube\.com\/watch\?v=([_-\d\w]+)#i' => 'http://i.ytimg.com/vi/%s/1.jpg',
+    '#youtu\.be\/([_-\d\w]+)#i' => 'http://i.ytimg.com/vi/%s/1.jpg',
     '#twitpic.com/([\d\w]+)#i' => 'http://twitpic.com/show/thumb/%s',
     '#twitgoo.com/([\d\w]+)#i' => 'http://twitgoo.com/show/thumb/%s',
     '#yfrog.com/([\w\d]+)#i' => 'http://yfrog.com/%s.th.jpg',
