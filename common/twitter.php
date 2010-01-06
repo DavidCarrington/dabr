@@ -250,7 +250,8 @@ function twitter_twitpic_page($query) {
 
 function twitter_process($url, $post_data = false) {
   if ($post_data === true) $post_data = array();
-  if (user_type() == 'oauth' && strpos($url, '/twitter.com') !== false) {
+  //Some POSTable twitter methods are on http://api.twitter.com not http://twitter.com
+  if (user_type() == 'oauth' && ( strpos($url, '/twitter.com') !== false || strpos($url, 'api.twitter.com') !== false) ) {
     user_oauth_sign($url, $post_data);
   } elseif (strpos($url, 'twitter.com') !== false && is_array($post_data)) {
     // Passing $post_data as an array to twitter.com (non-oauth) causes an error :(
@@ -690,7 +691,7 @@ function twitter_retweet($query) {
   twitter_ensure_post_action();
   $id = $query[1];
   if (is_numeric($id)) {
-    $request = 'http://twitter.com/statuses/retweet/'.$id.'.xml';
+    $request = 'http://api.twitter.com/1/statuses/retweet/'.$id.'.xml';
     twitter_process($request, true);
   }
   twitter_refresh($_POST['from'] ? $_POST['from'] : '');
