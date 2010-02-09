@@ -350,7 +350,8 @@ function twitter_parse_tags($input)
  	$out = preg_replace('#(^|\s)@([a-z_A-Z0-9]+)/([\w\d-]+)#', '$1@<a href="user/$2">$2</a>/<a href="lists/$2/$3">$3</a>', $out);
 
 	//Users
-	$out = preg_replace('#(^|\s)@([a-z_A-Z0-9]+)#', '$1@<a href="user/$2">$2</a>', $out);
+	//Also supports brackets (@edent)
+	$out = preg_replace('#(^|\s|\()@([a-z_A-Z0-9]+)#', '$1@<a href="user/$2">$2</a>', $out);
 
 	//Hashtags (#FollowFriday)
 	$out = preg_replace('#(^|\s)(\\#([a-z_A-Z0-9:_-]+))#', '$1<a href="hash/$3">$2</a>', $out);
@@ -411,7 +412,17 @@ function twitter_photo_replace($text) {
     '#mobypicture.com/\?([\w\d]+)#i' => 'http://mobypicture.com/?%s:square',
     '#twic.li/([\w\d]{2,7})#' => 'http://twic.li/api/photo.jpg?id=%s&size=small',
     '#tweetphoto.com/(\d+)#' => 'http://TweetPhotoAPI.com/api/TPAPI.svc/json/imagefromurl?size=thumbnail&url=http://tweetphoto.com/%s',
-		'#phz.in/([\d\w]+)#' => 'http://i.tinysrc.mobi/x50/http://api.phreadz.com/thumb/%s?t=code',
+	'#phz.in/([\d\w]+)#' => 'http://i.tinysrc.mobi/x50/http://api.phreadz.com/thumb/%s?t=code',
+	
+	//From the issues list http://code.google.com/p/dabr/issues/detail?id=106
+	'#twitvid.com/([\w]+)#i' => 'http://i.tinysrc.mobi/x50/http://images.twitvid.com/%s.jpg',
+    	'#pic.gd/([\w]+)#i' =>
+		'http://TweetPhotoAPI.com/api/TPAPI.svc/imagefromurl?size=thumbnail&url=http://www.pic.gd/%s',
+	'#imgur.com/([\w]{5})[\s\.ls][\.\w]*#i' => 'http://imgur.com/%ss.png',
+	'#imgur.com/gallery/([\w]+)#i' => 'http://imgur.com/%ss.png',
+ 	'#imgur.com/delete/([\w]+)#i' => 'images/trash.gif',
+ 	'#brizzly.com/pic/([\w]+)#i' => 'http://pics.brizzly.com/thumb_sm_%s.jpg',
+	'#img\.ly\/([\w\d]+)#i' => 'http://img.ly/show/thumb/%s',
   );
   
   // Only enable Flickr service if API key is available
@@ -905,8 +916,9 @@ function theme_status($status) {
   }
   return $out;
 }
-
-function theme_retweet($status) {
+/*
+function theme_retweet($status) 
+{
   $text = "RT @{$status->user->screen_name}: {$status->text}";
   $length = function_exists('mb_strlen') ? mb_strlen($text,'UTF-8') : strlen($text);
   $from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
@@ -916,6 +928,39 @@ function theme_retweet($status) {
     $content.="<br />Or Twitter's new style retweet<br /><form action='twitter-retweet/{$status->id}' method='post'><input type='hidden' name='from' value='$from' /><input type='submit' value='Twitter Retweet'></form>";
   }
   return $content;
+}
+*/
+function theme_retweet($status) 
+{
+	$text = "RT @{$status->user->screen_name}: {$status->text}";
+	$length = function_exists('mb_strlen') ? mb_strlen($text,'UTF-8') : strlen($text);
+	$from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
+	
+	if($status->user->protected == 0)
+	{
+		$content.="<p>Twitter's new style retweet:</p>
+					<form action='twitter-retweet/{$status->id}' method='post'>
+						<input type='hidden' name='from' value='$from' />
+						<input type='submit' value='Twitter Retweet' />
+					</form>
+					<hr />";
+	}
+	else
+	{
+		$content.="<p>@{$status->user->screen_name} doesn't allow you to retweet them. You will have to use the  use the old style editable retweet</p>";
+	}
+
+	$content .= "<p>Old style editable retweet:</p>
+					<form action='update' method='post'>
+						<input type='hidden' name='from' value='$from' />
+						<textarea name='status' cols='50' rows='3' id='status'>$text</textarea>
+						<br/>
+						<input type='submit' value='Retweet' />
+						<span id='remaining'>" . (140 - $length) ."</span>
+					</form>";
+	$content .= js_counter("status");  
+	
+	return $content;
 }
 
 function twitter_tweets_per_day($user, $rounding = 1) {
@@ -1247,7 +1292,9 @@ function theme_external_link($url, $content = null) {
 	//Long URL functionality.  Also uncomment function long_url($shortURL)
 	if (!$content) 
 	{	
-		return "<a href='$url' target='_blank'>".long_url($url)."</a>";
+		//Used to wordwrap long URLs
+		//return "<a href='$url' target='_blank'>". wordwrap(long_url($url), 64, "\n", true) ."</a>";
+		return "<a href='$url' target='_blank'>". long_url($url) ."</a>";
 	}
 	else
 	{
