@@ -4,7 +4,9 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
 
-# 1 week cache
-<FilesMatch "\.(png|ico)$">
-Header set Cache-Control "max-age=604800, public"
-</FilesMatch>
+<IfModule header_module>
+	# 1 week cache
+	<FilesMatch "\.(png|ico)$">
+	Header set Cache-Control "max-age=604800, public"
+	</FilesMatch>
+</IfModule>
