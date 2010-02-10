@@ -416,13 +416,11 @@ function twitter_photo_replace($text) {
 	
 	//From the issues list http://code.google.com/p/dabr/issues/detail?id=106
 	'#twitvid.com/([\w]+)#i' => 'http://i.tinysrc.mobi/x50/http://images.twitvid.com/%s.jpg',
-    	'#pic.gd/([\w]+)#i' =>
-		'http://TweetPhotoAPI.com/api/TPAPI.svc/imagefromurl?size=thumbnail&url=http://www.pic.gd/%s',
+    '#pic.gd/([\w]+)#i' => 'http://TweetPhotoAPI.com/api/TPAPI.svc/imagefromurl?size=thumbnail&url=http://www.pic.gd/%s',
 	'#imgur.com/([\w]{5})[\s\.ls][\.\w]*#i' => 'http://imgur.com/%ss.png',
 	'#imgur.com/gallery/([\w]+)#i' => 'http://imgur.com/%ss.png',
- 	'#imgur.com/delete/([\w]+)#i' => 'images/trash.gif',
  	'#brizzly.com/pic/([\w]+)#i' => 'http://pics.brizzly.com/thumb_sm_%s.jpg',
-	'#img\.ly\/([\w\d]+)#i' => 'http://img.ly/show/thumb/%s',
+	'#img.ly/([\w\d]+)#i' => 'http://img.ly/show/thumb/%s',
   );
   
   // Only enable Flickr service if API key is available
