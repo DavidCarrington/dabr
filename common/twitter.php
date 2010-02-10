@@ -261,6 +261,7 @@ function twitter_process($url, $post_data = false) {
     $post_data = implode('&', $s);
   }
   
+  $api_start = microtime(1);
   $ch = curl_init($url);
 
   if($post_data !== false && !$_GET['page']) {
@@ -281,6 +282,8 @@ function twitter_process($url, $post_data = false) {
   $response = curl_exec($ch);
   $response_info=curl_getinfo($ch);
   curl_close($ch);
+  global $api_time;
+  $api_time += microtime(1) - $api_start;
 
   switch( intval( $response_info['http_code'] ) ) {
     case 200:
@@ -416,7 +419,8 @@ function twitter_photo_replace($text) {
 	
 	//From the issues list http://code.google.com/p/dabr/issues/detail?id=106
 	'#twitvid.com/([\w]+)#i' => 'http://i.tinysrc.mobi/x50/http://images.twitvid.com/%s.jpg',
-    '#pic.gd/([\w]+)#i' => 'http://TweetPhotoAPI.com/api/TPAPI.svc/imagefromurl?size=thumbnail&url=http://www.pic.gd/%s',
+    '#pic.gd/([\w]+)#i' =>
+	'http://TweetPhotoAPI.com/api/TPAPI.svc/imagefromurl?size=thumbnail&url=http://www.pic.gd/%s',
 	'#imgur.com/([\w]{5})[\s\.ls][\.\w]*#i' => 'http://imgur.com/%ss.png',
 	'#imgur.com/gallery/([\w]+)#i' => 'http://imgur.com/%ss.png',
  	'#brizzly.com/pic/([\w]+)#i' => 'http://pics.brizzly.com/thumb_sm_%s.jpg',

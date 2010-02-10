@@ -18,6 +18,9 @@ define('FLICKR_API_KEY', '');
 // Uncomment to enable.
 // define('LONGURL_KEY', 'true');
 
+// Optional: Enable to view page processing and API time
+define('DEBUG_MODE', 'OFF');
+
 // Base URL, should point to your website, including a trailing slash
 // Can be set manually but the following code tries to work it out automatically.
 $base_url = 'http://'.$_SERVER['HTTP_HOST'];

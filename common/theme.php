@@ -130,6 +130,15 @@ function theme_page($title, $content) {
   $body .= $content;
   $body .= theme('menu_bottom');
   $body .= theme('google_analytics');
+  if (DEBUG_MODE == 'ON') {
+    global $dabr_start, $api_time;
+    $time = microtime(1) - $dabr_start;
+    $body .= '<p>Processed in '.round($time, 4).' seconds ('.round($api_time / $time * 100).'% waiting for Twitter\'s API)</p>';
+  }
+  if ($title == 'Login') {
+    $title = 'mobile Twitter Login';
+    $meta = '<meta name="description" content="Open source alternative to mobile Twitter, bringing you the complete Twitter experience to your phone." />';
+  }
   ob_start('ob_gzhandler');
   header('Content-Type: text/html; charset=utf-8');
   echo '<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
