@@ -366,6 +366,9 @@ function twitter_parse_tags($input)
 		$out = twitter_photo_replace($out);
 	}
 
+	//Linebreaks.  Some clients insert \n for formatting.
+	$out = nl2br($out);
+
 	//Return the completed string
 	return $out;
 }
