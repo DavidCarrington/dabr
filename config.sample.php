@@ -1,5 +1,8 @@
 <?php
 
+// Twitter's API URL.
+define('API_URL','http://api.twitter.com/1/');
+
 // Cookie encryption key. Max 52 characters
 define('ENCRYPTION_KEY', 'Example Key - Change Me!');
 

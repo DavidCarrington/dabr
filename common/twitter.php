@@ -160,7 +160,7 @@ function long_url($shortURL)
 
 
 function friendship_exists($user_a) {
-  $request = 'http://api.twitter.com/1/friendships/show.json?target_screen_name=' . $user_a;
+  $request = API_URL.'friendships/show.json?target_screen_name=' . $user_a;
   $following = twitter_process($request);
   
   if ($following->relationship->target->following == 1) {
@@ -174,7 +174,7 @@ function twitter_block_exists($query)
 {
 	//http://apiwiki.twitter.com/Twitter-REST-API-Method%3A-blocks-blocking-ids
 	//Get an array of all ids the authenticated user is blocking
-	$request = 'http://api.twitter.com/1/blocks/blocking/ids.json';
+	$request = API_URL.'blocks/blocking/ids.json';
 	$blocked = (array) twitter_process($request);
 	
 	//bool in_array  ( mixed $needle  , array $haystack  [, bool $strict  ] )		
@@ -250,10 +250,9 @@ function twitter_twitpic_page($query) {
 
 function twitter_process($url, $post_data = false) {
   if ($post_data === true) $post_data = array();
-  //Some POSTable twitter methods are on http://api.twitter.com not http://twitter.com
-  if (user_type() == 'oauth' && ( strpos($url, '/twitter.com') !== false || strpos($url, 'api.twitter.com') !== false) ) {
+  if (user_type() == 'oauth' && strpos($url, 'api.twitter.com') !== false) {
     user_oauth_sign($url, $post_data);
-  } elseif (strpos($url, 'twitter.com') !== false && is_array($post_data)) {
+  } elseif (strpos($url, 'api.twitter.com') !== false && is_array($post_data)) {
     // Passing $post_data as an array to twitter.com (non-oauth) causes an error :(
     $s = array();
     foreach ($post_data as $name => $value)
@@ -521,7 +520,7 @@ function format_interval($timestamp, $granularity = 2) {
 function twitter_status_page($query) {
   $id = (string) $query[1];
   if (is_numeric($id)) {
-    $request = "http://api.twitter.com/1/statuses/show/{$id}.json";
+    $request = API_URL."statuses/show/{$id}.json";
     $status = twitter_process($request);
     $content = theme('status', $status);
     if (!$status->user->protected) {
@@ -544,7 +543,7 @@ function twitter_thread_timeline($thread_id) {
 function twitter_retweet_page($query) {
   $id = (string) $query[1];
   if (is_numeric($id)) {
-    $request = "http://api.twitter.com/1/statuses/show/{$id}.json";
+    $request = API_URL."statuses/show/{$id}.json";
     $tl = twitter_process($request);
     $content = theme('retweet', $tl);
     theme('page', 'Retweet', $content);
@@ -566,7 +565,7 @@ function twitter_delete_page($query) {
   
   $id = (string) $query[1];
   if (is_numeric($id)) {
-    $request = "http://api.twitter.com/1/statuses/destroy/{$id}.json?page=".intval($_GET['page']);
+    $request = API_URL."statuses/destroy/{$id}.json?page=".intval($_GET['page']);
     $tl = twitter_process($request, true);
     twitter_refresh('user/'.user_current_username());
   }
@@ -584,9 +583,9 @@ function twitter_follow_page($query) {
   $user = $query[1];
   if ($user) {
     if($query[0] == 'follow'){
-      $request = "http://api.twitter.com/1/friendships/create/{$user}.json";
+      $request = API_URL."friendships/create/{$user}.json";
     } else {
-      $request = "http://api.twitter.com/1/friendships/destroy/{$user}.json";
+      $request = API_URL."friendships/destroy/{$user}.json";
     }
     twitter_process($request, true);
     twitter_refresh('friends');
@@ -598,9 +597,9 @@ function twitter_block_page($query) {
   $user = $query[1];
   if ($user) {
     if($query[0] == 'block'){
-      $request = "http://api.twitter.com/1/blocks/create/{$user}.json";
+      $request = API_URL."blocks/create/{$user}.json";
     } else {
-      $request = "http://api.twitter.com/1/blocks/destroy/{$user}.json";
+      $request = API_URL."blocks/destroy/{$user}.json";
     }
     twitter_process($request, true);
     twitter_refresh("user/{$user}");
@@ -617,7 +616,7 @@ function twitter_spam_page($query)
 	//The data we need to post
 	$post_data = array("screen_name" => $user);
 
-	$request = "http://api.twitter.com/1/report_spam.json";
+	$request = API_URL."report_spam.json";
 	twitter_process($request, $post_data);
 
 	//Where should we return the user to?  Back to the user
@@ -670,7 +669,7 @@ function twitter_friends_page($query) {
     user_ensure_authenticated();
     $user = user_current_username();
   }
-  $request = "http://api.twitter.com/1/statuses/friends/{$user}.xml";
+  $request = API_URL."statuses/friends/{$user}.xml";
   $tl = lists_paginated_process($request);
   $content = theme('followers', $tl);
   theme('page', 'Friends', $content);
@@ -682,7 +681,7 @@ function twitter_followers_page($query) {
     user_ensure_authenticated();
     $user = user_current_username();
   }
-  $request = "http://api.twitter.com/1/statuses/followers/{$user}.xml";
+  $request = API_URL."statuses/followers/{$user}.xml";
   $tl = lists_paginated_process($request);
   $content = theme('followers', $tl);
   theme('page', 'Followers', $content);
@@ -692,7 +691,7 @@ function twitter_update() {
   twitter_ensure_post_action();
   $status = twitter_url_shorten(stripslashes(trim($_POST['status'])));
   if ($status) {
-    $request = 'http://api.twitter.com/1/statuses/update.json';
+    $request = API_URL.'statuses/update.json';
     $post_data = array('source' => 'dabr', 'status' => $status);
     $in_reply_to_id = (string) $_POST['in_reply_to_id'];
     if (is_numeric($in_reply_to_id)) {
@@ -707,14 +706,14 @@ function twitter_retweet($query) {
   twitter_ensure_post_action();
   $id = $query[1];
   if (is_numeric($id)) {
-    $request = 'http://api.twitter.com/1/statuses/retweet/'.$id.'.xml';
+    $request = API_URL.'statuses/retweet/'.$id.'.xml';
     twitter_process($request, true);
   }
   twitter_refresh($_POST['from'] ? $_POST['from'] : '');
 }
 
 function twitter_public_page() {
-  $request = 'http://api.twitter.com/1/statuses/public_timeline.json?page='.intval($_GET['page']);
+  $request = API_URL.'statuses/public_timeline.json?page='.intval($_GET['page']);
   $content = theme('status_form');
   $tl = twitter_standard_timeline(twitter_process($request), 'public');
   $content .= theme('timeline', $tl);
@@ -722,7 +721,7 @@ function twitter_public_page() {
 }
 
 function twitter_replies_page() {
-  $request = 'http://api.twitter.com/1/statuses/replies.json?page='.intval($_GET['page']);
+  $request = API_URL.'statuses/replies.json?page='.intval($_GET['page']);
   $tl = twitter_process($request);
   $tl = twitter_standard_timeline($tl, 'replies');
   $content = theme('status_form');
@@ -736,7 +735,7 @@ function twitter_directs_page($query) {
     case 'delete':
       $id = $query[2];
       if (!is_numeric($id)) return;
-      $request = "http://api.twitter.com/1/direct_messages/destroy/$id.json";
+      $request = API_URL."direct_messages/destroy/$id.json";
       twitter_process($request, true);
       twitter_refresh();
       
@@ -749,12 +748,12 @@ function twitter_directs_page($query) {
       twitter_ensure_post_action();
       $to = trim(stripslashes($_POST['to']));
       $message = trim(stripslashes($_POST['message']));
-      $request = 'http://api.twitter.com/1/direct_messages/new.json';
+      $request = API_URL.'direct_messages/new.json';
       twitter_process($request, array('user' => $to, 'text' => $message));
       twitter_refresh('directs/sent');
     
     case 'sent':
-      $request = 'http://api.twitter.com/1/direct_messages/sent.json?page='.intval($_GET['page']);
+      $request = API_URL.'direct_messages/sent.json?page='.intval($_GET['page']);
       $tl = twitter_standard_timeline(twitter_process($request), 'directs_sent');
       $content = theme_directs_menu();
       $content .= theme('timeline', $tl);
@@ -762,7 +761,7 @@ function twitter_directs_page($query) {
 
     case 'inbox':
     default:
-      $request = 'http://api.twitter.com/1/direct_messages.json?page='.intval($_GET['page']);
+      $request = API_URL.'direct_messages.json?page='.intval($_GET['page']);
       $tl = twitter_standard_timeline(twitter_process($request), 'directs_inbox');
       $content = theme_directs_menu();
       $content .= theme('timeline', $tl);
@@ -842,7 +841,7 @@ function twitter_user_page($query) {
     $content .= theme('user_header', $user);
     
     if (isset($user->status)) {
-      $request = "http://api.twitter.com/1/statuses/user_timeline.json?screen_name={$screen_name}&page=".intval($_GET['page']);
+      $request = API_URL."statuses/user_timeline.json?screen_name={$screen_name}&page=".intval($_GET['page']);
       $tl = twitter_process($request);
       $tl = twitter_standard_timeline($tl, 'user');
       $content .= theme('timeline', $tl);
@@ -859,7 +858,7 @@ function twitter_favourites_page($query) {
     user_ensure_authenticated();
     $screen_name = user_current_username();
   }
-  $request = "http://api.twitter.com/1/favorites/{$screen_name}.json?page=".intval($_GET['page']);
+  $request = API_URL."favorites/{$screen_name}.json?page=".intval($_GET['page']);
   $tl = twitter_process($request);
   $tl = twitter_standard_timeline($tl, 'favourites');
   $content = theme('status_form');
@@ -871,9 +870,9 @@ function twitter_mark_favourite_page($query) {
   $id = (string) $query[1];
   if (!is_numeric($id)) return;
   if ($query[0] == 'unfavourite') {
-    $request = "http://api.twitter.com/1/favorites/destroy/$id.json";
+    $request = API_URL."favorites/destroy/$id.json";
   } else {
-    $request = "http://api.twitter.com/1/favorites/create/$id.json";
+    $request = API_URL."favorites/create/$id.json";
   }
   twitter_process($request, true);
   twitter_refresh();
@@ -881,7 +880,7 @@ function twitter_mark_favourite_page($query) {
 
 function twitter_home_page() {
   user_ensure_authenticated();
-  $request = 'http://api.twitter.com/1/statuses/home_timeline.json?count=20&page='.intval($_GET['page']);
+  $request = API_URL.'statuses/home_timeline.json?count=20&page='.intval($_GET['page']);
   $tl = twitter_process($request);
   $tl = twitter_standard_timeline($tl, 'friends');
   $content = theme('status_form');
@@ -1172,7 +1171,7 @@ function preg_match_one($pattern, $subject, $flags = NULL) {
 function twitter_user_info($username = null) {
   if (!$username)
   $username = user_current_username();
-  $request = "http://api.twitter.com/1/users/show.json?screen_name=$username";
+  $request = API_URL."users/show.json?screen_name=$username";
   $user = twitter_process($request);
   return $user;
 }
