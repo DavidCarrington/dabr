@@ -170,6 +170,13 @@ function friendship_exists($user_a) {
   }
 }
 
+function friendship($user_a) 
+{
+	$request = API_URL.'friendships/show.json?target_screen_name=' . $user_a;
+	return twitter_process($request);
+}
+
+
 function twitter_block_exists($query) 
 {
 	//http://apiwiki.twitter.com/Twitter-REST-API-Method%3A-blocks-blocking-ids
@@ -974,45 +981,87 @@ function twitter_tweets_per_day($user, $rounding = 1) {
 }
 
 function theme_user_header($user) {
+	$following = friendship($user->screen_name);
+	$followed_by = $following->relationship->target->followed_by; //The $user is followed by the authenticating 
+	$following = $following->relationship->target->following;
   $name = theme('full_name', $user);
   $full_avatar = str_replace('_normal.', '.', $user->profile_image_url);
   $link = theme('external_link', $user->url);
   $raw_date_joined = strtotime($user->created_at);
   $date_joined = date('jS M Y', $raw_date_joined);
   $tweets_per_day = twitter_tweets_per_day($user, 1);
-  $out = "<table><tr><td>".theme('external_link', $full_avatar, theme('avatar', $user->profile_image_url, 1))."</td>
-<td><b>{$name}</b>
-<small>";
+  $out = "<table>
+  				<tr>
+  					<td>".theme('external_link', $full_avatar, theme('avatar', $user->profile_image_url, 1))."</td>
+					<td><b>{$name}</b>
+						<small>";
   if ($user->verified == true) {
-    $out .= '<br /><strong>Verified Account</strong>';
+		$out .= '<br /><strong>Verified Account</strong>';
   }
   if ($user->protected == true) {
-    $out .= '<br /><strong>Private/Protected Tweets</strong>';
+		$out .= '<br /><strong>Private/Protected Tweets</strong>';
   }
-  $out .= "
-<br />Bio: {$user->description}
-<br />Link: {$link}
-<br />Location: {$user->location}
-<br />Joined: {$date_joined} (~$tweets_per_day tweets per day)
-</small>
-<br />
-{$user->statuses_count} tweets |
-<a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a> ";
-
-  if ($user->following !== true) {
-    $out .= "| <a href='follow/{$user->screen_name}'>Follow</a>";
-  } else {
-    $out .= " | <a href='unfollow/{$user->screen_name}'>Unfollow</a>";
-  }
+	$out .= "
+			<br />Bio: {$user->description}
+			<br />Link: {$link}
+			<br />Location: {$user->location}
+			<br />Joined: {$date_joined} (~$tweets_per_day tweets per day)
+			</small>
+			<br />
+			{$user->statuses_count} tweets | ";
+  
+		//If the authenticated user is not following the protected used, the API will return a 401 error when trying to view friends, followers and favourites
+		//This is not the case on the Twitter website
+		//To avoid the user being logged out, check to see if she is following the protected user. If not, don't create links to friends, followers and favourites
+		if ($user->protected == true && $followed_by == false)
+		{
+			$out .= "{$user->followers_count} followers 
+				| {$user->friends_count} friends</a>
+				| {$user->favourites_count} favourites</a>";
+		}
+		else
+		{
+			$out .= "<a href='followers/{$user->screen_name}'>{$user->followers_count} followers</a> 
+				| <a href='friends/{$user->screen_name}'>{$user->friends_count} friends</a>
+				| <a href='favourites/{$user->screen_name}'>{$user->favourites_count} favourites</a>";
+		}
+  
+	$out.= "	| <a href='lists/{$user->screen_name}'>Lists</a>
+				| <a href='directs/create/{$user->screen_name}'>Direct Message</a>";
+				//NB we can tell if the user can be sent a DM $following->relationship->target->following;
+				//Would removing this link confuse users?
+	
+	//Deprecated http://apiwiki.twitter.com/Twitter-REST-API-Method%3A-users%C2%A0show
+	//if ($user->following !== true) 
+	if ($followed_by == false)
+	{
+		$out .= " | <a href='follow/{$user->screen_name}'>Follow</a>";
+	} 
+	else 
+	{
+		$out .= " | <a href='unfollow/{$user->screen_name}'>Unfollow</a>";
+	}
   
 	//We need to pass the User Name and the User ID.  The Name is presented in the UI, the ID is used in checking
 	$out.= " | <a href='confirm/block/{$user->screen_name}/{$user->id}'>Block | Unblock</a>";
-	$out .= " | <a href='confirm/spam/{$user->screen_name}/{$user->id}'>Report Spam</a>";
-  $out.= " | <a href='friends/{$user->screen_name}'>{$user->friends_count} friends</a>
-| <a href='favourites/{$user->screen_name}'>{$user->favourites_count} favourites</a>
-| <a href='directs/create/{$user->screen_name}'>Direct Message</a>
-| <a href='lists/{$user->screen_name}'>Lists</a>
-</td></table>";
+
+	
+	/*
+	//This should work, but it doesn't. Grrr.
+	$blocked = $following->relationship->source->blocking; //The $user is blocked by the authenticating 
+	if ($blocked == true)
+	{
+		$out.= " | <a href='confirm/block/{$user->screen_name}/{$user->id}'>Unblock</a>";
+	}
+	else
+	{
+		$out.= " | <a href='confirm/block/{$user->screen_name}/{$user->id}'>Block</a>";
+	}
+	*/
+	
+	$out.= " | <a href='confirm/spam/{$user->screen_name}/{$user->id}'>Report Spam</a>
+	
+			</td></table>";
   return $out;
 }
 
