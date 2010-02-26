@@ -211,19 +211,11 @@ function twitter_trends_page($query)
 function js_counter($name)
 {
 	$script = '<script type="text/javascript">
-	function updateCount() 
-	{
-		document.getElementById("remaining").innerHTML = 140 - document.getElementById("' . $name . '").value.length;
-		setTimeout(updateCount, 400);
-	}
-
-	function confirmShortTweet() 
-	{
-		var len = document.getElementById("' . $name . '").value.length;
-		if (len < 30) return confirm("That\'s a short tweet.\nContinue?");
-		return true;
-	}
-	updateCount();
+function updateCount() {
+document.getElementById("remaining").innerHTML = 140 - document.getElementById("' . $name . '").value.length;
+setTimeout(updateCount, 400);
+}
+updateCount();
 </script>';
 	return $script;
 }
