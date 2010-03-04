@@ -45,11 +45,6 @@ menu_register(array(
     'callback' => 'twitter_search_page',
     'accesskey' => '3',
   ),
-  'public' => array(
-    'security' => true,
-    'callback' => 'twitter_public_page',
-    'accesskey' => '4',
-  ),
   'user' => array(
     'hidden' => true,
     'security' => true,
@@ -711,14 +706,6 @@ function twitter_retweet($query) {
   twitter_refresh($_POST['from'] ? $_POST['from'] : '');
 }
 
-function twitter_public_page() {
-  $request = API_URL.'statuses/public_timeline.json?page='.intval($_GET['page']);
-  $content = theme('status_form');
-  $tl = twitter_standard_timeline(twitter_process($request), 'public');
-  $content .= theme('timeline', $tl);
-  theme('page', 'Public Timeline', $content);
-}
-
 function twitter_replies_page() {
   $request = API_URL.'statuses/replies.json?page='.intval($_GET['page']);
   $tl = twitter_process($request);
@@ -1105,7 +1092,6 @@ function twitter_standard_timeline($feed, $source) {
   switch ($source) {
     case 'favourites':
     case 'friends':
-    case 'public':
     case 'replies':
     case 'user':
       foreach ($feed as $status) {
