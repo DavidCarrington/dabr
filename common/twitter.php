@@ -244,7 +244,7 @@ function twitter_twitpic_page($query) {
 
 function twitter_process($url, $post_data = false) {
   if ($post_data === true) $post_data = array();
-  if (user_type() == 'oauth' && strpos($url, 'api.twitter.com') !== false) {
+  if (user_type() == 'oauth' && ( strpos($url, '/twitter.com') !== false || strpos($url, 'api.twitter.com') !== false)) {
     user_oauth_sign($url, $post_data);
   } elseif (strpos($url, 'api.twitter.com') !== false && is_array($post_data)) {
     // Passing $post_data as an array to twitter.com (non-oauth) causes an error :(
