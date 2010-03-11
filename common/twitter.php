@@ -256,7 +256,7 @@ function twitter_process($url, $post_data = false) {
   
   $api_start = microtime(1);
   $ch = curl_init($url);
-
+	
   if($post_data !== false && !$_GET['page']) {
     curl_setopt ($ch, CURLOPT_POST, true);
     curl_setopt ($ch, CURLOPT_POSTFIELDS, $post_data);
@@ -285,7 +285,7 @@ function twitter_process($url, $post_data = false) {
       return $response;
     case 401:
       user_logout();
-      theme('error', '<p>Error: Login credentials incorrect.</p>');
+      theme('error', "<p>Error: Login credentials incorrect.</p><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
     case 0:
       theme('error', '<h2>Twitter timed out</h3><p>Dabr gave up on waiting for Twitter to respond. They\'re probably overloaded right now, try again in a minute.</p>');
     default:
@@ -351,7 +351,7 @@ function twitter_parse_tags($input)
 
 	//Hashtags (#FollowFriday)
 	$out = preg_replace('#(^|\s)(\\#([a-z_A-Z0-9:_-]+))#', '$1<a href="hash/$3">$2</a>', $out);
-
+		
 	//If this is worksafe mode - don't display any images
 	if (!in_array(setting_fetch('browser'), array('text', 'worksafe'))) 
 	{

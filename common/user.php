@@ -19,7 +19,7 @@ function user_oauth() {
   if ($oauth_token = $_GET['oauth_token']) {
     // Generate ACCESS token request
     $params = array('oauth_verifier' => $_GET['oauth_verifier']);
-    $response = twitter_process('https://twitter.com/oauth/access_token', $params);
+    $response = twitter_process('https://api.twitter.com/oauth/access_token', $params);
     parse_str($response, $token);
     
     // Store ACCESS tokens in COOKIE
@@ -27,7 +27,7 @@ function user_oauth() {
     
     // Fetch the user's screen name with a quick API call
     unset($_SESSION['oauth_request_token_secret']);
-    $user = twitter_process('http://twitter.com/account/verify_credentials.json');
+    $user = twitter_process('https://api.twitter.com/account/verify_credentials.json');
     $GLOBALS['user']['username'] = $user->screen_name;
     
     _user_save_cookie(1);
@@ -37,14 +37,14 @@ function user_oauth() {
   } else {
     // Generate AUTH token request
     $params = array('oauth_callback' => BASE_URL.'oauth');
-    $response = twitter_process('https://twitter.com/oauth/request_token', $params);
+    $response = twitter_process('https://api.twitter.com/oauth/request_token', $params);
     parse_str($response, $token);
     
     // Save secret token to session to validate the result that comes back from Twitter
     $_SESSION['oauth_request_token_secret'] = $token['oauth_token_secret'];
     
     // redirect user to authorisation URL
-    $authorise_url = 'https://twitter.com/oauth/authorize?oauth_token='.$token['oauth_token'];
+    $authorise_url = 'https://api.twitter.com/oauth/authorize?oauth_token='.$token['oauth_token'];
     header("Location: $authorise_url");
   }
 }
