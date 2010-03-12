@@ -808,17 +808,19 @@ function twitter_search($search_query) {
 function twitter_user_page($query) 
 {
 	$screen_name = $query[1];
+	$user = twitter_user_info($screen_name);
+
 	if ($screen_name) 
 	{
 		$content = '';
 
-    	if ($query[2] == 'reply') 
-    	{
-      	$in_reply_to_id = (string) $query[3];
-      	if (is_numeric($in_reply_to_id)) 
-      	{
-        		$content .= "<p>In reply to tweet ID $in_reply_to_id...</p>";
- 			}
+    		if ($query[2] == 'reply') 
+	    	{
+			$in_reply_to_id = (string) $query[3];
+			if (is_numeric($in_reply_to_id)) 
+			{
+        			$content .= "<p>In reply to:</p>";
+	 		}
 		}
 		else if($query[2] == 'replyall')
 	 	{
@@ -826,45 +828,26 @@ function twitter_user_page($query)
 
 			if (is_numeric($in_reply_to_id)) 
 			{
-				$content .= "<p>Reply To All for tweet ID $in_reply_to_id...</p>";
-
 				//Get the tweet so we can extract all the @ names
 				$request = API_URL."statuses/show/{$in_reply_to_id}.json";
 				$tweet = twitter_process($request);
 				$text = $tweet->text;
 
-				//Sure there's a faster / saner way to do this
-				/*
-				$pieces = explode(" ", $text);
-				$others = "";
-				for($i=0; $i<count($pieces); $i++)
+				$content .= "<p>Reply To All:<br />";
+				$content .= "\"$text\"</p>";
+
+				require_once('Extractor.php');
+
+				$extractor = new Twitter_Extractor();
+				$usernames = $extractor->extractMentionedScreennames($text);
+				$usernames = array_unique($usernames);
+
+				for($i=0; $i<count($usernames); $i++)
 				{
-					if (strpos($pieces[$i],"@") === 0)
+					if ($usernames[$i] && ($usernames[$i] !== user_current_username()))
 					{
-						$others .= $pieces[$i] . " ";
+						$others .= "@" . $usernames[$i] . " ";
 					}
-				}
-				*/
-				
-				//There is!
-				//Based on the Twitter engineering team's reference material
-				//http://github.com/mzsanford/twitter-text-php/blob/master/src/Twitter/Extractor.php
-				//This regex is under Apache 2.0 http://www.apache.org/licenses/LICENSE-2.0
-				preg_match_all('/(^|[^a-zA-Z0-9_])[@＠]([a-zA-Z0-9_]{1,20})(?=(.|$))/', $text, $matches);
-				$usernames = array();
-				for ($i = 0; $i < sizeof($matches[2]); $i += 1) 
-				{
-					if (! preg_match('/^[@＠]/', $matches[3][$i])) 
-					{
-            		array_push($usernames, $matches[2][$i]);
-          		}
-        		}
-        		//Regex ends
-        		//Software licensing this late at night hurts my brain. 
-        		
-        		for($i=0; $i<count($usernames); $i++)
-				{
-					$others .= "@" . $usernames[$i] . " ";
 				}
 			}
 		}
@@ -873,30 +856,33 @@ function twitter_user_page($query)
 		{
 		   $in_reply_to_id = 0;
 		}
-		$user = twitter_user_info($screen_name);
 		if (!user_is_current_user($user->screen_name)) 
 		{
 		   $status = "@{$user->screen_name} ";
-		   if($others)
-		   {
-		   	$status .= $others;
-		   }
-		} 
+		}
+		
+		if($others)
+		{
+			$status .= $others;
+		}
+		
 		else 
 		{
-		   $status = '';
+		  // $status = '';
 		}
 	
 		$content .= theme('status_form', $status, $in_reply_to_id);
 		$content .= theme('user_header', $user);
 		 
-		if (isset($user->status)) 
+		//Only show the full timeline if this isn't a reply or reply all
+		if (isset($user->status) && $in_reply_to_id == 0) 
 		{
 		   $request = API_URL."statuses/user_timeline.json?screen_name={$screen_name}&page=".intval($_GET['page']);
 		   $tl = twitter_process($request);
 		   $tl = twitter_standard_timeline($tl, 'user');
 		   $content .= theme('timeline', $tl);
 		}
+
 		theme('page', "User {$screen_name}", $content);
 	} 
   	else 
