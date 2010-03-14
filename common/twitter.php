@@ -1177,6 +1177,7 @@ function twitter_standard_timeline($feed, $source) {
             'screen_name' => $status->to_user,
           ),
           'created_at' => $status->created_at,
+          'geo' => $status->geo,
         );
       }
       return $output;
@@ -1401,6 +1402,7 @@ function theme_pagination() {
 
 function theme_action_icons($status) {
   $from = $status->from->screen_name;
+  $geo = $status->geo;
   $actions = array();
   
   if (!$status->is_direct) {
@@ -1427,6 +1429,13 @@ function theme_action_icons($status) {
   } else {
     $actions[] = theme('action_icon', "directs/delete/{$status->id}", 'images/trash.gif', 'DEL');
   }
+	if ($geo !== null) 
+	{
+		$latlong = $geo->coordinates;
+		$lat = $latlong[0];
+		$long = $latlong[1];
+		$actions[] = theme('action_icon', "http://maps.google.co.uk/m?q={$lat},{$long}", 'images/map.png', 'MAP');
+	}
 
   return implode(' ', $actions);
 }

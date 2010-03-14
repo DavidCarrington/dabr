@@ -22,7 +22,7 @@ class Twitter_Extractor {
     public function extractAll($tweet) {
         return array(
                 'hashtags' => $this->extractHashtags($tweet),
-                'urls' =>     $this->extraclURLS($tweet),
+                'urls' =>     $this->extractURLS($tweet),
                 'mentions' => $this->extractMentionedScreennames($tweet),
                 'replyto' =>  $this->extractReplyScreenname($tweet)
                 );
@@ -33,7 +33,7 @@ class Twitter_Extractor {
         return $matches[3];
     }
 
-    public function extraclURLS($tweet) {
+    public function extractURLS($tweet) {
         $URL_VALID_PRECEEDING_CHARS = "(?:[^/\"':!=]|^|\\:)";
         $URL_VALID_DOMAIN = "(?:[\\.-]|[^\\p{P}\\s])+\\.[a-z]{2,}(?::[0-9]+)?";
         $URL_VALID_URL_PATH_CHARS = "[a-z0-9!\\*'\\(\\);:&=\\+\\$/%#\\[\\]\\-_\\.,~@]";
