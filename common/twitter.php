@@ -103,16 +103,6 @@ menu_register(array(
     'security' => true,
     'callback' => 'twitter_retweet_page',
   ),
-  'flickr' => array(
-    'security' => true,
-    'hidden' => true,
-    'callback' => 'generate_thumbnail',
-  ),
-  'moblog' => array(
-    'security' => true,
-    'hidden' => true,
-    'callback' => 'generate_thumbnail',
-  ),
   'hash' => array(
     'security' => true,
     'hidden' => true,
@@ -404,7 +394,6 @@ function twitter_photo_replace($text) {
     '#twitpic.com/([\d\w]+)#i' => 'http://twitpic.com/show/thumb/%s',
     '#twitgoo.com/([\d\w]+)#i' => 'http://twitgoo.com/show/thumb/%s',
     '#yfrog.com/([\w\d]+)#i' => 'http://yfrog.com/%s.th.jpg',
-    '#moblog.net/view/([\d]+)/#' => 'moblog/%s',
     '#hellotxt.com/i/([\d\w]+)#i' => 'http://hellotxt.com/image/%s.s.jpg',
     '#ts1.in/(\d+)#i' => 'http://ts1.in/mini/%s',
     '#moby.to/\??([\w\d]+)#i' => 'http://moby.to/%s:square',
@@ -422,13 +411,7 @@ function twitter_photo_replace($text) {
  	'#brizzly.com/pic/([\w]+)#i' => 'http://pics.brizzly.com/thumb_sm_%s.jpg',
 	'#img.ly/([\w\d]+)#i' => 'http://img.ly/show/thumb/%s',
   );
-  
-  // Only enable Flickr service if API key is available
-  if (defined('FLICKR_API_KEY')) {
-    $services['#flickr.com/[^ ]+/([\d]+)#i'] = 'flickr/%s';
-    $services['#flic.kr/p/([\w\d]+)#i'] = 'flickr/%s';
-  }
-  
+
   // Loop through each service and show images for matching URLs
   foreach ($services as $pattern => $thumbnail_url) {
     if (preg_match_all($pattern, $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
@@ -437,7 +420,28 @@ function twitter_photo_replace($text) {
       }
     }
   }
- 
+
+	//Flickr is handled differently because API calls need to be made
+	if (defined('FLICKR_API_KEY') && (preg_match_all('#flic.kr/p/([\w\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0 ||
+			preg_match_all('#flickr.com/[^ ]+/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) )
+	{
+		foreach ($matches[1] as $key => $match) 
+		{
+			$thumb = get_thumbnail("flickr", $match);
+			$images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='$thumb' />");
+		}
+	}
+	
+	//Moblog is handled differently because of non-standard structure
+	if (preg_match_all('#moblog.net/view/([\d]+)/#', $tmp, $matches, PREG_PATTERN_ORDER) > 0 )
+	{
+		foreach ($matches[1] as $key => $match) 
+		{
+			$thumb = get_thumbnail("moblog", $match);
+			$images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='$thumb' />");
+		}
+	}
+	
   // Twitxr is handled differently because of their folder structure
   if (preg_match_all('#twitxr.com/[^ ]+/updates/([\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0) {
     foreach ($matches[1] as $key => $match) {
@@ -459,34 +463,36 @@ function twitter_photo_replace($text) {
   return implode('<br />', $images).'<br />'.$text;
 }
 
-function generate_thumbnail($query) {
-  $id = $query[1];
-  if ($id) {
-    header('HTTP/1.1 301 Moved Permanently');
-    if ($query[0] == 'flickr') {
-      if (!is_numeric($id)) $id = flickr_decode($id);
-      $url = "http://api.flickr.com/services/rest/?method=flickr.photos.getSizes&photo_id=$id&api_key=".FLICKR_API_KEY;
-      $flickr_xml = twitter_fetch($url);
-      if (setting_fetch('browser') == 'mobile') {
-        $pattern = '#"(http://.*_t\.jpg)"#';
-      } else {
-        $pattern = '#"(http://.*_m\.jpg)"#';
-      }
-      preg_match($pattern, $flickr_xml, $matches);
-      header('Location: '. $matches[1]);
-    }
-    if ($query[0] == 'moblog') {
-      $url = "http://moblog.net/view/{$id}/";
-      $html = twitter_fetch($url);
-      if (preg_match('#"(/media/[a-zA-Z0-9]/[^"]+)"#', $html, $matches)) {
-        $thumb = 'http://moblog.net' . str_replace(array('.j', '.J'), array('_tn.j', '_tn.J'), $matches[1]);
-        $pos = strrpos($thumb, '/');
-        $thumb = substr($thumb, 0, $pos) . '/thumbs' . substr($thumb, $pos);
-      }
-      header('Location: '. $thumb);
-    }
-  }
-  exit();
+function get_thumbnail($service, $id) 
+{
+	if ($service == "moblog") 
+	{
+		$url = "http://moblog.net/view/{$id}/";
+		$html = twitter_fetch($url);
+		if (preg_match('#"(/media/[a-zA-Z0-9]/[^"]+)"#', $html, $matches)) 
+		{
+			$thumb = 'http://moblog.net' . str_replace(array('.j', '.J'), array('_tn.j', '_tn.J'), $matches[1]);
+			$pos = strrpos($thumb, '/');
+			$thumb = substr($thumb, 0, $pos) . '/thumbs' . substr($thumb, $pos);
+			return $thumb;
+		}
+	}
+	else if ($service == "flickr") 
+	{
+		if (!is_numeric($id)) $id = flickr_decode($id);
+		$url = "http://api.flickr.com/services/rest/?method=flickr.photos.getSizes&photo_id=$id&api_key=".FLICKR_API_KEY;
+		$flickr_xml = twitter_fetch($url);
+		if (setting_fetch('browser') == 'mobile') 
+		{
+			$pattern = '#"(http://.*_t\.jpg)"#';
+		} 
+		else 
+		{
+			$pattern = '#"(http://.*_m\.jpg)"#';
+		}
+		preg_match($pattern, $flickr_xml, $matches);
+		return $matches[1];
+	}
 }
 
 function format_interval($timestamp, $granularity = 2) {
@@ -866,21 +872,16 @@ function twitter_user_page($query)
 			$status .= $others;
 		}
 		
-		else 
-		{
-		  // $status = '';
-		}
-	
 		$content .= theme('status_form', $status, $in_reply_to_id);
 		$content .= theme('user_header', $user);
 		 
 		//Only show the full timeline if this isn't a reply or reply all
 		if (isset($user->status) && $in_reply_to_id == 0) 
 		{
-		   $request = API_URL."statuses/user_timeline.json?screen_name={$screen_name}&page=".intval($_GET['page']);
-		   $tl = twitter_process($request);
-		   $tl = twitter_standard_timeline($tl, 'user');
-		   $content .= theme('timeline', $tl);
+			$request = API_URL."statuses/user_timeline.json?screen_name={$screen_name}&page=".intval($_GET['page']);
+			$tl = twitter_process($request);
+			$tl = twitter_standard_timeline($tl, 'user');
+			$content .= theme('timeline', $tl);
 		}
 
 		theme('page', "User {$screen_name}", $content);
