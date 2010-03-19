@@ -329,6 +329,23 @@ function twitter_parse_links_callback($matches) {
 
 function twitter_parse_tags($input) 
 {
+	require_once('Autolink.php');
+	require_once('Extractor.php');	
+	
+	$extract = new Twitter_Extractor();
+	$urls = $extract->extractURLS($input);
+	
+	$out = $input;
+	
+	foreach ($urls as $value) 
+	{
+		$out = str_replace ($value, long_url($value) , $out) ;
+	}
+	
+
+	$autolink = new Twitter_Autolink();
+	$out = $autolink->autolink($input);
+	/*
 	//Links
 	$out = preg_replace_callback('#(\w+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?<![.,])#is', 'twitter_parse_links_callback', $input);
 
@@ -341,7 +358,7 @@ function twitter_parse_tags($input)
 
 	//Hashtags (#FollowFriday)
 	$out = preg_replace('#(^|\s)(\\#([a-z_A-Z0-9:_-]+))#', '$1<a href="hash/$3">$2</a>', $out);
-		
+	*/
 	//If this is worksafe mode - don't display any images
 	if (!in_array(setting_fetch('browser'), array('text', 'worksafe'))) 
 	{
@@ -1319,23 +1336,40 @@ function theme_followers($feed, $hide_pagination = false) {
   $rows = array();
   if (count($feed) == 0 || $feed == '[]') return '<p>No users to display.</p>';
 
-  foreach ($feed->users->user as $user) {
+/*	//If this is a list
+	if ($feed->lists_list !== null)
+	{
+		foreach ($feed->lists->list->user as $user) 
+		{
+			$name = theme('full_name', $user);
+			$tweets_per_day = twitter_tweets_per_day($user);
+			$rows[] = array(
+			theme('avatar', $user->profile_image_url),
+			"{$name} - {$user->location}<br />" .
+			"<small>{$user->description}<br />" .
+			"Info: {$user->statuses_count} tweets, {$user->friends_count} friends, {$user->followers_count} followers, ~{$tweets_per_day} tweets per day</small>"
+			);
+		}
+	}
+	else
+	{
+*/	  foreach ($feed->users->user as $user) {
 	
-    $name = theme('full_name', $user);
-    $tweets_per_day = twitter_tweets_per_day($user);
-    $rows[] = array(
-      theme('avatar', $user->profile_image_url),
-      "{$name} - {$user->location}<br />" .
-      "<small>{$user->description}<br />" .
-      "Info: {$user->statuses_count} tweets, {$user->friends_count} friends, {$user->followers_count} followers, ~{$tweets_per_day} tweets per day</small>"
-    );
-  }
-  $content = theme('table', array(), $rows, array('class' => 'followers'));
-  if (!$hide_pagination)
-    $content .= theme('list_pagination', $feed);
-  return $content;
+		 $name = theme('full_name', $user);
+		 $tweets_per_day = twitter_tweets_per_day($user);
+		 $rows[] = array(
+		   theme('avatar', $user->profile_image_url),
+		   "{$name} - {$user->location}<br />" .
+		   "<small>{$user->description}<br />" .
+		   "Info: {$user->statuses_count} tweets, {$user->friends_count} friends, {$user->followers_count} followers, ~{$tweets_per_day} tweets per day</small>"
+		 );
+	  }
+	  $content = theme('table', array(), $rows, array('class' => 'followers'));
+	  if (!$hide_pagination)
+		 $content .= theme('list_pagination', $feed);
+	  return $content;
+	//}
 }
-
 function theme_full_name($user) {
   $name = "<a href='user/{$user->screen_name}'>{$user->screen_name}</a>";
   if ($user->name && $user->name != $user->screen_name) {
@@ -1443,6 +1477,11 @@ function theme_action_icons($status) {
 
 function theme_action_icon($url, $image_url, $text) {
   // alt attribute left off to reduce bandwidth by about 720 bytes per page
+  if ($text == 'MAP')
+  {
+	  return "<a href='$url' target='_blank'><img src='$image_url' /></a>";	
+  }
+  
   return "<a href='$url'><img src='$image_url' /></a>";
 }
 
