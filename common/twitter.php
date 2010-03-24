@@ -828,85 +828,72 @@ function twitter_search($search_query) {
   return $tl;
 }
 
+function twitter_find_tweet_in_timeline($tweet_id, $tl) {
+	// Parameter checks
+	if (!is_numeric($tweet_id) || !$tl) return;
+	
+	// Check if the tweet exists in the timeline given
+	if (array_key_exists($tweet_id, $tl)) {
+		// Found the tweet
+		$tweet = $tl[$tweet_id];
+	} else {
+		// Not found, fetch it specifically from the API
+		$request = API_URL."statuses/show/{$tweet_id}.json";
+		$tweet = twitter_process($request);
+	}
+	return $tweet;
+}
+
 function twitter_user_page($query) 
 {
 	$screen_name = $query[1];
+	$subaction = $query[2];
+	$in_reply_to_id = (string) $query[3];
+	$content = '';
+	
+	if (!$screen_name) theme('error', 'No username given');
+	
+	// Load up user profile information and one tweet
 	$user = twitter_user_info($screen_name);
-
-	if ($screen_name) 
-	{
-		$content = '';
-
-    		if ($query[2] == 'reply') 
-	    	{
-			$in_reply_to_id = (string) $query[3];
-			if (is_numeric($in_reply_to_id)) 
-			{
-        			$content .= "<p>In reply to:</p>";
-	 		}
-		}
-		else if($query[2] == 'replyall')
-	 	{
-			$in_reply_to_id = (string) $query[3];
-
-			if (is_numeric($in_reply_to_id)) 
-			{
-				//Get the tweet so we can extract all the @ names
-				$request = API_URL."statuses/show/{$in_reply_to_id}.json";
-				$tweet = twitter_process($request);
-				$text = $tweet->text;
-
-				$content .= "<p>Reply To All:<br />";
-				$content .= "\"$text\"</p>";
-
-				require_once('Extractor.php');
-
-				$extractor = new Twitter_Extractor();
-				$usernames = $extractor->extractMentionedScreennames($text);
-				$usernames = array_unique($usernames);
-
-				for($i=0; $i<count($usernames); $i++)
-				{
-					if ($usernames[$i] && ($usernames[$i] !== user_current_username()))
-					{
-						$others .= "@" . $usernames[$i] . " ";
-					}
-				}
-			}
-		}
-
-		else 
-		{
-		   $in_reply_to_id = 0;
-		}
-		if (!user_is_current_user($user->screen_name)) 
-		{
-		   $status = "@{$user->screen_name} ";
-		}
-		
-		if($others)
-		{
-			$status .= $others;
-		}
-		
-		$content .= theme('status_form', $status, $in_reply_to_id);
-		$content .= theme('user_header', $user);
-		 
-		//Only show the full timeline if this isn't a reply or reply all
-		if (isset($user->status) && $in_reply_to_id == 0) 
-		{
-			$request = API_URL."statuses/user_timeline.json?screen_name={$screen_name}&page=".intval($_GET['page']);
-			$tl = twitter_process($request);
-			$tl = twitter_standard_timeline($tl, 'user');
-			$content .= theme('timeline', $tl);
-		}
-
-		theme('page', "User {$screen_name}", $content);
-	} 
-  	else 
-  	{
-		// TODO: user search screen
+	
+	// If the user has at least one tweet
+	if (isset($user->status)) {
+		// Fetch the timeline early, so we can try find the tweet they're replying to
+		$request = API_URL."statuses/user_timeline.json?screen_name={$screen_name}&page=".intval($_GET['page']);
+		$tl = twitter_process($request);
+		$tl = twitter_standard_timeline($tl, 'user');
 	}
+	
+	// Build an array of people we're talking to
+	$to_users = array($user->screen_name);
+	
+	// Are we replying to anyone?
+	if (is_numeric($in_reply_to_id)) {
+		$tweet = twitter_find_tweet_in_timeline($in_reply_to_id, $tl);
+		$content .= "<p>In reply to:<br />{$tweet->text}</p>";
+		
+		if ($subaction == 'replyall') {
+			require_once('Extractor.php');
+
+			$extractor = new Twitter_Extractor();
+			$to_users += $extractor->extractMentionedScreennames($tweet->text);
+			$to_users = array_unique($to_users);
+		}
+	}
+	
+	// Build a status message to everyone we're talking to
+	$status = '';
+	foreach ($to_users as $username) {
+		if (!user_is_current_user($username)) {
+			$status .= "@{$username} ";
+		}
+	}
+	
+	$content .= theme('status_form', $status, $in_reply_to_id);
+	$content .= theme('user_header', $user);
+	$content .= theme('timeline', $tl);
+
+	theme('page', "User {$screen_name}", $content);
 }
 
 function twitter_favourites_page($query) {
