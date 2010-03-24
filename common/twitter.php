@@ -876,8 +876,8 @@ function twitter_user_page($query)
 			require_once('Extractor.php');
 
 			$extractor = new Twitter_Extractor();
-			$to_users += $extractor->extractMentionedScreennames($tweet->text);
-			$to_users = array_unique($to_users);
+			$found = $extractor->extractMentionedScreennames($tweet->text);
+			$to_users = array_unique(array_merge($to_users, $found));
 		}
 	}
 	
