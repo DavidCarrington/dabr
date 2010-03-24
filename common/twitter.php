@@ -1,5 +1,8 @@
 <?php
 
+require 'Autolink.php';
+require 'Extractor.php';	
+
 menu_register(array(
   '' => array(
     'callback' => 'twitter_home_page',
@@ -316,21 +319,25 @@ function twitter_fetch($url) {
   return $response;
 }
 
-function twitter_parse_links_callback($matches) {
-  $url = $matches[1];
-  if (substr($url, 0, strlen(BASE_URL)) == BASE_URL) return "<a href='$url'>$url</a>";
-  if (setting_fetch('gwt') == 'on') {
-    $encoded = urlencode($url);
-    return "<a href='http://google.com/gwt/n?u={$encoded}' target='_blank'>{$url}</a>";
-  } else {
-    return theme('external_link', $url);
-  }
+class Dabr_Autolink extends Twitter_Autolink {
+	function replacementURLs($matches) {
+		$replacement  = $matches[2];
+		$url = $matches[3];
+		if (!(substr($url, 0, 7) == 'http://' || substr($url, 0, 8) == 'https://')) {
+			$url = "http://{$url}";
+		}
+		if (setting_fetch('gwt') == 'on') {
+			$encoded = urlencode($url);
+			$replacement = "<a href='http://google.com/gwt/n?u={$encoded}' target='_blank'>{$url}</a>";
+		} else {
+			$replacement = theme('external_link', $url);
+		}
+		return $replacement;
+	}
 }
 
 function twitter_parse_tags($input) 
 {
-	require_once('Autolink.php');
-	require_once('Extractor.php');	
 	
 	$extract = new Twitter_Extractor();
 	$urls = $extract->extractURLS($input);
@@ -342,23 +349,9 @@ function twitter_parse_tags($input)
 		$out = str_replace ($value, long_url($value) , $out) ;
 	}
 	
-
-	$autolink = new Twitter_Autolink();
+	$autolink = new Dabr_Autolink();
 	$out = $autolink->autolink($input);
-	/*
-	//Links
-	$out = preg_replace_callback('#(\w+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)(?<![.,])#is', 'twitter_parse_links_callback', $input);
 
-	//Lists (@dabr/mobile)
- 	$out = preg_replace('#(^|\s)@([a-z_A-Z0-9]+)/([\w\d-]+)#', '$1@<a href="user/$2">$2</a>/<a href="lists/$2/$3">$3</a>', $out);
-
-	//Users
-	//Also supports brackets (@edent) and people who start tweets with .@ to #fixreplies
-	$out = preg_replace('#(^|\s|\(|\.)@([a-z_A-Z0-9]+)#', '$1@<a href="user/$2">$2</a>', $out);
-
-	//Hashtags (#FollowFriday)
-	$out = preg_replace('#(^|\s)(\\#([a-z_A-Z0-9:_-]+))#', '$1<a href="hash/$3">$2</a>', $out);
-	*/
 	//If this is worksafe mode - don't display any images
 	if (!in_array(setting_fetch('browser'), array('text', 'worksafe'))) 
 	{
@@ -873,7 +866,6 @@ function twitter_user_page($query)
 		$content .= "<p>In reply to:<br />{$tweet->text}</p>";
 		
 		if ($subaction == 'replyall') {
-			require_once('Extractor.php');
 
 			$extractor = new Twitter_Extractor();
 			$found = $extractor->extractMentionedScreennames($tweet->text);
@@ -964,20 +956,7 @@ function theme_status($status) {
   }
   return $out;
 }
-/*
-function theme_retweet($status) 
-{
-  $text = "RT @{$status->user->screen_name}: {$status->text}";
-  $length = function_exists('mb_strlen') ? mb_strlen($text,'UTF-8') : strlen($text);
-  $from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
-  $content = "<p>Old style editable retweet:</p><form action='update' method='post'><input type='hidden' name='from' value='$from' /><textarea name='status' cols='50' rows='3' id='status'>$text</textarea><br><input type='submit' value='Retweet'><span id='remaining'>" . (140 - $length) ."</span></form>";
-  $content .= js_counter("status");  
-	if($status->user->protected == 0){
-    $content.="<br />Or Twitter's new style retweet<br /><form action='twitter-retweet/{$status->id}' method='post'><input type='hidden' name='from' value='$from' /><input type='submit' value='Twitter Retweet'></form>";
-  }
-  return $content;
-}
-*/
+
 function theme_retweet($status) 
 {
 	$text = "RT @{$status->user->screen_name}: {$status->text}";
@@ -1323,24 +1302,7 @@ function theme_followers($feed, $hide_pagination = false) {
   $rows = array();
   if (count($feed) == 0 || $feed == '[]') return '<p>No users to display.</p>';
 
-/*	//If this is a list
-	if ($feed->lists_list !== null)
-	{
-		foreach ($feed->lists->list->user as $user) 
-		{
-			$name = theme('full_name', $user);
-			$tweets_per_day = twitter_tweets_per_day($user);
-			$rows[] = array(
-			theme('avatar', $user->profile_image_url),
-			"{$name} - {$user->location}<br />" .
-			"<small>{$user->description}<br />" .
-			"Info: {$user->statuses_count} tweets, {$user->friends_count} friends, {$user->followers_count} followers, ~{$tweets_per_day} tweets per day</small>"
-			);
-		}
-	}
-	else
-	{
-*/	  foreach ($feed->users->user as $user) {
+	foreach ($feed->users->user as $user) {
 	
 		 $name = theme('full_name', $user);
 		 $tweets_per_day = twitter_tweets_per_day($user);
@@ -1355,8 +1317,8 @@ function theme_followers($feed, $hide_pagination = false) {
 	  if (!$hide_pagination)
 		 $content .= theme('list_pagination', $feed);
 	  return $content;
-	//}
 }
+
 function theme_full_name($user) {
   $name = "<a href='user/{$user->screen_name}'>{$user->screen_name}</a>";
   if ($user->name && $user->name != $user->screen_name) {

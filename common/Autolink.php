@@ -87,7 +87,7 @@ class Twitter_Autolink {
 		  ')$i';
 
 		return preg_replace_callback($VALID_URL_PATTERN_STRING,
-									 array($this, 'replacementURLs'),
+									 array(get_class($this), 'replacementURLs'),
 									 $tweet);
 	}
 
