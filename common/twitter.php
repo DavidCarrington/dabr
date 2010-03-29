@@ -350,7 +350,7 @@ function twitter_parse_tags($input)
 	}
 	
 	$autolink = new Dabr_Autolink();
-	$out = $autolink->autolink($input);
+	$out = $autolink->autolink($out);
 
 	//If this is worksafe mode - don't display any images
 	if (!in_array(setting_fetch('browser'), array('text', 'worksafe'))) 
