@@ -346,7 +346,7 @@ function twitter_parse_tags($input)
 	
 	foreach ($urls as $value) 
 	{
-		$out = str_replace ($value, long_url($value) , $out) ;
+		$out = str_replace ($value, " " . long_url($value) , $out) ;
 	}
 	
 	$autolink = new Dabr_Autolink();
