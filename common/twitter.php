@@ -328,9 +328,9 @@ class Dabr_Autolink extends Twitter_Autolink {
 		}
 		if (setting_fetch('gwt') == 'on') {
 			$encoded = urlencode($url);
-			$replacement = "<a href='http://google.com/gwt/n?u={$encoded}' target='_blank'>{$url}</a>";
+			$replacement .= "<a href='http://google.com/gwt/n?u={$encoded}' target='_blank'>{$url}</a>";
 		} else {
-			$replacement = theme('external_link', $url);
+			$replacement .= theme('external_link', $url);
 		}
 		return $replacement;
 	}
@@ -344,9 +344,9 @@ function twitter_parse_tags($input)
 	
 	$out = $input;
 	
-	foreach ($urls as $value) 
+	foreach ($urls as $value)
 	{
-		$out = str_replace ($value, " " . long_url($value) , $out) ;
+		$out = str_replace ($value, long_url($value) , $out) ;
 	}
 	
 	$autolink = new Dabr_Autolink();
