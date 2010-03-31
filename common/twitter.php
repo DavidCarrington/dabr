@@ -339,8 +339,7 @@ class Dabr_Autolink extends Twitter_Autolink {
 function twitter_parse_tags($input) 
 {
 	
-	$extract = new Twitter_Extractor();
-	$urls = $extract->extractURLS($input);
+	$urls = Twitter_Extractor::extractURLS($input);
 	
 	$out = $input;
 	
@@ -786,7 +785,7 @@ function theme_directs_form($to) {
   } else {
     $html_to .= "To: <input name='to'><br />Message:";
   }
-   $content = "<form action='directs/send' method='post'>$html_to<br><textarea name='message' cols='50' rows='3' id='message'></textarea><br><input type='submit' value='Send'><span id='remaining'>140</span></form>";
+   $content = "<form action='directs/send' method='post'>$html_to<br><textarea name='message' style='width:100%; max-width: 400px;' rows='3' id='message'></textarea><br><input type='submit' value='Send'><span id='remaining'>140</span></form>";
    $content .= js_counter("message");
    return $content;
 }
@@ -866,9 +865,7 @@ function twitter_user_page($query)
 		$content .= "<p>In reply to:<br />{$tweet->text}</p>";
 		
 		if ($subaction == 'replyall') {
-
-			$extractor = new Twitter_Extractor();
-			$found = $extractor->extractMentionedScreennames($tweet->text);
+			$found = Twitter_Extractor::extractMentionedScreennames($tweet->text);
 			$to_users = array_unique(array_merge($to_users, $found));
 		}
 	}
@@ -980,7 +977,7 @@ function theme_retweet($status)
 	$content .= "<p>Old style editable retweet:</p>
 					<form action='update' method='post'>
 						<input type='hidden' name='from' value='$from' />
-						<textarea name='status' cols='50' rows='3' id='status'>$text</textarea>
+						<textarea name='status' style='width:100%; max-width: 400px;' rows='3' id='status'>$text</textarea>
 						<br/>
 						<input type='submit' value='Retweet' />
 						<span id='remaining'>" . (140 - $length) ."</span>
@@ -1395,8 +1392,7 @@ function theme_action_icons($status) {
   //Reply All functionality. 
 	if(substr_count(($status->text), '@') >= 1)
 	{
-			$extractor = new Twitter_Extractor();
-			$found = $extractor->extractMentionedScreennames($status->text);
+			$found = Twitter_Extractor::extractMentionedScreennames($status->text);
 			$to_users = array_unique($found);
 			
 			$key = array_search(user_current_username(), $to_users); // Remove the username of the authenticated user
