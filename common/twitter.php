@@ -323,7 +323,7 @@ class Dabr_Autolink extends Twitter_Autolink {
 	function replacementURLs($matches) {
 		$replacement  = $matches[2];
 		$url = $matches[3];
-		if (!(substr($url, 0, 7) == 'http://' || substr($url, 0, 8) == 'https://')) {
+		if (!preg_match("#^https{0,1}://#i", $url)) {
 			$url = "http://{$url}";
 		}
 		if (setting_fetch('gwt') == 'on') {
