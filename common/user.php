@@ -177,18 +177,16 @@ function _user_decrypt_cookie($crypt_text) {
 }
 
 function theme_login() {
-  return '
-<p><strong><a href="oauth">Sign in with Twitter/OAuth</a></strong><br />
-Note: Twitter\'s OAuth page isn\'t very mobile friendly.</p>
-  
-  <p>Or enter your Twitter username and password below:</p>
-<form method="post" action="'.$_GET['q'].'">
-<p>Username <input name="username" size="15" />
-<br />Password <input name="password" type="password" size="15" />
-<br /><label><input type="checkbox" value="yes" name="stay-logged-in" /> Stay logged in? </label>
-<br /><input type="submit" value="Sign In" /></p>
-</form>
-';
+	return '
+			<p><a href="oauth"><img src="images/twitter_button_2_lo.gif" alt="Sign in with Twitter/OAuth" width="165" height="28" /></a> (mobile friendly).</p>
+			<p>Or enter your Twitter username and password below:</p>
+			<form method="post" action="'.$_GET['q'].'">
+				<p>Username <input name="username" size="15" />
+				<br />Password <input name="password" type="password" size="15" />
+				<br /><label><input type="checkbox" value="yes" name="stay-logged-in" /> Stay logged in? </label>
+				<br /><input type="submit" value="Sign In" /></p>
+			</form>
+			';
 }
 
 function theme_logged_out() {
