@@ -4,6 +4,18 @@ function desktop_theme_status_form($text = '', $in_reply_to_id = NULL) {
     $output = '<form method="post" action="update">
   <textarea id="status" name="status" rows="3" style="width:100%; max-width: 400px;">'.$text.'</textarea>
   <div><input name="in_reply_to_id" value="'.$in_reply_to_id.'" type="hidden" /><input type="submit" value="Update" /> <span id="remaining">140</span></div>
+  
+  <input type="hidden" id="lat" name="lat" /><input type="hidden" id="long" name="long" />
+  <script type="text/javascript">
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(success, error);
+}
+function error(msg) {}
+function success(position) {
+	document.getElementById("lat").value = position.coords.latitude;
+	document.getElementById("long").value = position.coords.longitude;
+}
+  </script>
 </form>';
     $output .= js_counter('status');
     return $output;

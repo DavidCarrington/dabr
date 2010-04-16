@@ -706,6 +706,14 @@ function twitter_update() {
     if (is_numeric($in_reply_to_id)) {
       $post_data['in_reply_to_status_id'] = $in_reply_to_id;
     }
+	// Geolocation parameters
+	$lat = $_POST['lat'];
+	$long = $_POST['long'];
+    if (is_numeric($lat) && is_numeric($long)) {
+      $post_data['lat'] = $lat;
+      $post_data['long'] = $long;
+	  // $post_data['display_coordinates'] = 'false';
+    }
     $b = twitter_process($request, $post_data);
   }
   twitter_refresh($_POST['from'] ? $_POST['from'] : '');
