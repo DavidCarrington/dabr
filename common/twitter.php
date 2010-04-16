@@ -707,8 +707,7 @@ function twitter_update() {
       $post_data['in_reply_to_status_id'] = $in_reply_to_id;
     }
 	// Geolocation parameters
-	$lat = $_POST['lat'];
-	$long = $_POST['long'];
+	list($lat, $long) = explode(',', $_POST['location']);
     if (is_numeric($lat) && is_numeric($long)) {
       $post_data['lat'] = $lat;
       $post_data['long'] = $long;
