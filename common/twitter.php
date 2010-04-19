@@ -708,11 +708,14 @@ function twitter_update() {
     }
 	// Geolocation parameters
 	list($lat, $long) = explode(',', $_POST['location']);
+	$geo = 'N';
     if (is_numeric($lat) && is_numeric($long)) {
+      $geo = 'Y';
       $post_data['lat'] = $lat;
       $post_data['long'] = $long;
 	  // $post_data['display_coordinates'] = 'false';
     }
+	setcookie_year('geo', $geo);
     $b = twitter_process($request, $post_data);
   }
   twitter_refresh($_POST['from'] ? $_POST['from'] : '');

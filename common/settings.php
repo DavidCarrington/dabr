@@ -43,14 +43,18 @@ function setting_fetch($setting, $default = NULL) {
   }
 }
 
+function setcookie_year($name, $value) {
+    $duration = time() + (3600 * 24 * 365);
+    setcookie($name, $value, $duration, '/');
+}
+
 function settings_page($args) {
   if ($args[1] == 'save') {
     $settings['browser'] = $_POST['browser'];
     $settings['gwt'] = $_POST['gwt'];
     $settings['colours'] = $_POST['colours'];
     $settings['reverse'] = $_POST['reverse'];
-    $duration = time() + (3600 * 24 * 365);
-    setcookie('settings', base64_encode(serialize($settings)), $duration, '/');
+	setcookie_year('settings', base64_encode(serialize($settings)));
     twitter_refresh('');
   }
   
