@@ -235,7 +235,7 @@ function twitter_twitpic_page($query) {
   return theme('page', 'Twitpic Upload', $content);
 }
 
-function twitter_process($url, $post_data = false) {
+function twitter_process($url, $post_data = false,  $retry = 0) {
   if ($post_data === true) $post_data = array();
   if (user_type() == 'oauth' && ( strpos($url, '/twitter.com') !== false || strpos($url, 'api.twitter.com') !== false)) {
     user_oauth_sign($url, $post_data);
@@ -260,7 +260,7 @@ function twitter_process($url, $post_data = false) {
 
   curl_setopt($ch, CURLOPT_VERBOSE, 0);
   curl_setopt($ch, CURLOPT_HEADER, 0);
-  curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+  curl_setopt($ch, CURLOPT_TIMEOUT, 9);
   curl_setopt($ch, CURLOPT_USERAGENT, 'dabr');
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
   curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -272,20 +272,42 @@ function twitter_process($url, $post_data = false) {
   $api_time += microtime(1) - $api_start;
 
   switch( intval( $response_info['http_code'] ) ) {
-    case 200:
+	case 200:    
+    case 201:
       $json = json_decode($response);
       if ($json) return $json;
       return $response;
     case 401:
       user_logout();
       theme('error', "<p>Error: Login credentials incorrect.</p><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
-    case 0:
-      theme('error', '<h2>Twitter timed out</h3><p>Dabr gave up on waiting for Twitter to respond. They\'re probably overloaded right now, try again in a minute.</p>');
-    default:
-      $result = json_decode($response);
-      $result = $result->error ? $result->error : $response;
-      if (strlen($result) > 500) $result = 'Something broke on Twitter\'s end.';
-      theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
+		case 500:    
+		case 502:
+		case 503:
+			if( $retry < 3 ) return twitter_process( $url, $post_data, $retry + 1 );
+			else theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
+			break;
+		case 0:
+			if( $response )return $response;
+			if( $retry < 3 ) 
+			{
+				return twitter_process( $url, $post_data, $retry + 1 );
+			}
+			else
+			{
+				theme('error', '<h2>Twitter timed out</h3><p>Dabr gave up on waiting for Twitter to respond. They\'re probably overloaded right now, try again in a minute.</p>');
+			}
+		default:
+			$result = json_decode( $response );
+			$result = $result->error ? $result->error : $response;
+			if (strlen($result) > 500) $result = 'Something broke on Twitter\'s end.';
+			if( $retry < 3) 
+			{
+				return twitter_process($url, $post_data, $retry + 1 );
+			}
+			else
+			{
+				theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
+			}
   }
 }
 
