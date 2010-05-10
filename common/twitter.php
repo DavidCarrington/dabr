@@ -235,64 +235,96 @@ function twitter_twitpic_page($query) {
   return theme('page', 'Twitpic Upload', $content);
 }
 
-function twitter_process($url, $post_data = false) {
-  if ($post_data === true) $post_data = array();
-  if (user_type() == 'oauth' && ( strpos($url, '/twitter.com') !== false || strpos($url, 'api.twitter.com') !== false)) {
-    user_oauth_sign($url, $post_data);
-  } elseif (strpos($url, 'api.twitter.com') !== false && is_array($post_data)) {
-    // Passing $post_data as an array to twitter.com (non-oauth) causes an error :(
-    $s = array();
-    foreach ($post_data as $name => $value)
-      $s[] = $name.'='.urlencode($value);
-    $post_data = implode('&', $s);
-  }
-  
-  $api_start = microtime(1);
-  $ch = curl_init($url);
+function twitter_process($url, $post_data = false) 
+{
+	if ($post_data === true)
+	{
+		$post_data = array();
+	}
 	
-  if($post_data !== false && !$_GET['page']) {
-    curl_setopt ($ch, CURLOPT_POST, true);
-    curl_setopt ($ch, CURLOPT_POSTFIELDS, $post_data);
-  }
+	if (user_type() == 'oauth' && ( strpos($url, '/twitter.com') !== false || strpos($url, 'api.twitter.com') !== false)) 
+	{
+		user_oauth_sign($url, $post_data);
+	} 
 
-  if (user_type() != 'oauth' && user_is_authenticated())
-  {  curl_setopt($ch, CURLOPT_USERPWD, user_current_username().':'.$GLOBALS['user']['password']);}
+	elseif (strpos($url, 'api.twitter.com') !== false && is_array($post_data)) 
+	{
+		// Passing $post_data as an array to twitter.com (non-oauth) causes an error :(
+		$s = array();
+		foreach ($post_data as $name => $value)
+		$s[] = $name.'='.urlencode($value);
+		$post_data = implode('&', $s);
+	}
+
+	$api_start = microtime(1);
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $url);
+
+	if($post_data !== false && !$_GET['page']) 
+	{
+		curl_setopt ($ch, CURLOPT_POST, true);
+		curl_setopt ($ch, CURLOPT_POSTFIELDS, $post_data);
+	}
+
+	if (user_type() != 'oauth' && user_is_authenticated())
+	{  
+		curl_setopt($ch, CURLOPT_USERPWD, user_current_username().':'.$GLOBALS['user']['password']);
+	}
 
 
 	//from  http://github.com/abraham/twitteroauth/blob/master/twitteroauth/twitteroauth.php
 	curl_setopt($ch, CURLOPT_USERAGENT, 'dabr');
-	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
-	curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+	//curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+	//curl_setopt($ch, CURLOPT_TIMEOUT, 15);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-	//curl_setopt($ci, CURLOPT_HEADERFUNCTION, array($this, 'getHeader'));
 	curl_setopt($ch, CURLOPT_HEADER, FALSE);
+	curl_setopt($ch, CURLOPT_FRESH_CONNECT, TRUE);
 
+	$response = curl_exec($ch);
+	$response_info=curl_getinfo($ch);
+	$erno = curl_errno($ch);
+	$er = curl_error($ch);
+	curl_close($ch);
 
+	global $api_time;
+	$api_time += microtime(1) - $api_start;
 
-  $response = curl_exec($ch);
-  $response_info=curl_getinfo($ch);
-  curl_close($ch);
-  global $api_time;
-  $api_time += microtime(1) - $api_start;
-
-  switch( intval( $response_info['http_code'] ) ) {
-    case 200:
-      $json = json_decode($response);
-      if ($json) return $json;
-      return $response;
-    case 401:
-      user_logout();
-      theme('error', "<p>Error: Login credentials incorrect.</p><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
-    case 0:
-      theme('error', '<h2>Twitter timed out</h3><p>Dabr gave up on waiting for Twitter to respond. They\'re probably overloaded right now, try again in a minute.</p>');
-    default:
-      $result = json_decode($response);
-      $result = $result->error ? $result->error : $response;
-      if (strlen($result) > 500) $result = 'Something broke on Twitter\'s end.';
-      theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
-  }
+	switch( intval( $response_info['http_code'] ) ) 
+	{
+		case 200:
+		case 201:
+			$json = json_decode($response);
+			if ($json)
+			{ 
+				return $json;
+			}
+			return $response;
+		case 401:
+			user_logout();
+			theme('error', "<p>Error: Login credentials incorrect.</p><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
+		case 0:
+			$result = $erno . ":" . $er . "<br />" ;
+			foreach ($response_info as $key => $value) 
+			{
+				$result .= "Key: $key; Value: $value<br />";
+			}
+			theme('error', '<h2>Twitter timed out</h2><p>Dabr gave up on waiting for Twitter to respond. They\'re probably overloaded right now, try again in a minute. <br />'. $result . ' </p>');
+		default:
+			$result = json_decode($response);
+			$result = $result->error ? $result->error : $response;
+			if (strlen($result) > 500) 
+			{
+				$result = 'Something broke on Twitter\'s end.';
+				$result .= $erno . ":" . $er . "<br />" ;
+				foreach ($response_info as $key => $value) 
+				{
+					$result .= "Key: $key; Value: $value<br />";
+				}
+			}
+			theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
+	}
 }
 
 function twitter_url_shorten($text) {
