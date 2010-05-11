@@ -271,16 +271,11 @@ function twitter_process($url, $post_data = false)
 		curl_setopt($ch, CURLOPT_USERPWD, user_current_username().':'.$GLOBALS['user']['password']);
 	}
 
-
 	//from  http://github.com/abraham/twitteroauth/blob/master/twitteroauth/twitteroauth.php
-	curl_setopt($ch, CURLOPT_USERAGENT, 'dabr');
-	//curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-	//curl_setopt($ch, CURLOPT_TIMEOUT, 15);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 	curl_setopt($ch, CURLOPT_HEADER, FALSE);
-	curl_setopt($ch, CURLOPT_FRESH_CONNECT, TRUE);
 
 	$response = curl_exec($ch);
 	$response_info=curl_getinfo($ch);
@@ -306,10 +301,12 @@ function twitter_process($url, $post_data = false)
 			theme('error', "<p>Error: Login credentials incorrect.</p><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
 		case 0:
 			$result = $erno . ":" . $er . "<br />" ;
+			/*
 			foreach ($response_info as $key => $value) 
 			{
 				$result .= "Key: $key; Value: $value<br />";
 			}
+			*/
 			theme('error', '<h2>Twitter timed out</h2><p>Dabr gave up on waiting for Twitter to respond. They\'re probably overloaded right now, try again in a minute. <br />'. $result . ' </p>');
 		default:
 			$result = json_decode($response);
@@ -317,11 +314,13 @@ function twitter_process($url, $post_data = false)
 			if (strlen($result) > 500) 
 			{
 				$result = 'Something broke on Twitter\'s end.';
+				/*				
 				$result .= $erno . ":" . $er . "<br />" ;
 				foreach ($response_info as $key => $value) 
 				{
 					$result .= "Key: $key; Value: $value<br />";
 				}
+				*/
 			}
 			theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
 	}
@@ -350,7 +349,7 @@ function twitter_url_shorten_callback($match) {
 function twitter_fetch($url) {
   $ch = curl_init();
   curl_setopt($ch, CURLOPT_URL, $url);
-  curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+  //curl_setopt($ch, CURLOPT_TIMEOUT, 10);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
   $response = curl_exec($ch);
   curl_close($ch);
