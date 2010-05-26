@@ -196,11 +196,11 @@ function twitter_trends_page($query)
   theme('page', 'Trends', $content);
 }
 
-function js_counter($name)
+function js_counter($name, $length='140')
 {
 	$script = '<script type="text/javascript">
 function updateCount() {
-document.getElementById("remaining").innerHTML = 140 - document.getElementById("' . $name . '").value.length;
+document.getElementById("remaining").innerHTML = ' . $length . ' - document.getElementById("' . $name . '").value.length;
 setTimeout(updateCount, 400);
 }
 updateCount();
@@ -208,31 +208,123 @@ updateCount();
 	return $script;
 }
 
-function twitter_twitpic_page($query) {
-  if (user_type() == 'oauth') {
-    return theme('page', 'Error', '<p>You can\'t use Twitpic uploads while accessing Dabr using an OAuth login.</p>');
-  }
-  if ($_POST['message']) {
-    $response = twitter_process('http://twitpic.com/api/uploadAndPost', array(
-      'media' => '@'.$_FILES['media']['tmp_name'],
-      'message' => stripslashes($_POST['message']),
-      'username' => user_current_username(),
-      'password' => $GLOBALS['user']['password'],
-    ));
-    if (preg_match('#mediaid>(.*)</mediaid#', $response, $matches)) {
-      $id = $matches[1];
-      twitter_refresh("twitpic/confirm/$id");
-    } else {
-      twitter_refresh('twitpic/fail');
-    }
-  } elseif ($query[1] == 'confirm') {
-    $content = "<p>Upload success.</p><p><img src='http://twitpic.com/show/thumb/{$query[2]}' alt='' /></p>";
-  } elseif ($query[1] == 'fail') {
-    $content = '<p>Twitpic upload failed. No idea why!</p>';
-  } else {
-    $content = '<form method="post" action="twitpic" enctype="multipart/form-data">Image <input type="file" name="media" /><br />Message: <input type="text" name="message" maxlength="120" /><br /><input type="submit" value="Upload" /></form>';
-  }
-  return theme('page', 'Twitpic Upload', $content);
+function twitter_twitpic_page($query) 
+{
+	if (user_type() == 'oauth') 
+	{
+		//V2 of the Twitpic API allows for OAuth
+		//http://dev.twitpic.com/docs/2/upload/
+		
+		//Has the user submitted an image and message?
+		if ($_POST['message']) 
+		{
+			$twitpicURL = 'http://api.twitpic.com/2/upload.json';
+			
+			//Set the initial headers
+			$header = array(
+									'X-Auth-Service-Provider: https://api.twitter.com/1/account/verify_credentials.json', 
+									'X-Verify-Credentials-Authorization: OAuth realm="http://api.twitter.com/"'
+								);
+			
+			//Using Abraham's OAuth library
+			require_once('OAuth.php');
+
+			// instantiating OAuth customer 
+			$consumer = new OAuthConsumer(OAUTH_CONSUMER_KEY, OAUTH_CONSUMER_SECRET);
+
+			// instantiating signer
+			$sha1_method = new OAuthSignatureMethod_HMAC_SHA1();
+
+			// user's token
+			list($oauth_token, $oauth_token_secret) = explode('|', $GLOBALS['user']['password']);
+			$token = new OAuthConsumer($oauth_token, $oauth_token_secret);
+	
+			// Generate all the OAuth parameters needed
+			$signingURL = 'https://api.twitter.com/1/account/verify_credentials.json';
+			$request = OAuthRequest::from_consumer_and_token($consumer, $token, 'GET', $signingURL, array());
+			$request->sign_request($sha1_method, $consumer, $token);
+	
+			$header[1] .= ", oauth_consumer_key=\"" . $request->get_parameter('oauth_consumer_key') ."\"";
+			$header[1] .= ", oauth_signature_method=\"" . $request->get_parameter('oauth_signature_method') ."\"";
+			$header[1] .= ", oauth_token=\"" . $request->get_parameter('oauth_token') ."\"";
+			$header[1] .= ", oauth_timestamp=\"" . $request->get_parameter('oauth_timestamp') ."\"";
+			$header[1] .= ", oauth_nonce=\"" . $request->get_parameter('oauth_nonce') ."\"";
+			$header[1] .= ", oauth_version=\"" . $request->get_parameter('oauth_version') ."\"";
+			$header[1] .= ", oauth_signature=\"" . urlencode($request->get_parameter('oauth_signature')) ."\"";
+
+			//open connection
+			$ch = curl_init();
+			
+			//Set paramaters
+			curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+			//set the url, number of POST vars, POST data
+			curl_setopt($ch,CURLOPT_URL,$twitpicURL);
+			
+			//TwitPic requires the data to be sent as POST
+			$media_data = array(
+									'media' => '@'.$_FILES['media']['tmp_name'],
+							      'message' => ' ' . stripslashes($_POST['message']), //A space is needed because twitpic b0rks if first char is an @
+							      'key'=>TWITPIC_API_KEY
+								);
+
+			curl_setopt($ch, CURLOPT_POST, true);
+			curl_setopt($ch,CURLOPT_POSTFIELDS,$media_data);
+
+			//execute post
+			$result = curl_exec($ch);
+			$response_info=curl_getinfo($ch);
+
+			//close connection
+			curl_close($ch);
+	
+			if ($response_info['http_code'] == 200) //Success
+			{
+				//Decode the response
+				$json = json_decode($result);
+				$id = $json->id;
+				$twitpicURL = $json->url;
+				$text = $json->text;
+				$message = trim($text) . " " . $twitpicURL;
+
+				//Send the user's message to twitter
+				$request = API_URL.'statuses/update.json';
+				
+				$post_data = array('source' => 'dabr', 'status' => $message);
+				$status = twitter_process($request, $post_data);
+
+				//Back to the timeline
+				twitter_refresh("twitpic/confirm/$id");
+			} 
+			else 
+			{
+				$content = "<p>Twitpic upload failed. No idea why!</p>";
+				$content .=  "<pre>";
+				$json = json_decode($result);
+				$content .= "<br / ><b>message</b> " . urlencode($_POST['message']);
+				$content .= "<br / ><b>json</b> " . print_r($json);
+				$content .= "<br / ><b>Response</b> " . print_r($response_info);
+				$content .= "<br / ><b>header</b> " . print_r($header);
+				$content .= "<br / ><b>media_data</b> " . print_r($media_data);
+				$content .= "<br /><b>URL was</b> " . $twitpicURL;
+				$content .= "<br /><b>File uploaded was</b> " . $_FILES['media']['tmp_name'];
+				$content .= "</pre>";
+			}
+		} 
+		elseif ($query[1] == 'confirm') 
+		{
+			$content = "<p>Upload success. Image posted to Twitter.</p><p><img src='http://twitpic.com/show/thumb/{$query[2]}' alt='' /></p>";
+		}
+		else 
+		{
+			$content = "<form method='post' action='twitpic' enctype='multipart/form-data'>Image <input type='file' name='media' /><br />Message (optional):<br /><textarea name='message' style='width:100%; max-width: 400px;' rows='3' id='message'></textarea><br><input type='submit' value='Send'><span id='remaining'>110</span></form>";
+			$content .= js_counter("message", "110");
+		}
+
+		return theme('page', 'Twitpic Upload', $content);
+	}
 }
 
 function twitter_process($url, $post_data = false) 

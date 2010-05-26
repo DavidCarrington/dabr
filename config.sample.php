@@ -17,6 +17,9 @@ define('BITLY_API_KEY', '');
 // Optional API keys for retrieving thumbnails
 define('FLICKR_API_KEY', '');
 
+// API key for Twitpic - sign up at http://dev.twitpic.com/
+define('TWITPIC_API_KEY', '');
+
 // Optional: Allows you to turn shortened URLs into long URLs http://www.longurlplease.com/docs
 // Uncomment to enable.
 // define('LONGURL_KEY', 'true');
