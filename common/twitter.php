@@ -861,7 +861,7 @@ function twitter_retweet($query) {
 }
 
 function twitter_replies_page() {
-  $request = API_URL.'statuses/replies.json?page='.intval($_GET['page']);
+  $request = API_URL.'statuses/mentions.json?page='.intval($_GET['page']);
   $tl = twitter_process($request);
   $tl = twitter_standard_timeline($tl, 'replies');
   $content = theme('status_form');
@@ -990,7 +990,7 @@ function twitter_user_page($query)
 	// If the user has at least one tweet
 	if (isset($user->status)) {
 		// Fetch the timeline early, so we can try find the tweet they're replying to
-		$request = API_URL."statuses/user_timeline.json?screen_name={$screen_name}&page=".intval($_GET['page']);
+		$request = API_URL."statuses/user_timeline.json?screen_name={$screen_name}&include_rts=true&page=".intval($_GET['page']);
 		$tl = twitter_process($request);
 		$tl = twitter_standard_timeline($tl, 'user');
 	}
@@ -1052,7 +1052,7 @@ function twitter_mark_favourite_page($query) {
 
 function twitter_home_page() {
   user_ensure_authenticated();
-  $request = API_URL.'statuses/home_timeline.json?count=20&page='.intval($_GET['page']);
+  $request = API_URL.'statuses/home_timeline.json?count=20&include_rts=true&page='.intval($_GET['page']);
   $tl = twitter_process($request);
   $tl = twitter_standard_timeline($tl, 'friends');
   $content = theme('status_form');
