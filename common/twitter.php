@@ -570,6 +570,27 @@ function twitter_photo_replace($text) {
 		}
 	}
 	
+	//Posterous / post.ly is handled differently because API calls need to be made
+	if (preg_match_all('#post.ly/([\w\d]+)#', $tmp, $matches, PREG_PATTERN_ORDER) > 0)
+	{
+		foreach ($matches[1] as $key => $match) 
+		{
+			$thumb = get_thumbnail("post.ly", $match);
+			
+			if ($thumb) //not all posts have thumbnails
+			{
+				if (substr($thumb, -4) == ".mp3")
+				{
+					$images[] = theme('external_link', $thumb, "[Listen to MP3]");
+				}
+				else
+				{
+					$images[] = theme('external_link', "http://{$matches[0][$key]}", "<img src='$thumb' />");
+				}
+			}
+		}
+	}
+	
 	//Moblog is handled differently because of non-standard structure
 	if (preg_match_all('#moblog.net/view/([\d]+)/#', $tmp, $matches, PREG_PATTERN_ORDER) > 0 )
 	{
@@ -630,6 +651,38 @@ function get_thumbnail($service, $id)
 		}
 		preg_match($pattern, $flickr_xml, $matches);
 		return $matches[1];
+	}
+	else if ($service == "post.ly") 
+	{
+		//Documentation at http://posterous.com/api/postly
+		$url = "http://posterous.com/api/getpost?id=$id";
+		$postly_xml = twitter_fetch($url);
+		$postly_data = simplexml_load_string($postly_xml);
+		
+		if ($postly_data->media[0]->type == "image")
+		{
+			$thumb = $postly_data->media[0]->medium->url;
+		}
+		elseif ($postly_data->media[0]->type == "video")
+		{
+			$thumb = $postly_data->media[0]->thumb;
+		}
+		elseif ($postly_data->media[0]->type == "audio")
+		{
+			$thumb = $postly_data->media[0]->url;
+			if (substr($thumb, -4) == ".mp3") //Not sure if audio can be other file types. Belt & braces.
+			{
+				return $thumb;
+			}
+		}
+	
+		// We can use the thumbnail that Postereous generates - $postly_data->media[0]->thumb->url; - but it's often too small.
+		// Using tinysrc.mobi creates better sized thumbnails
+		if ($thumb) 
+		{
+			return "http://i.tinysrc.mobi/x50/" . $thumb;
+		} 
+		return null;
 	}
 }
 
