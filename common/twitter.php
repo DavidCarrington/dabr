@@ -1575,6 +1575,8 @@ function theme_pagination() {
 
 function theme_action_icons($status) {
   $from = $status->from->screen_name;
+	$retweeted_by = $status->retweeted_by->user->screen_name;
+	$retweeted_id = $status->retweeted_by->id;
   $geo = $status->geo;
   $actions = array();
   
@@ -1608,9 +1610,18 @@ function theme_action_icons($status) {
       $actions[] = theme('action_icon', "favourite/{$status->id}", 'images/star_grey.png', 'FAV');
     }
     $actions[] = theme('action_icon', "retweet/{$status->id}", 'images/retweet.png', 'RT');
-    if (user_is_current_user($from)) {
+    if (user_is_current_user($from))
+    {
       $actions[] = theme('action_icon', "confirm/delete/{$status->id}", 'images/trash.gif', 'DEL');
     }
+	if ($retweeted_by) //Allow users to delete what they have retweeted
+	{
+		if (user_is_current_user($retweeted_by))
+		{
+			$actions[] = theme('action_icon', "confirm/delete/{$retweeted_id}", 'images/trash.gif', 'DEL');
+		}
+    }
+    
   } else {
     $actions[] = theme('action_icon', "directs/delete/{$status->id}", 'images/trash.gif', 'DEL');
   }
