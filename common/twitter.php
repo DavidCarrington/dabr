@@ -1105,7 +1105,19 @@ function twitter_mark_favourite_page($query) {
 
 function twitter_home_page() {
   user_ensure_authenticated();
-  $request = API_URL.'statuses/home_timeline.json?count=20&include_rts=true&page='.intval($_GET['page']);
+  //$request = API_URL.'statuses/home_timeline.json?count=20&include_rts=true&page='.intval($_GET['page']);
+  $request = API_URL.'statuses/home_timeline.json?count=20&include_rts=true';
+  
+	if ($_GET['max_id'])
+	{
+		$request .= '&max_id='.$_GET['max_id'];
+	}
+	
+	if ($_GET['since_id'])
+	{
+		$request .= '&since_id='.$_GET['since_id'];
+	}
+//echo $request;
   $tl = twitter_process($request);
   $tl = twitter_standard_timeline($tl, 'friends');
   $content = theme('status_form');
@@ -1326,6 +1338,7 @@ function twitter_standard_timeline($feed, $source) {
           $retweet = $new->retweeted_status;
           unset($new->retweeted_status);
           $retweet->retweeted_by = $new;
+          $retweet->original_id = $new->id;
           $new = $retweet;
         }
         $new->from = $new->user;
@@ -1430,53 +1443,91 @@ function twitter_user_info($username = null) {
   return $user;
 }
 
-function theme_timeline($feed) {
-  if (count($feed) == 0) return theme('no_tweets');
-  $rows = array();
-  $page = menu_current_page();
-  $date_heading = false;
-  foreach ($feed as $status) {
-    $time = strtotime($status->created_at);
-    if ($time > 0) {
-      $date = twitter_date('l jS F Y', strtotime($status->created_at));
-      if ($date_heading !== $date) {
-        $date_heading = $date;
-        $rows[] = array(array(
-          'data' => "<small><b>$date</b></small>",
-          'colspan' => 2
-        ));
-      }
-    } else {
-      $date = $status->created_at;
-    }
-    $text = twitter_parse_tags($status->text);
-    $link = theme('status_time_link', $status, !$status->is_direct);
-    $actions = theme('action_icons', $status);
-    $avatar = theme('avatar', $status->from->profile_image_url);
-    $source = $status->source ? " via {$status->source}" : '';
-    if ($status->in_reply_to_status_id) {
-      $source .= " <a href='status/{$status->in_reply_to_status_id}'>in reply to {$status->in_reply_to_screen_name}</a>";
-    }
-    $html = "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br />{$text} <small>$source</small>";
-    if ($status->retweeted_by) {
-      $retweeted_by = $status->retweeted_by->user->screen_name;
-      $html .= "<br /><small>retweeted to you by <a href='user/{$retweeted_by}'>{$retweeted_by}</a></small>";
-    }
-    $row = array($html);
+function theme_timeline($feed) 
+{
+	if (count($feed) == 0) return theme('no_tweets');
+	$rows = array();
+	$page = menu_current_page();
+	$date_heading = false;
+	$first=0;
+	
+	foreach ($feed as $status) 
+	{
+		if ($first==0)
+		{
+			$since_id = $status->id;
+			$first++;
+		}
+		else
+		{
+			$max_id =  $status->id;
+			if ($status->original_id)
+			{
+				$max_id =  $status->original_id;
+			}
+		}
+    	$time = strtotime($status->created_at);
+		if ($time > 0) 
+		{
+      	$date = twitter_date('l jS F Y', strtotime($status->created_at));
+      	if ($date_heading !== $date) 
+      	{
+				$date_heading = $date;
+				$rows[] = array(array('data' => "<small><b>$date</b></small>",'colspan' => 2));
+			}
+    	} 
+    	else 
+    	{
+			$date = $status->created_at;
+		}
+		$text = twitter_parse_tags($status->text);
+		$link = theme('status_time_link', $status, !$status->is_direct);
+		$actions = theme('action_icons', $status);
+		$avatar = theme('avatar', $status->from->profile_image_url);
+		$source = $status->source ? " via {$status->source}" : '';
+		if ($status->in_reply_to_status_id) 
+		{
+      	$source .= " <a href='status/{$status->in_reply_to_status_id}'>in reply to {$status->in_reply_to_screen_name}</a>";
+		}
+		$html = "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br />{$text} <small>$source</small>";
+		if ($status->retweeted_by) 
+		{
+      	$retweeted_by = $status->retweeted_by->user->screen_name;
+      	$html .= "<br /><small>retweeted to you by <a href='user/{$retweeted_by}'>{$retweeted_by}</a></small>";
+		}
+		$row = array($html);
 
-    if ($page != 'user' && $avatar) {
-      array_unshift($row, $avatar);
-    }
-    if ($page != 'replies' && twitter_is_reply($status)) {
-      $row = array('class' => 'reply', 'data' => $row);
-    }
-    $rows[] = $row;
+		if ($page != 'user' && $avatar) 
+		{
+      	array_unshift($row, $avatar);
+		}
+		
+		if ($page != 'replies' && twitter_is_reply($status)) 
+		{
+      	$row = array('class' => 'reply', 'data' => $row);
+		}
+		
+		$rows[] = $row;
   }
   $content = theme('table', array(), $rows, array('class' => 'timeline'));
-  if (count($feed) >= 15) {
-    $content .= theme('pagination');
-  }
-  return $content;
+  
+	//$content .= theme('pagination');
+	if ($page != '')
+	{
+		$content .= theme('pagination');
+	}
+	else
+	{
+		//Doesn't work. since_id returns the most recent tweets up to since_id, not since. Grrr
+		//$links[] = "<a href='{$_GET['q']}?since_id=$since_id'>Newer</a>";
+		
+		$links[] = "<a href='{$_GET['q']}?max_id=$max_id'>Older</a>";
+		$content .= '<p>'.implode(' | ', $links).'</p>';
+	}
+
+	
+
+	return $content;
 }
 
 function twitter_is_reply($status) {
@@ -1561,15 +1612,38 @@ function theme_external_link($url, $content = null) {
 	
 }
 
-function theme_pagination() {
-  $page = intval($_GET['page']);
-  if (preg_match('#&q(.*)#', $_SERVER['QUERY_STRING'], $matches)) {
-    $query = $matches[0];
-  }
-  if ($page == 0) $page = 1;
-  $links[] = "<a href='{$_GET['q']}?page=".($page+1)."$query' accesskey='9'>Older</a> 9";
-  if ($page > 1) $links[] = "<a href='{$_GET['q']}?page=".($page-1)."$query' accesskey='8'>Newer</a> 8";
-  return '<p>'.implode(' | ', $links).'</p>';
+function theme_pagination() 
+{
+
+	$page = intval($_GET['page']);
+	if (preg_match('#&q(.*)#', $_SERVER['QUERY_STRING'], $matches)) 
+	{
+		$query = $matches[0];
+	}
+	if ($page == 0) $page = 1;
+	$links[] = "<a href='{$_GET['q']}?page=".($page+1)."$query' accesskey='9'>Older</a> 9";
+	if ($page > 1) $links[] = "<a href='{$_GET['q']}?page=".($page-1)."$query' accesskey='8'>Newer</a> 8";
+	return '<p>'.implode(' | ', $links).'</p>';
+
+/*
+	if ($_GET['max_id'])
+	{
+		$id = intval($_GET['max_id']);
+	}
+	elseif ($_GET['since_id'])
+	{
+		$id = intval($_GET['since_id']);
+	}
+	else
+	{
+		$id = 17090863233;
+	}
+
+	$links[] = "<a href='{$_GET['q']}?max_id=$id' accesskey='9'>Older</a> 9";
+	$links[] = "<a href='{$_GET['q']}?since_id=$id' accesskey='8'>Newer</a> 8";
+	
+	return '<p>'.implode(' | ', $links).'</p>';
+	*/
 }
 
 
