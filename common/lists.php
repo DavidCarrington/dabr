@@ -10,12 +10,12 @@ menu_register(array(
 
 
 /*
-	API Calls
+ API Calls
 
-	Note that some calls are XML and not JSON like the rest of Dabr. This is because 32-bit
-	PHP installs cannot handle the 64-bit Lists API cursors used for paging.
+ Note that some calls are XML and not JSON like the rest of Dabr. This is because 32-bit
+ PHP installs cannot handle the 64-bit Lists API cursors used for paging.
 
-*/
+ */
 
 function lists_paginated_process($url) {
 	// Adds cursor/pagination parameters to a query
@@ -58,24 +58,24 @@ function twitter_lists_list_subscribers($user, $list) {
 
 
 
-/* Front controller for the new pages 
+/* Front controller for the new pages
 
 List URLS:
-	lists -- current user's lists
-	lists/$user -- xhosen user's lists
-	lists/$user/lists -- alias of the above
-	lists/$user/memberships -- lists user is in
-	lists/$user/$list -- tweets
-	lists/$user/$list/members
-	lists/$user/$list/subscribers
-	lists/$user/$list/edit -- rename a list (no member editting)
+lists -- current user's lists
+lists/$user -- xhosen user's lists
+lists/$user/lists -- alias of the above
+lists/$user/memberships -- lists user is in
+lists/$user/$list -- tweets
+lists/$user/$list/members
+lists/$user/$list/subscribers
+lists/$user/$list/edit -- rename a list (no member editting)
 */
 
 function lists_controller($query) {
 	// Pick off $user from $query or default to the current user
 	$user = $query[1];
 	if (!$user) $user = user_current_username();
-	
+
 	// Fiddle with the $query to find which part identifies the page they want
 	if ($query[3]) {
 		// URL in form: lists/$user/$list/$method
@@ -85,7 +85,7 @@ function lists_controller($query) {
 		// URL in form: lists/$user/$method
 		$method = $query[2];
 	}
-	
+
 	// Attempt to call the correct page based on $method
 	switch ($method) {
 		case '':
@@ -109,7 +109,7 @@ function lists_controller($query) {
 			$list = $method;
 			return lists_list_tweets_page($user, $list);
 	}
-	
+
 	// Error to be shown for any incomplete pages (breaks above)
 	return theme('error', 'List page not found');
 }
@@ -139,8 +139,8 @@ function lists_list_tweets_page($user, $list) {
 	$tweets = twitter_lists_tweets($user, $list);
 	$tl = twitter_standard_timeline($tweets, 'user');
 	$content = theme('status_form');
-  $list_url = "lists/{$user}/{$list}";
-  $content .= "<p>Tweets in <a href='user/{$user}'>@{$user}</a>/<strong>{$list}</strong> | <a href='{$list_url}/members'>View Members</a> | <a href='{$list_url}/subscribers'>View Subscribers</a></p>";
+	$list_url = "lists/{$user}/{$list}";
+	$content .= "<p>Tweets in <a href='user/{$user}'>@{$user}</a>/<strong>{$list}</strong> | <a href='{$list_url}/members'>View Members</a> | <a href='{$list_url}/subscribers'>View Subscribers</a></p>";
 	$content .= theme('timeline', $tl);
 	theme('page', "List {$user}/{$list}", $content);
 }
@@ -149,7 +149,7 @@ function lists_list_members_page($user, $list) {
 	// Show members of a list
 	// TODO: add logic to CREATE and REMOVE members
 	$p = twitter_lists_list_members($user, $list);
-	
+
 	// TODO: use a different theme() function? Add a "delete member" link for each member
 	$content = theme('followers', $p, 1);
 	$content .= theme('list_pagination', $p);
@@ -173,7 +173,7 @@ function theme_lists($json) {
 		return "<p>No lists to display</p>";
 	}
 	$rows = array();
-	$headers = array('List', 'Members', 'Subscribers');	
+	$headers = array('List', 'Members', 'Subscribers');
 	foreach ($json->lists->list as $list) {
 		$url = "lists/{$list->user->screen_name}/{$list->slug}";
 		$rows[] = array(

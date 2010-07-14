@@ -31,7 +31,7 @@ define('DEBUG_MODE', 'OFF');
 // Can be set manually but the following code tries to work it out automatically.
 $base_url = 'http://'.$_SERVER['HTTP_HOST'];
 if ($directory = trim(dirname($_SERVER['SCRIPT_NAME']), '/\,')) {
-  $base_url .= '/'.$directory;
+	$base_url .= '/'.$directory;
 }
 define('BASE_URL', $base_url.'/');
 
@@ -43,23 +43,23 @@ $GA_ACCOUNT = "";
 $GA_PIXEL = "ga.php";
 
 function googleAnalyticsGetImageUrl() {
-  global $GA_ACCOUNT, $GA_PIXEL;
-  $url = "";
-  $url .= $GA_PIXEL . "?";
-  $url .= "utmac=" . $GA_ACCOUNT;
-  $url .= "&utmn=" . rand(0, 0x7fffffff);
-  $referer = $_SERVER["HTTP_REFERER"];
-  $query = $_SERVER["QUERY_STRING"];
-  $path = $_SERVER["REQUEST_URI"];
-  if (empty($referer)) {
-    $referer = "-";
-  }
-  $url .= "&utmr=" . urlencode($referer);
-  if (!empty($path)) {
-    $url .= "&utmp=" . urlencode($path);
-  }
-  $url .= "&guid=ON";
-  return str_replace("&", "&amp;", $url);
+	global $GA_ACCOUNT, $GA_PIXEL;
+	$url = "";
+	$url .= $GA_PIXEL . "?";
+	$url .= "utmac=" . $GA_ACCOUNT;
+	$url .= "&utmn=" . rand(0, 0x7fffffff);
+	$referer = $_SERVER["HTTP_REFERER"];
+	$query = $_SERVER["QUERY_STRING"];
+	$path = $_SERVER["REQUEST_URI"];
+	if (empty($referer)) {
+		$referer = "-";
+	}
+	$url .= "&utmr=" . urlencode($referer);
+	if (!empty($path)) {
+		$url .= "&utmp=" . urlencode($path);
+	}
+	$url .= "&guid=ON";
+	return str_replace("&", "&amp;", $url);
 }
 
 ?>
