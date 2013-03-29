@@ -1,7 +1,14 @@
 <?php
 
-// Twitter's API URL.
+error_reporting(E_ALL ^ E_NOTICE);
+
+// Twitter's API URL - you can also use https://api.twitter.com/1/ if you want a secure connection to Twitter
 define('API_URL','http://api.twitter.com/1/');
+
+// Image Proxy URL
+// Use http://src.sencha.io/ for regular connections
+// Use https://tinysrc.appspot.com/ for SSL connections
+define('IMAGE_PROXY_URL', 'https://tinysrc.appspot.com/');
 
 // Cookie encryption key. Max 52 characters
 define('ENCRYPTION_KEY', 'Example Key - Change Me!');
@@ -10,15 +17,13 @@ define('ENCRYPTION_KEY', 'Example Key - Change Me!');
 define('OAUTH_CONSUMER_KEY', '');
 define('OAUTH_CONSUMER_SECRET', '');
 
-// bit.ly login and API key for URL shortening
-define('BITLY_LOGIN', '');
-define('BITLY_API_KEY', '');
+// Embedly Key 
+// Embed image previews in tweets
+// Sign up at https://app.embed.ly/
+define('EMBEDLY_KEY', '');
 
-// Optional API keys for retrieving thumbnails
-define('FLICKR_API_KEY', '');
-
-// API key for Twitpic - sign up at http://dev.twitpic.com/
-define('TWITPIC_API_KEY', '');
+// API key for InMobi adverts - sign up at http://inmobi.com/
+define('INMOBI_API_KEY', '');
 
 // Optional: Allows you to turn shortened URLs into long URLs http://www.longurlplease.com/docs
 // Uncomment to enable.
@@ -35,6 +40,24 @@ if ($directory = trim(dirname($_SERVER['SCRIPT_NAME']), '/\,')) {
 }
 define('BASE_URL', $base_url.'/');
 
+
+
+// MySQL storage of OAuth login details for users
+define('MYSQL_USERS', 'OFF');
+// mysql_connect('localhost', 'username', 'password');
+// mysql_select_db('dabr');
+
+/* The following table is needed to store user login details if you enable MYSQL_USERS:
+
+CREATE TABLE IF NOT EXISTS `user` (
+  `username` varchar(64) NOT NULL,
+  `oauth_key` varchar(128) NOT NULL,
+  `oauth_secret` varchar(128) NOT NULL,
+  `password` varchar(32) NOT NULL,
+  PRIMARY KEY (`username`)
+)
+
+*/
 
 // Google Analytics Mobile tracking code
 // You need to download ga.php from the Google Analytics website for this to work

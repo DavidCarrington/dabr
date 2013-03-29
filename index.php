@@ -16,23 +16,24 @@ require 'common/twitter.php';
 require 'common/lists.php';
 require 'common/settings.php';
 
+// Twitter's API URL.
+define('API_NEW','http://api.twitter.com/1.1/');
+define('API_OLD','http://api.twitter.com/1/');
+
 menu_register(array (
 	'about' => array (
 		'callback' => 'about_page',
-
 	),
 	'logout' => array (
 		'security' => true,
 		'callback' => 'logout_page',
-
 	),
-
 ));
 
 function logout_page() {
 	user_logout();
-	$content = theme('logged_out');
-	theme('page', 'Logged out', $content);
+	header("Location: " . BASE_URL); /* Redirect browser */
+	exit;
 }
 
 function about_page() {

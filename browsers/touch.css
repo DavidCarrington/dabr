@@ -15,3 +15,6 @@ body.show-menu #menu-extras { display: block; }
 #menu-extras a { padding: 0.8em; border-bottom: 1px solid #eee; }
 
 .timeline a img { padding: 1px 2px; }
+
+.avatar{display:block; height:50px; width:50px; left:5px; margin:0; overflow:hidden; position:absolute;}
+.shift{margin-left:58px;min-height:48px;}

@@ -7,53 +7,43 @@ menu_register(array(
 	),
 ));
 
-
-
-/*
- API Calls
-
- Note that some calls are XML and not JSON like the rest of Dabr. This is because 32-bit
- PHP installs cannot handle the 64-bit Lists API cursors used for paging.
-
- */
-
 function lists_paginated_process($url) {
 	// Adds cursor/pagination parameters to a query
 	$cursor = $_GET['cursor'];
 	if (!is_numeric($cursor)) {
 		$cursor = -1;
 	}
-	$url .= '?cursor='.$cursor;
-	$xml = twitter_process($url);
-	return simplexml_load_string($xml);
+	$url .= '&cursor='.$cursor;
+	return twitter_process($url);
 }
 
 function twitter_lists_tweets($user, $list) {
 	// Tweets belonging to a list
-	$url = API_URL."{$user}/lists/{$list}/statuses.json";
-	$page = intval($_GET['page']);
-	if ($page > 0) $url .= '?page='.$page;
+	$url = API_NEW."lists/statuses.json?owner_screen_name={$user}&slug={$list}";
+	if($_GET['max_id']) {
+		$url .= '&max_id=' . $_GET['max_id'];
+	}
 	return twitter_process($url);
 }
 
 function twitter_lists_user_lists($user) {
 	// Lists a user has created
-	return lists_paginated_process(API_URL."{$user}/lists.xml");
+	return twitter_process(API_NEW."lists/list.json?screen_name={$user}");
 }
 
 function twitter_lists_user_memberships($user) {
 	// Lists a user belongs to
-	return lists_paginated_process(API_URL."{$user}/lists/memberships.xml");
+	return lists_paginated_process(API_NEW."lists/memberships.json?screen_name={$user}");
 }
 
 function twitter_lists_list_members($user, $list) {
 	// Members of a list
-	return lists_paginated_process(API_URL."{$user}/{$list}/members.xml");
+	return lists_paginated_process(API_NEW."lists/members.json?owner_screen_name={$user}&slug={$list}");
 }
 
 function twitter_lists_list_subscribers($user, $list) {
 	// Subscribers of a list
-	return lists_paginated_process(API_URL."{$user}/{$list}/subscribers.xml");
+	return lists_paginated_process(API_NEW."lists/subscribers.json?owner_screen_name={$user}&slug={$list}");
 }
 
 
@@ -62,7 +52,7 @@ function twitter_lists_list_subscribers($user, $list) {
 
 List URLS:
 lists -- current user's lists
-lists/$user -- xhosen user's lists
+lists/$user -- chosen user's lists
 lists/$user/lists -- alias of the above
 lists/$user/memberships -- lists user is in
 lists/$user/$list -- tweets
@@ -151,16 +141,16 @@ function lists_list_members_page($user, $list) {
 	$p = twitter_lists_list_members($user, $list);
 
 	// TODO: use a different theme() function? Add a "delete member" link for each member
-	$content = theme('followers', $p, 1);
-	$content .= theme('list_pagination', $p);
+	$content = "<div class='heading'>Members of <a href='user/{$user}'>@{$user}</a>/<a href='lists/{$user}/{$list}'>{$list}</a>:</div>\n";
+	$content .= theme('followers_list', $p);
 	theme('page', "Members of {$user}/{$list}", $content);
 }
 
 function lists_list_subscribers_page($user, $list) {
 	// Show subscribers of a list
 	$p = twitter_lists_list_subscribers($user, $list);
-	$content = theme('followers', $p->users->user, 1);
-	$content .= theme('list_pagination', $p);
+	$content = "<div class='heading'>Subscribers of <a href='user/{$user}'>@{$user}</a>/<a href='lists/{$user}/{$list}'>{$list}</a>:</div>\n";
+	$content .= theme('followers_list', $p);
 	theme('page', "Subscribers of {$user}/{$list}", $content);
 }
 
@@ -169,16 +159,22 @@ function lists_list_subscribers_page($user, $list) {
 /* Theme functions */
 
 function theme_lists($json) {
-	if (count($json->lists) == 0) {
+	if(isset($json->lists)) {
+		$lists = $json->lists;
+	}
+	else {
+		$lists = $json;
+	}
+	if (sizeof($lists) == 0 || $lists == '[]') {
 		return "<p>No lists to display</p>";
 	}
 	$rows = array();
-	$headers = array('List', 'Members', 'Subscribers');
-	foreach ($json->lists->list as $list) {
+	$headers = array('List ', 'Members ', 'Subscribers');
+	foreach ($lists as $list) {
 		$url = "lists/{$list->user->screen_name}/{$list->slug}";
 		$rows[] = array(
-			"<a href='user/{$list->user->screen_name}'>@{$list->user->screen_name}</a>/<a href='{$url}'><strong>{$list->slug}</strong></a>",
-			"<a href='{$url}/members'>{$list->member_count}</a>",
+			"<a href='user/{$list->user->screen_name}'>@{$list->user->screen_name}</a>/<a href='{$url}'><strong>{$list->slug}</strong></a> ",
+			"<a href='{$url}/members'>{$list->member_count}</a> ",
 			"<a href='{$url}/subscribers'>{$list->subscriber_count}</a>",
 		);
 	}

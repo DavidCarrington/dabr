@@ -17,3 +17,6 @@ body.show-menu #menu-extras { display: block; }
 .timeline a img { padding: 1px 2px; }
 
 img.bigger { height: 22px; width: 22px; }
+
+.avatar{display:block; height:50px; width:50px; left:5px; margin:0; overflow:hidden; position:absolute;}
+.shift{margin-left:58px;min-height:48px;}
