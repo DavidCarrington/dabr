@@ -448,7 +448,7 @@ function twitter_media_page($query)
 		}
 	}
 	
-	$content .=	"<form method='post' action='Upload Picture' enctype='multipart/form-data'>
+	$content .=	"<form method='post' action='upload-picture' enctype='multipart/form-data'>
 						Image <input type='file' name='image' /><br />
 						Message (optional):<br />
 						<textarea name='message' style='width:90%; max-width: 400px;' rows='3' id='message'>" . $status . "</textarea><br>
