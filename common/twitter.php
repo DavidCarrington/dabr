@@ -238,7 +238,7 @@ function twitter_profile_page() {
 function theme_profile_form($user){
 	// Profile form
 	$out .= "
-				<form name='profile' action='Edit Profile' method='post' enctype='multipart/form-data'>
+				<form name='profile' action='edit-profile' method='post' enctype='multipart/form-data'>
 					<hr />Name:			<input name='name' maxlength='20' value='"						. htmlspecialchars($user->name, ENT_QUOTES) ."' />
 					<br />Avatar:		<img src='".theme_get_avatar($user)."' /> <input type='file' name='image' />
 					<br />Bio:			<input name='description' size=40 maxlength='160' value='"	. htmlspecialchars($user->description, ENT_QUOTES) ."' />
