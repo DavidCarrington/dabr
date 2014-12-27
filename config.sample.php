@@ -2,12 +2,7 @@
 
 error_reporting(E_ALL ^ E_NOTICE);
 
-// Twitter's API URL - you can also use https://api.twitter.com/1/ if you want a secure connection to Twitter
-define('API_URL','http://api.twitter.com/1/');
-
 // Image Proxy URL
-// Use http://src.sencha.io/ for regular connections
-// Use https://tinysrc.appspot.com/ for SSL connections (no longer appears to work)
 define('IMAGE_PROXY_URL', '');
 
 // Cookie encryption key. Max 52 characters
@@ -22,13 +17,6 @@ define('OAUTH_CONSUMER_SECRET', '');
 // Sign up at https://app.embed.ly/
 define('EMBEDLY_KEY', '');
 
-// API key for InMobi adverts - sign up at http://inmobi.com/
-define('INMOBI_API_KEY', '');
-
-// Optional: Allows you to turn shortened URLs into long URLs http://www.longurlplease.com/docs
-// Uncomment to enable.
-// define('LONGURL_KEY', 'true');
-
 // Optional: Enable to view page processing and API time
 define('DEBUG_MODE', 'OFF');
 
@@ -39,8 +27,6 @@ if ($directory = trim(dirname($_SERVER['SCRIPT_NAME']), '/\,')) {
 	$base_url .= '/'.$directory;
 }
 define('BASE_URL', $base_url.'/');
-
-
 
 // MySQL storage of OAuth login details for users
 define('MYSQL_USERS', 'OFF');
@@ -84,5 +70,3 @@ function googleAnalyticsGetImageUrl() {
 	$url .= "&guid=ON";
 	return str_replace("&", "&amp;", $url);
 }
-
-?>
