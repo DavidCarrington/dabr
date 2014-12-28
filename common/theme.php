@@ -501,7 +501,7 @@ function theme_timeline($feed, $paginate = true) {
 		$retweeted = '';
 		if ($status->retweeted_by) {
 			$retweeted_by = $status->retweeted_by->user->screen_name;
-			$retweeted = "<br /><small>" . theme('action_icon', "retweeted_by/{$status->id}", 'images/retweet.png', 'RT') . "retweeted by <a href='user/{$retweeted_by}'>{$retweeted_by}</a></small>";
+			$retweeted = "<br /><small>" . theme('action_icon', "retweeted_by/{$status->id}", "♻", 'RT') . "retweeted by <a href='user/{$retweeted_by}'>{$retweeted_by}</a></small>";
 			//$source .= "<br /><a href='retweeted_by/{$status->id}'>retweeted</a> by <a href='user/{$retweeted_by}'>{$retweeted_by}</a>";
 		}
 		if($status->favorite_count) {
@@ -726,35 +726,35 @@ function theme_action_icons($status) {
 	$actions = array();
 
 	if (!$status->is_direct) {
-		$actions[] = theme('action_icon', "user/{$from}/reply/{$status->id}", 'images/reply.png', '@');
+		$actions[] = theme('action_icon', "user/{$from}/reply/{$status->id}", '↩', '@');
 	}
 	//Reply All functionality.
 	if( $status->entities->user_mentions ) {
-		$actions[] = theme('action_icon', "user/{$from}/replyall/{$status->id}", 'images/replyall.png', 'REPLY ALL');
+//		$actions[] = theme('action_icon', "user/{$from}/replyall/{$status->id}", 'images/replyall.png', 'REPLY ALL');
 	}
 
 	if (!user_is_current_user($from)) {
-		$actions[] = theme('action_icon', "directs/create/{$from}", 'images/dm.png', 'DM');
+		$actions[] = theme('action_icon', "directs/create/{$from}", '✉', 'DM');
 	}
 	if (!$status->is_direct) {
 		if ($status->favorited == '1') {
-			$actions[] = theme('action_icon', "unfavourite/{$status->id}", 'images/star.png', 'UNFAV');
+			$actions[] = theme('action_icon', "unfavourite/{$status->id}", '★', 'UNFAV');
 		} else {
-			$actions[] = theme('action_icon', "favourite/{$status->id}", 'images/star_grey.png', 'FAV');
+			$actions[] = theme('action_icon', "favourite/{$status->id}", '☆', 'FAV');
 		}
 		// Show a diffrent retweet icon to indicate to the user this is an RT
 		if ($status->retweeted || user_is_current_user($retweeted_by)) {
 			$actions[] = theme('action_icon', "retweet/{$status->id}", 'images/retweeted.png', 'RT');
 		}
 		else {
-			$actions[] = theme('action_icon', "retweet/{$status->id}", 'images/retweet.png', 'RT');
+			$actions[] = theme('action_icon', "retweet/{$status->id}", '♻', 'RT');
 		}
 		if (user_is_current_user($from)) {
-			$actions[] = theme('action_icon', "confirm/delete/{$status->id}", 'images/trash.gif', 'DEL');
+			$actions[] = theme('action_icon', "confirm/delete/{$status->id}", '🗑', 'DEL');
 		}
 		//Allow users to delete what they have retweeted
 		if (user_is_current_user($retweeted_by)) {
-			$actions[] = theme('action_icon', "confirm/delete/{$retweeted_id}", 'images/trash.gif', 'DEL');
+			$actions[] = theme('action_icon', "confirm/delete/{$retweeted_id}", '🗑', 'DEL');
 		}		
 	}
 	else {
@@ -779,7 +779,13 @@ function theme_action_icon($url, $image_url, $text) {
 		return "<a href='$url' alt='$text' target='" . get_target() . "'><img src='$image_url' /></a>";
 	}
 
-	return "<a href='$url'><img src='$image_url' alt='$text' /></a>";
+    if (0 === strpos($image_url, "images/"))
+    {
+        return "<a href='$url'><img src='$image_url' alt='$text' /></a>";
+    }
+
+    return "<a href='{$url}' class='action' >{$image_url}</a>";
+	
 }
 function theme_followers_list($feed, $hide_pagination = false) {
 	if(isset($feed->users))
