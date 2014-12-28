@@ -221,7 +221,7 @@ function theme_directs_form($to) {
 	$content .= js_counter("message");
 	return $content;
 }
-function theme_status_form($text,  $in_reply_to_id) { //= '', $in_reply_to_id = null) {
+function theme_status_form($text = '', $in_reply_to_id = null) {
 
 	if (user_is_authenticated()) {
 		$icon = "images/twitter-bird-16x16.png";
@@ -332,35 +332,40 @@ function theme_retweet($status)
 }
 function theme_user_header($user) {
 	$friendship = friendship($user->screen_name);
+
 	$followed_by = $friendship->relationship->target->followed_by; //The $user is followed by the authenticating
 	$following = $friendship->relationship->target->following;
 	$name = theme('full_name', $user);
 	$full_avatar = theme_get_full_avatar($user);
 	$link = twitter_parse_tags($user->url, $user->entities->url);
 	//Some locations have a prefix which should be removed (UbertTwitter and iPhone)
-	//Sorry if my PC has converted from UTF-8 with the U (artesea)
 	$cleanLocation = str_replace(array("iPhone: ","ÜT: "),"",$user->location);
 	$raw_date_joined = strtotime($user->created_at);
 	$date_joined = date('jS M Y', $raw_date_joined);
 	$tweets_per_day = twitter_tweets_per_day($user, 1);
 	$bio = twitter_parse_tags($user->description, $user->entities->description);
-	$out = "<div class='profile'>";
-	$out .= "<span class='avatar'>".theme('external_link', $full_avatar, theme('avatar', theme_get_avatar($user)))."</span>";
-	$out .= "<span class='status shift'><b>{$name}</b><br />";
-	$out .= "<span class='about'>";
+	$out = "<div class='profile'>
+	            <span class='avatar'>".theme('external_link', $full_avatar, theme('avatar', theme_get_avatar($user)))."</span>
+	            <span class='status shift'><b>{$name}</b>
+	            <br />
+	            <span class='about'>";
 	if ($user->verified == true) {
-		$out .= '<strong>Verified Account</strong><br />';
+		$out .= '   <strong>Verified ✔</strong><br />';
 	}
 	if ($user->protected == true) {
-		$out .= '<strong>Private/Protected Tweets</strong><br />';
+		$out .= '   <strong>Private/Protected Tweets</strong><br />';
 	}
 
-	$out .= "Bio: {$bio}<br />";
-	$out .= "Link: {$link}<br />";
-	$out .= "Location: <a href=\"https://maps.google.com/maps?q={$cleanLocation}\" target=\"" . get_target() . "\">{$user->location}</a><br />";
-	$out .= "Joined: {$date_joined} (~" . pluralise('tweet', $tweets_per_day, true) . " per day)";
-	$out .= "</span></span>";
-	$out .= "<div class='features'>";
+	$out .= "       Bio: {$bio}<br />
+	                Link: {$link}<br />
+	                Location: <a href=\"https://maps.google.com/maps?q={$cleanLocation}\" target=\"" . get_target() . "\">
+	                              {$user->location}
+	                          </a><br />
+	                Joined: {$date_joined} (~" . pluralise('tweet', $tweets_per_day, true) . " per day)
+	           </span>
+	        </span>
+	    <div class='features'>";
+	
 	$out .= pluralise('tweet', $user->statuses_count, true);
 
 	//If the authenticated user is not following the protected used, the API will return a 401 error when trying to view friends, followers and favourites
@@ -392,12 +397,12 @@ function theme_user_header($user) {
 			$out .= " | <a href='unfollow/{$user->screen_name}'>Unfollow</a>";
 		}
 
-		if($friendship->relationship->source->want_retweets) {
-			$out .= " | <a href='confirm/hideretweets/{$user->screen_name}'>Hide Retweets</a>";
-		}
-		else {
-			$out .= " | <a href='showretweets/{$user->screen_name}'>Show Retweets</a>";
-		}
+		// if($friendship->relationship->source->want_retweets) {
+		// 	$out .= " | <a href='confirm/hideretweets/{$user->screen_name}'>Hide Retweets</a>";
+		// }
+		// else {
+		// 	$out .= " | <a href='showretweets/{$user->screen_name}'>Show Retweets</a>";
+		// }
 
 		//We need to pass the User Name and the User ID.  The Name is presented in the UI, the ID is used in checking
 		$blocked = $friendship->relationship->source->blocking; //The $user is blocked by the authenticating
@@ -835,6 +840,9 @@ function theme_followers_list($feed, $hide_pagination = false) {
 	return $content;
 }
 
+function theme_trends_page($locales, $trends) {
+	// TODO FIXME
+}
 
 function theme_css() {
 	$c = theme('colours');

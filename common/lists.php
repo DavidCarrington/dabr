@@ -189,6 +189,12 @@ function theme_list_pagination($json) {
 		$links[] = "<a href='{$_GET['q']}?cursor={$cursor}'>Next</a>";
 	}
 	if ($cursor = (string) $json->previous_cursor) {
+		//	Codebird needs a +ve cursor, but returns a -ve one?
+		if (0 === strpos($cursor, "-"))
+		{
+			//	TODO FIXME still doesn't go back to first screen?
+			$cursor = trim($cursor,"-");
+		}
 		$links[] = "<a href='{$_GET['q']}?cursor={$cursor}'>Previous</a>";
 	}
 	if (count($links) > 0) return '<p>'.implode(' | ', $links).'</p>';
