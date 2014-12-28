@@ -27,7 +27,7 @@ menu_register(array(
 	'replies' => array(
 		'security' => true,
 		'callback' => 'twitter_replies_page',
-		'accesskey' => '1',
+		'display' => 'Replies'
 	),
 	'favourite' => array(
 		'hidden' => true,
@@ -42,12 +42,12 @@ menu_register(array(
 	'directs' => array(
 		'security' => true,
 		'callback' => 'twitter_directs_page',
-		'accesskey' => '2',
+		'display' => 'Direct Messages'
 	),
 	'search' => array(
 		'security' => true,
 		'callback' => 'twitter_search_page',
-		'accesskey' => '3',
+		'display' => '🔍' // http://stackoverflow.com/questions/12036038/is-there-unicode-glyph-symbol-to-represent-search
 	),
 	'user' => array(
 		'hidden' => true,
@@ -92,14 +92,17 @@ menu_register(array(
 	'favourites' => array(
 		'security' => true,
 		'callback' =>  'twitter_favourites_page',
+		'display' => '★'
 	),
 	'followers' => array(
 		'security' => true,
 		'callback' => 'twitter_followers_page',
+		'display' => 'Followers'
 	),
 	'friends' => array(
 		'security' => true,
 		'callback' => 'twitter_friends_page',
+		'display' => 'Friends'
 	),
 	'delete' => array(
 		'hidden' => true,
@@ -124,14 +127,17 @@ menu_register(array(
 	'upload-picture' => array(
 		'security' => true,
 		'callback' => 'twitter_media_page',
+		'display' => 'Upload Picture'
 	),
 	'trends' => array(
 		'security' => true,
 		'callback' => 'twitter_trends_page',
+		'display' => 'Trends'
 	),
 	'retweets' => array(
 		'security' => true,
 		'callback' => 'twitter_retweets_page',
+		'display' => 'Retweets'
 	),
 	'retweeted_by' => array(
 		'security' => true,
@@ -141,6 +147,7 @@ menu_register(array(
 	'edit-profile' => array(
 		'security' => true,
 		'callback' => 'twitter_profile_page',
+		'display' => 'My Profile'
 	),
 	'showretweets' => array(
 		'hidden' => true,
@@ -241,20 +248,6 @@ function twitter_profile_page() {
 	theme('page', "Edit Profile", $content);
 }
 
-function theme_profile_form($user){
-	// Profile form
-	$out .= "
-				<form name='profile' action='edit-profile' method='post' enctype='multipart/form-data'>
-					<hr />Name:			<input name='name' maxlength='20' value='"						. htmlspecialchars($user->name, ENT_QUOTES) ."' />
-					<br />Avatar:		<img src='".theme_get_avatar($user)."' /> <input type='file' name='image' />
-					<br />Bio:			<input name='description' size=40 maxlength='160' value='"	. htmlspecialchars($user->description, ENT_QUOTES) ."' />
-					<br />Link:			<input name='url' maxlength='100' size=40 value='"				. htmlspecialchars($user->url, ENT_QUOTES) ."' />
-					<br />Location:	<input name='location' maxlength='30' value='"					. htmlspecialchars($user->location, ENT_QUOTES) ."' />
-					<br /><input type='submit' value='Update Profile' />
-				</form>";
-
-	return $out;
-}
 
 // function long_url($shortURL)
 // {
@@ -1232,25 +1225,6 @@ function twitter_directs_page($query) {
 	}
 }
 
-function theme_directs_menu() {
-	return '<p><a href="directs/create">Create</a> | <a href="directs/inbox">Inbox</a> | <a href="directs/sent">Sent</a></p>';
-}
-
-function theme_directs_form($to) {
-	if ($to) {
-
-		if (friendship_exists($to) != 1)
-		{
-			$html_to = "<em>Warning</em> <b>" . $to . "</b> is not following you. You cannot send them a Direct Message :-(<br/>";
-		}
-		$html_to .= "Sending direct message to <b>$to</b><input name='to' value='$to' type='hidden'>";
-	} else {
-		$html_to .= "To: <input name='to'><br />Message:";
-	}
-	$content = "<form action='directs/send' method='post'>$html_to<br><textarea name='message' style='width:90%; max-width: 400px;' rows='3' id='message'></textarea><br><input type='submit' value='Send'><span id='remaining'>140</span></form>";
-	$content .= js_counter("message");
-	return $content;
-}
 
 function twitter_search_page() {
 	$search_query = $_GET['query'];
@@ -1508,62 +1482,6 @@ function twitter_hashtag_page($query) {
 	}
 }
 
-function theme_status_form($text = '', $in_reply_to_id = null) {
-	if (user_is_authenticated()) {
-		$icon = "images/twitter-bird-16x16.png";
-
-		//	adding ?status=foo will automaticall add "foo" to the text area.
-		if ($_GET['status'])
-		{
-			$text = $_GET['status'];
-		}
-		
-		return "<fieldset><legend><img src='{$icon}' width='16' height='16' /> What's Happening?</legend><form method='post' action='update'><input name='status' value='{$text}' maxlength='140' /> <input name='in_reply_to_id' value='{$in_reply_to_id}' type='hidden' /><input type='submit' value='Tweet' /></form></fieldset>";
-	}
-}
-
-function theme_status($status) {
-	//32bit int / snowflake patch
-	if($status->id_str) $status->id = $status->id_str;
-	
-	$feed[] = $status;
-	$tl = twitter_standard_timeline($feed, 'status');
-	$content = theme('timeline', $tl);
-	return $content;
-}
-
-function theme_retweet($status)
-{
-	$text = "RT @{$status->user->screen_name}: {$status->text}";
-	$length = function_exists('mb_strlen') ? mb_strlen($text,'UTF-8') : strlen($text);
-	$from = substr($_SERVER['HTTP_REFERER'], strlen(BASE_URL));
-
-	if($status->user->protected == 0)
-	{
-		$content.="<p>Twitter's new style retweet:</p>
-					<form action='twitter-retweet/{$status->id_str}' method='post'>
-						<input type='hidden' name='from' value='$from' />
-						<input type='submit' value='Twitter Retweet' />
-					</form>
-					<hr />";
-	}
-	else
-	{
-		$content.="<p>@{$status->user->screen_name} doesn't allow you to retweet them. You will have to use the  use the old style editable retweet</p>";
-	}
-
-	$content .= "<p>Old style editable retweet:</p>
-					<form action='update' method='post'>
-						<input type='hidden' name='from' value='$from' />
-						<textarea name='status' style='width:90%; max-width: 400px;' rows='3' id='status'>$text</textarea>
-						<br/>
-						<input type='submit' value='Retweet' />
-						<span id='remaining'>" . (140 - $length) ."</span>
-					</form>";
-	$content .= js_counter("status");
-
-	return $content;
-}
 
 function twitter_tweets_per_day($user, $rounding = 1) {
 	// Helper function to calculate an average count of tweets per day
@@ -1571,112 +1489,6 @@ function twitter_tweets_per_day($user, $rounding = 1) {
 	return round($user->statuses_count / $days_on_twitter, $rounding);
 }
 
-function theme_user_header($user) {
-	$friendship = friendship($user->screen_name);
-	$followed_by = $friendship->relationship->target->followed_by; //The $user is followed by the authenticating
-	$following = $friendship->relationship->target->following;
-	$name = theme('full_name', $user);
-	$full_avatar = theme_get_full_avatar($user);
-	$link = twitter_parse_tags($user->url, $user->entities->url);
-	//Some locations have a prefix which should be removed (UbertTwitter and iPhone)
-	//Sorry if my PC has converted from UTF-8 with the U (artesea)
-	$cleanLocation = str_replace(array("iPhone: ","ÜT: "),"",$user->location);
-	$raw_date_joined = strtotime($user->created_at);
-	$date_joined = date('jS M Y', $raw_date_joined);
-	$tweets_per_day = twitter_tweets_per_day($user, 1);
-	$bio = twitter_parse_tags($user->description, $user->entities->description);
-	$out = "<div class='profile'>";
-	$out .= "<span class='avatar'>".theme('external_link', $full_avatar, theme('avatar', theme_get_avatar($user)))."</span>";
-	$out .= "<span class='status shift'><b>{$name}</b><br />";
-	$out .= "<span class='about'>";
-	if ($user->verified == true) {
-		$out .= '<strong>Verified Account</strong><br />';
-	}
-	if ($user->protected == true) {
-		$out .= '<strong>Private/Protected Tweets</strong><br />';
-	}
-
-	$out .= "Bio: {$bio}<br />";
-	$out .= "Link: {$link}<br />";
-	$out .= "Location: <a href=\"https://maps.google.com/maps?q={$cleanLocation}\" target=\"" . get_target() . "\">{$user->location}</a><br />";
-	$out .= "Joined: {$date_joined} (~" . pluralise('tweet', $tweets_per_day, true) . " per day)";
-	$out .= "</span></span>";
-	$out .= "<div class='features'>";
-	$out .= pluralise('tweet', $user->statuses_count, true);
-
-	//If the authenticated user is not following the protected used, the API will return a 401 error when trying to view friends, followers and favourites
-	//This is not the case on the Twitter website
-	//To avoid the user being logged out, check to see if she is following the protected user. If not, don't create links to friends, followers and favourites
-	if ($user->protected == true && $followed_by == false) {
-		$out .= " | " . pluralise('follower', $user->followers_count, true);
-		$out .= " | " . pluralise('friend', $user->friends_count, true);
-		$out .= " | " . pluralise('favourite', $user->favourites_count, true);
-	}
-	else {
-		$out .= " | <a href='followers/{$user->screen_name}'>" . pluralise('follower', $user->followers_count, true) . "</a>";
-		$out .= " | <a href='friends/{$user->screen_name}'>" . pluralise('friend', $user->friends_count, true) . "</a>";
-		$out .= " | <a href='favourites/{$user->screen_name}'>" . pluralise('favourite', $user->favourites_count, true) . "</a>";
-	}
-
-	$out .= " | <a href='lists/{$user->screen_name}'>" . pluralise('list', $user->listed_count, true) . "</a>";
-	if($following) {
-		$out .=	" | <a href='directs/create/{$user->screen_name}'>Direct Message</a>";
-	}
-	
-	//	One cannot follow, block, nor report spam oneself.
-	if (strtolower($user->screen_name) !== strtolower(user_current_username())) {
-	
-		if ($followed_by == false) {
-			$out .= " | <a href='follow/{$user->screen_name}'>Follow</a>";
-		}
-		else {
-			$out .= " | <a href='unfollow/{$user->screen_name}'>Unfollow</a>";
-		}
-
-		if($friendship->relationship->source->want_retweets) {
-			$out .= " | <a href='confirm/hideretweets/{$user->screen_name}'>Hide Retweets</a>";
-		}
-		else {
-			$out .= " | <a href='showretweets/{$user->screen_name}'>Show Retweets</a>";
-		}
-
-		//We need to pass the User Name and the User ID.  The Name is presented in the UI, the ID is used in checking
-		$blocked = $friendship->relationship->source->blocking; //The $user is blocked by the authenticating
-		if ($blocked == true) {
-			$out.= " | <a href='confirm/block/{$user->screen_name}/{$user->id}'>Unblock</a>";
-		}
-		else {
-			$out.= " | <a href='confirm/block/{$user->screen_name}/{$user->id}'>Block</a>";
-		}
-
-		$out .= " | <a href='confirm/spam/{$user->screen_name}/{$user->id}'>Report Spam</a>";
-	}
-	
-	$out .= " | <a href='search?query=%40{$user->screen_name}'>Search @{$user->screen_name}</a>";
-	$out .= "</div></div>";
-	return $out;
-}
-
-function theme_avatar($url, $force_large = false) {
-	$size = 48;	//$force_large ? 48 : 24;
-	return "<img src='$url' height='$size' width='$size' />";
-}
-
-function theme_status_time_link($status, $is_link = true) {
-	$time = strtotime($status->created_at);
-	if ($time > 0) {
-		if (twitter_date('dmy') == twitter_date('dmy', $time) && !setting_fetch('timestamp')) {
-			$out = format_interval(time() - $time, 1). ' ago';
-		} else {
-			$out = twitter_date('H:i', $time);
-		}
-	} else {
-		$out = $status->created_at;
-	}
-	if ($is_link)
-		$out = "<a href='status/{$status->id}' class='time'>$out</a>";
-	return $out;
-}
 
 function twitter_date($format, $timestamp = null) {
 /*
@@ -1839,114 +1651,6 @@ function twitter_user_info($username = null) {
 	// return $user;
 }
 
-function theme_timeline($feed, $paginate = true) {
-	if (count($feed) == 0) return theme('no_tweets');
-	if (count($feed) < 2) { 
-		$hide_pagination = true;
-	}
-	$rows = array();
-	$page = menu_current_page();
-	$date_heading = false;
-	$first=0;
-	
-	// Add the hyperlinks *BEFORE* adding images
-	foreach ($feed as &$status)	{
-		$status->text = twitter_parse_tags($status->text, $status->entities);
-	}
-	unset($status);
-	
-	// Only embed images in suitable browsers
-	
-	if(!setting_fetch('hide_inline') && !in_array(setting_fetch('browser'), array('text', 'worksafe'))) {
-		// oembed_embed_thumbnails($feed);
-	}
-
-	foreach ($feed as $status) {
-		if ($first==0) {
-			$since_id = $status->id;
-			$first++;
-		}
-		else {
-			$max_id =  $status->id;
-			if ($status->original_id) {
-				$max_id =  $status->original_id;
-			}
-		}
-		$time = strtotime($status->created_at);
-		if ($time > 0) {
-			$date = twitter_date('l jS F Y', strtotime($status->created_at));
-			if ($date_heading !== $date) {
-				$date_heading = $date;
-				$rows[] = array('data'  => array($date), 'class' => 'date');
-			}
-		}
-		else {
-			$date = $status->created_at;
-		}
-		$text = $status->text;
-		if (!in_array(setting_fetch('browser'), array('text', 'worksafe'))) {
-			$media = twitter_get_media($status);
-		}
-		$link = theme('status_time_link', $status, !$status->is_direct);
-		$actions = theme('action_icons', $status);
-		$avatar = theme('avatar', theme_get_avatar($status->from));
-		$source = $status->source ? " from ".str_replace('rel="nofollow"', 'rel="nofollow" target="' . get_target() . '"', preg_replace('/&(?![a-z][a-z0-9]*;|#[0-9]+;|#x[0-9a-f]+;)/i', '&amp;', $status->source)) : ''; //need to replace & in links with &amps and force new window on links
-		if ($status->place->name) {
-			$source .= ", " . $status->place->name . ", " . $status->place->country;
-		}
-		if ($status->in_reply_to_status_id)	{
-			$source .= ", in reply to <a href='status/{$status->in_reply_to_status_id_str}'>{$status->in_reply_to_screen_name}</a>";
-		}
-		if ($status->retweet_count)	{
-			$source .= ", <a href='retweeted_by/{$status->id}'>retweeted " . x_times($status->retweet_count) . "</a>";
-		}
-		$retweeted = '';
-		if ($status->retweeted_by) {
-			$retweeted_by = $status->retweeted_by->user->screen_name;
-			$retweeted = "<br /><small>" . theme('action_icon', "retweeted_by/{$status->id}", 'images/retweet.png', 'RT') . "retweeted by <a href='user/{$retweeted_by}'>{$retweeted_by}</a></small>";
-			//$source .= "<br /><a href='retweeted_by/{$status->id}'>retweeted</a> by <a href='user/{$retweeted_by}'>{$retweeted_by}</a>";
-		}
-		if($status->favorite_count) {
-			$source .= ', favourited ' . x_times($status->favorite_count);
-		}
-		//$html = "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br />{$text}<br />$media<small>$source</small>";
-		$html = "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link{$retweeted}<br />{$text}<br />$media<span class='from'>$source</span>";
-
-		unset($row);
-		$class = 'status';
-		
-		if ($avatar)	{
-			$row[] = array('data' => $avatar, 'class' => 'avatar');
-			$class .= ' shift';
-		}
-		
-		$row[] = array('data' => $html, 'class' => $class);
-
-		$class = 'tweet';
-		if ($page != 'replies' && twitter_is_reply($status)) {
-			$class .= ' reply';
-		}
-		$row = array('data' => $row, 'class' => $class);
-
-		$rows[] = $row;
-	}
-	$content = theme('table', array(), $rows, array('class' => 'timeline'));
-
-	if(!$hide_pagination) {
-		if($paginate) {
-			if($page == 'some-unknown-method-which-doesnt-take-max_id') {
-				$content .= theme('pagination');
-			}
-			//if ($page == '' || $page == 'user' || $page == 'search' || $page == 'hash' || $page == 'tofrom' || $page == 'replies' || $page == 'directs') {
-			else {
-				if(is_64bit()) $max_id = intval($max_id) - 1; //stops last tweet appearing as first tweet on next page
-				$content .= theme('pagination', $max_id);				
-			}
-		}
-	}
-
-	return $content;
-}
 
 function twitter_is_reply($status) {
 	if (!user_is_authenticated()) {
@@ -1985,242 +1689,6 @@ function twitter_is_reply($status) {
 	return false;
 }
 
-function theme_followers($feed, $nextPageURL) {
-	$rows = array();
-	if (count($feed) == 0 || $feed == '[]') return '<p>No users to display.</p>';
-
-	foreach ($feed as $user) {
-
-		$name = theme('full_name', $user);
-		$tweets_per_day = twitter_tweets_per_day($user);
-		$last_tweet = strtotime($user->status->created_at);
-		$content = "{$name}<br /><span class='about'>";
-		if($user->description != "")
-			$content .= "Bio: " . twitter_parse_tags($user->description) . "<br />";
-		if($user->location != "")
-			$content .= "Location: {$user->location}<br />";
-		$content .= "Info: ";
-		$content .= pluralise('tweet', (int)$user->statuses_count, true) . ", ";
-		$content .= pluralise('friend', (int)$user->friends_count, true) . ", ";
-		$content .= pluralise('follower', (int)$user->followers_count, true) . ", ";
-		$content .= "~" . pluralise('tweet', $tweets_per_day, true) . " per day<br />";
-		$content .= "Last tweet: ";
-		if($user->protected == 'true' && $last_tweet == 0)
-			$content .= "Private";
-		else if($last_tweet == 0)
-			$content .= "Never tweeted";
-		else
-			$content .= twitter_date('l jS F Y', $last_tweet);
-		$content .= "</span>";
-
-		$rows[] = array('data' => array(array('data' => theme('avatar', theme_get_avatar($user)), 'class' => 'avatar'),
-		                                array('data' => $content, 'class' => 'status shift')),
-		                'class' => 'tweet');
-
-	}
-
-	$content = theme('table', array(), $rows, array('class' => 'followers'));
-	if ($nextPageURL)
-		$content .= "<a href='{$nextPageURL}'>Next</a>";
-	return $content;
-}
-
-// Annoyingly, retweeted_by.xml and followers.xml are subtly different. 
-// TODO merge theme_retweeters with theme_followers
-function theme_retweeters($feed, $hide_pagination = false) {
-	$rows = array();
-	if (count($feed) == 0 || $feed == '[]') return '<p>No one has retweeted this status.</p>';
-
-	foreach ($feed->user as $user) {
-
-		$name = theme('full_name', $user);
-		$tweets_per_day = twitter_tweets_per_day($user);
-		$last_tweet = strtotime($user->status->created_at);
-		$content = "{$name}<br /><span class='about'>";
-		if($user->description != "")
-			$content .= "Bio: " . twitter_parse_tags($user->description) . "<br />";
-		if($user->location != "")
-			$content .= "Location: {$user->location}<br />";
-		$content .= "Info: ";
-		$content .= pluralise('tweet', (int)$user->statuses_count, true) . ", ";
-		$content .= pluralise('friend', (int)$user->friends_count, true) . ", ";
-		$content .= pluralise('follower', (int)$user->followers_count, true) . ", ";
-		$content .= "~" . pluralise('tweet', $tweets_per_day, true) . " per day<br />";
-		$content .= "</span>";
-
-		$rows[] = array('data' => array(array('data' => theme('avatar', theme_get_avatar($user)), 'class' => 'avatar'),
-		                                array('data' => $content, 'class' => 'status shift')),
-		                'class' => 'tweet');
-
-	}
-
-	$content = theme('table', array(), $rows, array('class' => 'followers'));
-	if (!$hide_pagination)
-	$content .= theme('list_pagination', $feed);
-	return $content;
-}
-
-function theme_full_name($user) {
-	$name = "<a href='user/{$user->screen_name}'>{$user->screen_name}</a>";
-	//THIS IF STATEMENT IS RETURNING FALSE EVERYTIME ?!?
-	//if ($user->name && $user->name != $user->screen_name) {
-	if($user->name != "") {
-		$name .= " ({$user->name})";
-	}
-	return $name;
-}
-
-// http://groups.google.com/group/twitter-development-talk/browse_thread/thread/50fd4d953e5b5229#
-function theme_get_avatar($object) {
-	if ($_SERVER['HTTPS'] == "on" || (0 === strpos(BASE_URL, "https://"))) { //$object->profile_image_url_https) {
-		return image_proxy($object->profile_image_url_https, "48/48/");
-	}
-	else {
-		return image_proxy($object->profile_image_url, "48/48/");
-	}
-}
-
-function theme_get_full_avatar($object) {
-	if ($_SERVER['HTTPS'] == "on" && $object->profile_image_url_https) {
-		return image_proxy(str_replace('_normal.', '.', $object->profile_image_url_https));
-	}
-	else {
-		return image_proxy(str_replace('_normal.', '.', $object->profile_image_url));
-	}
-}
-
-function theme_no_tweets() {
-	return '<p>No tweets to display.</p>';
-}
-
-function theme_search_results($feed) {
-	$rows = array();
-	foreach ($feed->results as $status) {
-		$text = twitter_parse_tags($status->text, $status->entities);
-		$link = theme('status_time_link', $status);
-		$actions = theme('action_icons', $status);
-
-		$row = array(
-		theme('avatar', theme_get_avatar($status)),
-      "<a href='user/{$status->from_user}'>{$status->from_user}</a> $actions - {$link}<br />{$text}",
-		);
-		if (twitter_is_reply($status)) {
-			$row = array('class' => 'reply', 'data' => $row);
-		}
-		$rows[] = $row;
-	}
-	$content = theme('table', array(), $rows, array('class' => 'timeline'));
-	$content .= theme('pagination');
-	return $content;
-}
-
-function theme_search_form($query) {
-	$query = stripslashes(htmlentities($query,ENT_QUOTES,"UTF-8"));
-	return '
-	<form action="search" method="get"><input name="query" value="'. $query .'" />
-		<input type="submit" value="Search" />
-	</form>';
-}
-
-function theme_external_link($url, $content = null) {
-	// //Long URL functionality.  Also uncomment function long_url($shortURL)
-	// if (!$content)
-	// {
-	// 	//Used to wordwrap long URLs
-	// 	//return "<a href='$url' target='_blank'>". wordwrap(long_url($url), 64, "\n", true) ."</a>";
-	// 	return "<a href='$url' target='" . get_target() . "'>". long_url($url) ."</a>";
-	// }
-	// else
-	// {
-		return "<a href='$url' target='" . get_target() . "'>$content</a>";
-	// }
-
-}
-
-function theme_pagination($max_id = false) {
-	$page = intval($_GET['page']);
-	if (preg_match('#&q(.*)#', $_SERVER['QUERY_STRING'], $matches))	{
-		$query = $matches[0];
-	}
-	if($max_id) {
-		$links[] = "<a href='{$_GET['q']}?max_id=".$max_id."$query' accesskey='9'>Older</a> 9";
-	}
-	else {
-		if ($page == 0) $page = 1;
-		$links[] = "<a href='{$_GET['q']}?page=".($page+1)."$query' accesskey='9'>Older</a> 9";
-		if ($page > 1) $links[] = "<a href='{$_GET['q']}?page=".($page-1)."$query' accesskey='8'>Newer</a> 8";
-	}
-	if($query) {
-		$query = '?' . substr($query, 1);
-	}
-	$links[] = "<a href='{$_GET['q']}?$query'>First</a>";
-	return '<p>'.implode(' | ', $links).'</p>';
-}
-
-function theme_action_icons($status) {
-	$from = $status->from->screen_name;
-	$retweeted_by = $status->retweeted_by->user->screen_name;
-	$retweeted_id = $status->retweeted_by->id;
-	$geo = $status->geo;
-	$actions = array();
-
-	if (!$status->is_direct) {
-		$actions[] = theme('action_icon', "user/{$from}/reply/{$status->id}", 'images/reply.png', '@');
-	}
-	//Reply All functionality.
-	if( $status->entities->user_mentions ) {
-		$actions[] = theme('action_icon', "user/{$from}/replyall/{$status->id}", 'images/replyall.png', 'REPLY ALL');
-	}
-
-	if (!user_is_current_user($from)) {
-		$actions[] = theme('action_icon', "directs/create/{$from}", 'images/dm.png', 'DM');
-	}
-	if (!$status->is_direct) {
-		if ($status->favorited == '1') {
-			$actions[] = theme('action_icon', "unfavourite/{$status->id}", 'images/star.png', 'UNFAV');
-		} else {
-			$actions[] = theme('action_icon', "favourite/{$status->id}", 'images/star_grey.png', 'FAV');
-		}
-		// Show a diffrent retweet icon to indicate to the user this is an RT
-		if ($status->retweeted || user_is_current_user($retweeted_by)) {
-			$actions[] = theme('action_icon', "retweet/{$status->id}", 'images/retweeted.png', 'RT');
-		}
-		else {
-			$actions[] = theme('action_icon', "retweet/{$status->id}", 'images/retweet.png', 'RT');
-		}
-		if (user_is_current_user($from)) {
-			$actions[] = theme('action_icon', "confirm/delete/{$status->id}", 'images/trash.gif', 'DEL');
-		}
-		//Allow users to delete what they have retweeted
-		if (user_is_current_user($retweeted_by)) {
-			$actions[] = theme('action_icon', "confirm/delete/{$retweeted_id}", 'images/trash.gif', 'DEL');
-		}		
-	}
-	else {
-		$actions[] = theme('action_icon', "confirm/deleteDM/{$status->id}", 'images/trash.gif', 'DEL');
-	}
-	if ($geo !== null) {
-		$latlong = $geo->coordinates;
-		$lat = $latlong[0];
-		$long = $latlong[1];
-		$actions[] = theme('action_icon', "https://maps.google.com/maps?q={$lat},{$long}", 'images/map.png', 'MAP');
-	}
-	//Search for @ to a user
-	$actions[] = theme('action_icon',"search?query=%40{$from}",'images/q.png','?');
-
-	return '<span class="actionicons">' . implode(' ', $actions) . '</span>';
-}
-
-function theme_action_icon($url, $image_url, $text) {
-	// alt attribute left off to reduce bandwidth by about 720 bytes per page
-	if ($text == 'MAP')
-	{
-		return "<a href='$url' alt='$text' target='" . get_target() . "'><img src='$image_url' /></a>";
-	}
-
-	return "<a href='$url'><img src='$image_url' alt='$text' /></a>";
-}
-
 function pluralise($word, $count, $show = false) {
 	if($show) $word = number_format($count) . " {$word}";
 	return $word . (($count != 1) ? 's' : '');
@@ -2232,53 +1700,6 @@ function is_64bit() {
 	return ($int == 9223372036854775807);
 }
 
-function theme_followers_list($feed, $hide_pagination = false) {
-	if(isset($feed->users))
-		$users = $feed->users;
-	else
-		$users = $feed;
-	$rows = array();
-	if (count($users) == 0 || $users == '[]') return '<p>No users to display.</p>';
-
-	foreach($users as $user) {
-		if($user->user) $user = $user->user;
-		$name = theme('full_name', $user);
-		$tweets_per_day = twitter_tweets_per_day($user);
-		$last_tweet = strtotime($user->status->created_at);
-		#$vicon = ($user->verified) ? theme('action_icon', "", 'images/verified.png', '&#10004;') : '';
-		$content = "{$vicon}{$name}<br /><span class='about'>";
-		if($user->description != "")
-			$content .= "Bio: {$user->description}<br />";
-		if($user->location != "")
-			$content .= "Location: {$user->location}<br />";
-		$content .= "Info: ";
-		$content .= pluralise('tweet', $user->statuses_count, true) . ", ";
-		$content .= pluralise('friend', $user->friends_count, true) . ", ";
-		$content .= pluralise('follower', $user->followers_count, true) . ", ";
-		$content .= "~" . pluralise('tweet', $tweets_per_day, true) . " per day<br />";
-		if($user->status->created_at) {
-			$content .= "Last tweet: ";
-			if($user->protected == 'true' && $last_tweet == 0)
-				$content .= "Private";
-			else if($last_tweet == 0)
-				$content .= "Never tweeted";
-			else
-				$content .= twitter_date('l jS F Y', $last_tweet);
-		}
-		$content .= "</span>";
-
-		$rows[] = array('data' => array(array('data' => theme('avatar', $user->profile_image_url), 'class' => 'avatar'),
-		                                array('data' => $content, 'class' => 'status shift')),
-		                'class' => 'tweet');
-
-	}
-
-	$content = theme('table', array(), $rows, array('class' => 'followers'));
-	if (!$hide_pagination)
-		#$content .= theme('pagination');
-		$content .= theme('list_pagination', $feed);
-	return $content;
-}
 
 function x_times($count) {
 	if($count == 1) return 'once';

@@ -21,10 +21,12 @@ require 'common/codebird.php';
 menu_register(array (
 	'about' => array (
 		'callback' => 'about_page',
+		'display' => 'About'
 	),
 	'logout' => array (
 		'security' => true,
 		'callback' => 'logout_page',
+		'display' => 'Logout'
 	),
 	'oauth' => array(
 		'callback' => 'user_oauth',

@@ -155,6 +155,8 @@ function user_is_authenticated() {
 }
 
 function user_current_username() {
+	//echo "<pre>";
+	//var_dump($GLOBALS);
 	return $GLOBALS['user']['username'];
 }
 
@@ -200,6 +202,7 @@ function _user_decrypt_cookie($crypt_text) {
 	$plain_text = mdecrypt_generic($td, $crypt_text);
 	mcrypt_generic_deinit($td);
 
+//	TODO FIXME errr...
 	list($GLOBALS['user']['username'], $GLOBALS['user']['password'], $GLOBALS['user']['type']) = explode(':', $plain_text);
 }
 

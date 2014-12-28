@@ -4,6 +4,7 @@ menu_register(array(
 	'lists' => array(
 		'security' => true,
 		'callback' => 'lists_controller',
+		'display'  => 'Lists'
 	),
 ));
 

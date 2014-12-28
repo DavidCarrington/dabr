@@ -19,6 +19,7 @@ $GLOBALS['colour_schemes'] = array(
 menu_register(array(
 	'settings' => array(
 		'callback' => 'settings_page',
+		'display' => '⚙'
 	),
 	'reset' => array(
 		'hidden' => true,
