@@ -476,7 +476,7 @@ function theme_timeline($feed, $paginate = true) {
 	
 	// Only embed images in suitable browsers
 	
-	if(!setting_fetch('hide_inline') && !in_array(setting_fetch('browser'), array('text', 'worksafe'))) {
+	if(!setting_fetch('hide_inline')) {
 		// oembed_embed_thumbnails($feed);
 	}
 
@@ -503,12 +503,16 @@ function theme_timeline($feed, $paginate = true) {
 			$date = $status->created_at;
 		}
 		$text = $status->text;
-		if (!in_array(setting_fetch('browser'), array('text', 'worksafe'))) {
+		if ("yes" != setting_fetch('hide_inline')) {
 			$media = twitter_get_media($status);
 		}
 		$link = theme('status_time_link', $status, !$status->is_direct);
 		$actions = theme('action_icons', $status);
-		$avatar = theme('avatar', theme_get_avatar($status->from));
+
+		if ("yes" != setting_fetch('hide_avatars')) {
+			$avatar = theme('avatar', theme_get_avatar($status->from));
+		}
+		
 		$source = $status->source ? " from ".str_replace('rel="nofollow"', 'rel="nofollow" target="' . get_target() . '"', preg_replace('/&(?![a-z][a-z0-9]*;|#[0-9]+;|#x[0-9a-f]+;)/i', '&amp;', $status->source)) : ''; //need to replace & in links with &amps and force new window on links
 		if ($status->place->name) {
 			$source .= ", " . $status->place->name . ", " . $status->place->country;
@@ -880,11 +884,23 @@ function theme_css() {
 	$c = theme('colours');
 	return "<style type='text/css'>
 	
+@font-face {
+    font-family: 'quiviraregular';
+    src: url('".BASE_URL."/fonts/quivira-webfont.eot');
+    src: url('".BASE_URL."/fonts/quivira-webfont.eot?#iefix') format('embedded-opentype'),
+         url('".BASE_URL."/fonts/fonts/quivira-webfont.woff2') format('woff2'),
+         url('".BASE_URL."/fonts/quivira-webfont.woff') format('woff'),
+         url('".BASE_URL."/fonts/quivira-webfont.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
 form{margin:.3em;}
 
 body{
 	margin:0;
-	font-family:sans-serif;
+	font-family:quiviraregular,sans-serif;
 	background:#{$c->bodybg};
 	color:#{$c->bodyt};
 }

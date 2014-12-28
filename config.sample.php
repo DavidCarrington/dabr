@@ -12,10 +12,10 @@ define('ENCRYPTION_KEY', 'Example Key - Change Me!');
 define('OAUTH_CONSUMER_KEY', '');
 define('OAUTH_CONSUMER_SECRET', '');
 
-// Embedly Key 
+// Embedkit Key 
 // Embed image previews in tweets
-// Sign up at https://app.embed.ly/
-define('EMBEDLY_KEY', '');
+// Free sign up at https://embedkit.com/
+define('EMBEDKIT_KEY', '');
 
 // Optional: Enable to view page processing and API time
 define('DEBUG_MODE', 'OFF');

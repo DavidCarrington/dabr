@@ -49,5 +49,5 @@ function about_page() {
 }
 session_start();
 	
-browser_detect();
+// browser_detect();
 menu_execute_active_handler();
