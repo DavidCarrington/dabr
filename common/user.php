@@ -1,56 +1,61 @@
 <?php
 
-menu_register(array(
-	'oauth' => array(
-		'callback' => 'user_oauth',
-		'hidden' => 'true',
-	),
-	'login' => array(
-		'callback' => 'user_login',
-		'hidden' => 'true',
-	),
-));
-
 function user_oauth() {
-	require_once 'OAuth.php';
-
-	// Session used to keep track of secret token during authorisation step
-	session_start();
-
+	
+	//require_once ('codebird.php');
+	$cb = \Codebird\Codebird::getInstance();
 	// Flag forces twitter_process() to use OAuth signing
 	$GLOBALS['user']['type'] = 'oauth';
 
-	if ($oauth_token = $_GET['oauth_token']) {
-		// Generate ACCESS token request
-		$params = array('oauth_verifier' => $_GET['oauth_verifier']);
-		$response = twitter_process('https://api.twitter.com/oauth/access_token', $params);
-		parse_str($response, $token);
+	//	If there's no OAuth Token, take the user to Twiter's sign in page
+	if (! isset($_SESSION['oauth_token'])) {
+		// get the request token
+		$reply = $cb->oauth_requestToken(array(
+			'oauth_callback' => 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']
+		));
+
+		// store the token
+		$cb->setToken($reply->oauth_token, $reply->oauth_token_secret);
+		$_SESSION['oauth_token']        = $reply->oauth_token;
+		$_SESSION['oauth_token_secret'] = $reply->oauth_token_secret;
+		$_SESSION['oauth_verify']       = true;
+
+		// redirect to auth website
+		$auth_url = $cb->oauth_authorize();
+		header('Location: ' . $auth_url);
+		die();
+
+	}	//	If there's an OAuth Token 
+//	elseif (isset($_GET['oauth_verifier']) && isset($_SESSION['oauth_verify'])) {
+		// verify the token
+		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		unset($_SESSION['oauth_verify']);
+
+		// get the access token
+		$reply = $cb->oauth_accessToken(array(
+			'oauth_verifier' => $_GET['oauth_verifier']
+		));
+
+		// store the token (which is different from the request token!)
+		$_SESSION['oauth_token']        = $reply->oauth_token;
+		$_SESSION['oauth_token_secret'] = $reply->oauth_token_secret;
+		
+		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+				
+		//	Verify and get the username
+		$user = $cb->account_verifyCredentials();
+		$GLOBALS['user']['username']    = $user->screen_name;
 
 		// Store ACCESS tokens in COOKIE
-		$GLOBALS['user']['password'] = $token['oauth_token'] .'|'.$token['oauth_token_secret'];
-
-		// Fetch the user's screen name with a quick API call
-		unset($_SESSION['oauth_request_token_secret']);
-		$user = twitter_process('https://api.twitter.com/1.1/account/verify_credentials.json');
-		$GLOBALS['user']['username'] = $user->screen_name;
+        $GLOBALS['user']['password'] = $_SESSION['oauth_token'] .'|'.$_SESSION['oauth_token_secret'];
 
 		_user_save_cookie(1);
+		// send to same URL, without oauth GET parameters
 		header('Location: '. BASE_URL);
-		exit();
-
-	} else {
-		// Generate AUTH token request
-		$params = array('oauth_callback' => BASE_URL.'oauth');
-		$response = twitter_process('https://api.twitter.com/oauth/request_token', $params);
-		parse_str($response, $token);
-
-		// Save secret token to session to validate the result that comes back from Twitter
-		$_SESSION['oauth_request_token_secret'] = $token['oauth_token_secret'];
-
-		// redirect user to authorisation URL
-		$authorise_url = 'https://api.twitter.com/oauth/authorize?oauth_token='.$token['oauth_token'];
-		header("Location: $authorise_url");
-	}
+//		echo "Your Name is " . $user->screen_name;
+		die();
+//	}
+//	header('Location: '. BASE_URL);	
 }
 
 function user_oauth_sign(&$url, &$args = false) {
@@ -92,6 +97,8 @@ function user_oauth_sign(&$url, &$args = false) {
 			$args = $request->to_postdata();
 			return;
 	}
+
+// echo "hello";
 }
 
 function user_ensure_authenticated() {
@@ -116,32 +123,33 @@ function user_is_authenticated() {
 		}
 	}
 	
-	// Auto-logout any users that aren't correctly using OAuth
-	if (user_current_username() && user_type() !== 'oauth') {
-		user_logout();
-		twitter_refresh('logout');
-	}
+	// // Auto-logout any users that aren't correctly using OAuth
+	// if (user_current_username() && user_type() !== 'oauth') {
+	// 	user_logout();
+	// 	twitter_refresh('logout');
+	// }
 
 	if (!user_current_username()) {
-		if ($_POST['username'] && $_POST['password']) {
-			$GLOBALS['user']['username'] = trim($_POST['username']);
-			$GLOBALS['user']['password'] = $_POST['password'];
-			$GLOBALS['user']['type'] = 'oauth';
+		// if ($_POST['username'] && $_POST['password']) {
+		// 	$GLOBALS['user']['username'] = trim($_POST['username']);
+		// 	$GLOBALS['user']['password'] = $_POST['password'];
+		// 	$GLOBALS['user']['type'] = 'oauth';
 			
-			$sql = sprintf("SELECT * FROM user WHERE username='%s' AND password=MD5('%s') LIMIT 1", mysql_escape_string($GLOBALS['user']['username']), mysql_escape_string($GLOBALS['user']['password']));
-			$rs = mysql_query($sql);
-			if ($rs && $user = mysql_fetch_object($rs)) {
-				$GLOBALS['user']['password'] = $user->oauth_key . '|' . $user->oauth_secret;
-			} else {
-				theme('error', 'Invalid username or password.');
-			}
+		// 	$sql = sprintf("SELECT * FROM user WHERE username='%s' AND password=MD5('%s') LIMIT 1", mysql_escape_string($GLOBALS['user']['username']), mysql_escape_string($GLOBALS['user']['password']));
+		// 	$rs = mysql_query($sql);
+		// 	if ($rs && $user = mysql_fetch_object($rs)) {
+		// 		$GLOBALS['user']['password'] = $user->oauth_key . '|' . $user->oauth_secret;
+		// 	} else {
+		// 		theme('error', 'Invalid username or password.');
+		// 	}
 			
-			_user_save_cookie($_POST['stay-logged-in'] == 'yes');
-			header('Location: '. BASE_URL);
-			exit();
-		} else {
-			return false;
-		}
+		// 	_user_save_cookie($_POST['stay-logged-in'] == 'yes');
+		// 	header('Location: '. BASE_URL);
+		// 	exit();
+		// } else {
+		// 	return false;
+		// }
+		return false;
 	}
 	return true;
 }
@@ -196,31 +204,36 @@ function _user_decrypt_cookie($crypt_text) {
 }
 
 function user_login() {
-	return theme('page', 'Login','
-<form method="post" action="'.$_GET['q'].'">
-<p>Username <input name="username" size="15" />
-<br />Password <input name="password" type="password" size="15" />
-<br /><label><input type="checkbox" checked="checked" value="yes" name="stay-logged-in" /> Stay logged in? </label>
-<br /><input type="submit" value="Sign In" /></p>
-</form>
+// 	return theme('page', 'Login','
+// <form method="post" action="'.$_GET['q'].'">
+// <p>Username <input name="username" size="15" />
+// <br />Password <input name="password" type="password" size="15" />
+// <br /><label><input type="checkbox" checked="checked" value="yes" name="stay-logged-in" /> Stay logged in? </label>
+// <br /><input type="submit" value="Sign In" /></p>
+// </form>
 
-<p><b>Registration steps:</b></p>
+// <p><b>Registration steps:</b></p>
 
-<ol>
-	<li><a href="oauth">Sign in via Twitter.com</a> from any computer</li>
-	<li>Visit the Dabr settings page to choose a password</li>
-	<li>Done! You can now benefit from accessing Twitter through Dabr from anywhere (even from computers that block Twitter.com)</li>
-</ol>
-');
+// <ol>
+// 	<li><a href="oauth">Sign in via Twitter.com</a> from any computer</li>
+// 	<li>Visit the Dabr settings page to choose a password</li>
+// 	<li>Done! You can now benefit from accessing Twitter through Dabr from anywhere (even from computers that block Twitter.com)</li>
+// </ol>
+// ');
 }
 
 function theme_login() {
 	$content = '<div style="margin:1em; font-size: 1.2em">
-<p><a href="oauth"><img src="images/twitter_button_2_lo.gif" alt="Sign in with Twitter/OAuth" width="165" height="28" /></a><br /><a href="oauth">Sign in via Twitter.com</a></p>
-<p>Twitter no longer allow you to log in directly with a username and password so we can\'t show the standard login form. There\'s some more information on the <a href="http://blog.dabr.co.uk/">Dabr blog</a>.</p>';
+					<p>
+						<a href="oauth">
+							<img src="images/twitter_button_2_lo.gif" alt="Sign in with Twitter/" width="165" height="28" />
+						</a>
+						<br />
+						<a href="oauth">Sign in via Twitter.com</a>
+					</p>';
+
+	$content .= "SESSION<pre>" . print_r($_SESSION, true) . "GLOBALS" . print_r($GLOBALS, true) ;
 	
-	if (MYSQL_USERS == 'ON') $content .= '<p>No access to Twitter.com? <a href="login">Sign in with your Dabr account</a></p>';
-	$content .= '</div>';
 	return $content;
 }
 

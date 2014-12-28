@@ -1,7 +1,7 @@
 <?php
 require 'Autolink.php';
 require 'Extractor.php';
-require 'Embedly.php';
+require 'oembed.php';
 require 'Emoticons.php';
 		
 menu_register(array(
@@ -175,10 +175,10 @@ function twitter_profile_page() {
 
 		// post profile update
 		$post_data = array(
-			"name"			=> stripslashes($_POST['name']),
-			"url"				=> stripslashes($_POST['url']),
-			"location"		=> stripslashes($_POST['location']),
-			"description"	=> stripslashes($_POST['description']),
+			"name"        => stripslashes($_POST['name']),
+			"url"         => stripslashes($_POST['url']),
+			"location"    => stripslashes($_POST['location']),
+			"description" => stripslashes($_POST['description']),
 		);
 
 		$url = API_NEW."account/update_profile.json";
@@ -256,30 +256,30 @@ function theme_profile_form($user){
 	return $out;
 }
 
-function long_url($shortURL)
-{
-	if (!defined('LONGURL_KEY'))
-	{
-		return $shortURL;
-	}
-	$url = "http://www.longurlplease.com/api/v1.1?q=" . $shortURL;
-	$curl_handle=curl_init();
-	curl_setopt($curl_handle,CURLOPT_RETURNTRANSFER,1);
-	curl_setopt($curl_handle,CURLOPT_URL,$url);
-	$url_json = curl_exec($curl_handle);
-	curl_close($curl_handle);
+// function long_url($shortURL)
+// {
+// 	if (!defined('LONGURL_KEY'))
+// 	{
+// 		return $shortURL;
+// 	}
+// 	$url = "http://www.longurlplease.com/api/v1.1?q=" . $shortURL;
+// 	$curl_handle=curl_init();
+// 	curl_setopt($curl_handle,CURLOPT_RETURNTRANSFER,1);
+// 	curl_setopt($curl_handle,CURLOPT_URL,$url);
+// 	$url_json = curl_exec($curl_handle);
+// 	curl_close($curl_handle);
 
-	$url_array = json_decode($url_json,true);
+// 	$url_array = json_decode($url_json,true);
 
-	$url_long = $url_array["$shortURL"];
+// 	$url_long = $url_array["$shortURL"];
 
-	if ($url_long == null)
-	{
-		return $shortURL;
-	}
+// 	if ($url_long == null)
+// 	{
+// 		return $shortURL;
+// 	}
 
-	return $url_long;
-}
+// 	return $url_long;
+// }
 
 
 function friendship_exists($user_a) {
@@ -1139,29 +1139,54 @@ function twitter_retweet($query) {
 }
 
 function twitter_replies_page() {
+	$cb = \Codebird\Codebird::getInstance();
+	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	
+	$api_options = "";
+	
 	$per_page = setting_fetch('perPage', 20);	
-	$request = API_NEW."statuses/mentions_timeline.json?count={$per_page}";
+	$api_options = "count=$per_page";
+
+	//	If we're paginating through
 	if ($_GET['max_id']) {
-		$request .= '&max_id='.$_GET['max_id'];
+		$api_options .= '&max_id='.$_GET['max_id'];
 	}
-	$tl = twitter_process($request);
-	$tl = twitter_standard_timeline($tl, 'replies');
+		
+	$tl = twitter_standard_timeline($cb->statuses_mentionsTimeline($api_options), 'replies');
 	$content = theme('status_form');
 	$content .= theme('timeline', $tl);
 	theme('page', 'Replies', $content);
 }
 
 function twitter_retweets_page() {
-	$per_page = setting_fetch('perPage', 20);
-	$request = API_NEW."statuses/retweets_of_me.json?count={$per_page}";
+	$cb = \Codebird\Codebird::getInstance();
+	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	
+	$api_options = "";
+	
+	$per_page = setting_fetch('perPage', 20);	
+	$api_options = "count=$per_page";
+
+	//	If we're paginating through
 	if ($_GET['max_id']) {
-		$request .= '&max_id='.$_GET['max_id'];
+		$api_options .= '&max_id='.$_GET['max_id'];
 	}
-	$tl = twitter_process($request);
-	$tl = twitter_standard_timeline($tl, 'retweets');
+		
+	$tl = twitter_standard_timeline($cb->statuses_retweetsOfMe($api_options), 'replies');
 	$content = theme('status_form');
-	$content .= theme('timeline',$tl);
+	$content .= theme('timeline', $tl);
 	theme('page', 'Retweets', $content);
+
+	// $per_page = setting_fetch('perPage', 20);
+	// $request = API_NEW."statuses/retweets_of_me.json?count={$per_page}";
+	// if ($_GET['max_id']) {
+	// 	$request .= '&max_id='.$_GET['max_id'];
+	// }
+	// $tl = twitter_process($request);
+	// $tl = twitter_standard_timeline($tl, 'retweets');
+	// $content = theme('status_form');
+	// $content .= theme('timeline',$tl);
+	// theme('page', 'Retweets', $content);
 }
 
 function twitter_directs_page($query) {
@@ -1304,12 +1329,27 @@ function twitter_user_page($query) {
 	// If the user has at least one tweet
 	if (isset($user->status)) {
 		// Fetch the timeline early, so we can try find the tweet they're replying to
-		$request = API_NEW."statuses/user_timeline.json?screen_name={$screen_name}";
+
+		$cb = \Codebird\Codebird::getInstance();
+		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		
+		$api_options = "";
+
+		$per_page = setting_fetch('perPage', 20);	
+		$api_options = "&count={$per_page}";
+
+		//	If we're paginating through
 		if ($_GET['max_id']) {
-			$request .= '&max_id='.$_GET['max_id'];
+			$api_options .= '&max_id='.$_GET['max_id'];
 		}
-		$tl = twitter_process($request);
-		$tl = twitter_standard_timeline($tl, 'user');
+
+		$api_options .= "&screen_name={$screen_name}";
+
+		//echo "$api_options";	
+		$tl = twitter_standard_timeline($cb->statuses_userTimeline($api_options), 'user');
+		$content = theme('status_form');
+		$content .= theme('timeline', $tl);
+		theme('page', 'user', $content);
 	}
 
 	// Build an array of people we're talking to
@@ -1363,15 +1403,39 @@ function twitter_favourites_page($query) {
 		user_ensure_authenticated();
 		$screen_name = user_current_username();
 	}
-	$request = API_NEW."favorites/list.json?screen_name={$screen_name}";
+
+	$cb = \Codebird\Codebird::getInstance();
+	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+
+	$api_options = "";
+
+	$per_page = setting_fetch('perPage', 20);	
+	$api_options = "&count={$per_page}";
+
+	//	If we're paginating through
 	if ($_GET['max_id']) {
-		$request .= '&max_id=' . $_GET['max_id'];
+		$api_options .= '&max_id='.$_GET['max_id'];
 	}
-	$tl = twitter_process($request);
-	$tl = twitter_standard_timeline($tl, 'favourites');
-	$content = theme('status_form');
+
+	$api_options .= "&screen_name={$screen_name}";
+
+	//echo "$api_options";	
+	$tl = twitter_standard_timeline($cb->favorites_list($api_options), 'favourites');
+	// $content = theme('status_form');
 	$content .= theme('timeline', $tl);
 	theme('page', 'Favourites', $content);
+
+
+
+// 	$request = API_NEW."favorites/list.json?screen_name={$screen_name}";
+// 	if ($_GET['max_id']) {
+// 		$request .= '&max_id=' . $_GET['max_id'];
+// 	}
+// 	$tl = twitter_process($request);
+// 	$tl = twitter_standard_timeline($tl, 'favourites');
+// 	$content = theme('status_form');
+// 	$content .= theme('timeline', $tl);
+// 	theme('page', 'Favourites', $content);
 }
 
 function twitter_mark_favourite_page($query) {
@@ -1389,20 +1453,47 @@ function twitter_mark_favourite_page($query) {
 
 function twitter_home_page() {
 	user_ensure_authenticated();
-	$per_page = setting_fetch('perPage', 20);
-	$request = API_NEW."statuses/home_timeline.json?count={$per_page}";
+
+	$cb = \Codebird\Codebird::getInstance();
+	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+
+	$api_options = "";
+
+	$per_page = setting_fetch('perPage', 20);	
+	$api_options = "&count={$per_page}";
+
+	//	If we're paginating through
 	if ($_GET['max_id']) {
-		$request .= '&max_id='.$_GET['max_id'];
+		$api_options .= '&max_id='.$_GET['max_id'];
 	}
+
 	if ($_GET['since_id']) {
-		$request .= '&since_id='.$_GET['since_id'];
+		$api_options .= '&since_id='.$_GET['since_id'];
 	}
-	//echo $request;
-	$tl = twitter_process($request);
-	$tl = twitter_standard_timeline($tl, 'friends');
-	$content = theme('status_form');
+
+	$api_options .= "&screen_name={$screen_name}";
+
+	//echo "$api_options";	
+	$tl = twitter_standard_timeline($cb->statuses_homeTimeline($api_options), 'friends');
+	// $content = theme('status_form');
 	$content .= theme('timeline', $tl);
 	theme('page', 'Home', $content);
+
+
+	// $per_page = setting_fetch('perPage', 20);
+	// $request = API_NEW."statuses/home_timeline.json?count={$per_page}";
+	// if ($_GET['max_id']) {
+	// 	$request .= '&max_id='.$_GET['max_id'];
+	// }
+	// if ($_GET['since_id']) {
+	// 	$request .= '&since_id='.$_GET['since_id'];
+	// }
+	// //echo $request;
+	// $tl = twitter_process($request);
+	// $tl = twitter_standard_timeline($tl, 'friends');
+	// $content = theme('status_form');
+	// $content .= theme('timeline', $tl);
+	// theme('page', 'Home', $content);
 }
 
 function twitter_hashtag_page($query) {
@@ -1612,24 +1703,35 @@ function twitter_date($format, $timestamp = null) {
 }
 
 function twitter_standard_timeline($feed, $source) {
+//	echo "<pre>";
+	//var_dump($feed);
+//	echo json_encode($feed);
+	//	Remove the status elements from the array
+	unset($feed->httpstatus);
+	unset($feed->rate);
+
 	$output = array();
-	if (!is_array($feed) && $source != 'thread') return $output;
+//	if (!is_array($feed) && $source != 'thread') return $output;
 	
 	//32bit int / snowflake patch
-	if (is_array($feed)) {
-		foreach($feed as $key => $status) {
-			if($status->id_str) {
-				$feed[$key]->id = $status->id_str;
-			}
-			if($status->in_reply_to_status_id_str) {
-				$feed[$key]->in_reply_to_status_id = $status->in_reply_to_status_id_str;
-			}
-			if($status->retweeted_status->id_str) {
-				$feed[$key]->retweeted_status->id = $status->retweeted_status->id_str;
-			}
-		}
+	// if (is_array($feed)) {
+	// 	foreach($feed as $key => $status) {
+	// 		if($status->id_str) {
+	// 			$feed[$key]->id = $status->id_str;
+	// 		}
+	// 		if($status->in_reply_to_status_id_str) {
+	// 			$feed[$key]->in_reply_to_status_id = $status->in_reply_to_status_id_str;
+	// 		}
+	// 		if($status->retweeted_status->id_str) {
+	// 			$feed[$key]->retweeted_status->id = $status->retweeted_status->id_str;
+	// 		}
+	// 	}
+	// }
+
+	foreach ($feed as $status) {
+//		echo "</pre><br.>STATUS = " . $status->text;
 	}
-	
+
 	switch ($source) {
 		case 'status':
 		case 'favourites':
@@ -1721,11 +1823,20 @@ function preg_match_one($pattern, $subject, $flags = null) {
 }
 
 function twitter_user_info($username = null) {
-	if (!$username)
-	$username = user_current_username();
-	$request = API_NEW."users/show.json?screen_name={$username}";
-	$user = twitter_process($request);
-	return $user;
+	// if (!$username) 
+
+	$cb = \Codebird\Codebird::getInstance();
+	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	
+	$api_options = "screen_name={$username}";
+		// echo "<pre>";
+		// var_dump($cb->users_show($api_options));
+	return $cb->users_show($api_options);
+
+	// $username = user_current_username();
+	// $request = API_NEW."users/show.json?screen_name={$username}";
+	// $user = twitter_process($request);
+	// return $user;
 }
 
 function theme_timeline($feed, $paginate = true) {
@@ -1747,7 +1858,7 @@ function theme_timeline($feed, $paginate = true) {
 	// Only embed images in suitable browsers
 	
 	if(!setting_fetch('hide_inline') && !in_array(setting_fetch('browser'), array('text', 'worksafe'))) {
-		embedly_embed_thumbnails($feed);
+		// oembed_embed_thumbnails($feed);
 	}
 
 	foreach ($feed as $status) {
@@ -1961,7 +2072,7 @@ function theme_full_name($user) {
 
 // http://groups.google.com/group/twitter-development-talk/browse_thread/thread/50fd4d953e5b5229#
 function theme_get_avatar($object) {
-	if ($_SERVER['HTTPS'] == "on" && $object->profile_image_url_https) {
+	if ($_SERVER['HTTPS'] == "on" || (0 === strpos(BASE_URL, "https://"))) { //$object->profile_image_url_https) {
 		return image_proxy($object->profile_image_url_https, "48/48/");
 	}
 	else {
@@ -2012,17 +2123,17 @@ function theme_search_form($query) {
 }
 
 function theme_external_link($url, $content = null) {
-	//Long URL functionality.  Also uncomment function long_url($shortURL)
-	if (!$content)
-	{
-		//Used to wordwrap long URLs
-		//return "<a href='$url' target='_blank'>". wordwrap(long_url($url), 64, "\n", true) ."</a>";
-		return "<a href='$url' target='" . get_target() . "'>". long_url($url) ."</a>";
-	}
-	else
-	{
+	// //Long URL functionality.  Also uncomment function long_url($shortURL)
+	// if (!$content)
+	// {
+	// 	//Used to wordwrap long URLs
+	// 	//return "<a href='$url' target='_blank'>". wordwrap(long_url($url), 64, "\n", true) ."</a>";
+	// 	return "<a href='$url' target='" . get_target() . "'>". long_url($url) ."</a>";
+	// }
+	// else
+	// {
 		return "<a href='$url' target='" . get_target() . "'>$content</a>";
-	}
+	// }
 
 }
 

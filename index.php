@@ -15,11 +15,9 @@ require 'common/theme.php';
 require 'common/twitter.php';
 require 'common/lists.php';
 require 'common/settings.php';
+require 'common/codebird.php';
 
 // Twitter's API URL.
-define('API_NEW','https://api.twitter.com/1.1/');
-define('API_OLD','https://api.twitter.com/1/');
-
 menu_register(array (
 	'about' => array (
 		'callback' => 'about_page',
@@ -27,6 +25,14 @@ menu_register(array (
 	'logout' => array (
 		'security' => true,
 		'callback' => 'logout_page',
+	),
+	'oauth' => array(
+		'callback' => 'user_oauth',
+		'hidden' => 'true',
+	),
+	'login' => array(
+		'callback' => 'user_login',
+		'hidden' => 'true',
 	),
 ));
 
@@ -40,7 +46,8 @@ function about_page() {
 	$content = file_get_contents('about.html');
 	theme('page', 'About', $content);
 }
-
+session_start();
+	
 browser_detect();
 menu_execute_active_handler();
 

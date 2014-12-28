@@ -91,12 +91,12 @@ function settings_page($args) {
 	);
 	
 	$perPage = array(
-		  '5'		=>   '5 Tweets Per Page',
-		 '10'		=>  '10 Tweets Per Page',
-		 '20'		=>  '20 Tweets Per Page',
-		 '30'		=>  '30 Tweets Per Page',
-		 '40'		=>  '40 Tweets Per Page',
-		 '50'		=>  '50 Tweets Per Page',
+		  '5'	=>   '5 Tweets Per Page',
+		 '10'	=>  '10 Tweets Per Page',
+		 '20'	=>  '20 Tweets Per Page',
+		 '30'	=>  '30 Tweets Per Page',
+		 '40'	=>  '40 Tweets Per Page',
+		 '50'	=>  '50 Tweets Per Page',
 		'100' 	=> '100 Tweets Per Page',
 		'150' 	=> '150 Tweets Per Page',
 		'200' 	=> '200 Tweets Per Page',
@@ -104,11 +104,11 @@ function settings_page($args) {
 
 	$gwt = array(
 		'off' => 'direct',
-		'on' => 'via GWT',
+		'on'  => 'via GWT',
 	);
 	
 	$emoticons = array(
-		'on' => 'ON',
+		'on'  => 'ON',
 		'off' => 'OFF',
 	);
 
