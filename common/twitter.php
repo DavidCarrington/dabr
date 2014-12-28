@@ -1086,22 +1086,56 @@ function twitter_retweeters_page($query) {
 }
 
 function twitter_update() {
+	//	Was this request sent by POST?
 	twitter_ensure_post_action();
-	$status = stripslashes(trim($_POST['status']));
-	if ($status) {
-		$request = API_NEW.'statuses/update.json';
-		$post_data = array('source' => 'dabr', 'status' => $status);
+
+	//	POSTing adds slashes, let's get rid of them.
+	//	Or not...
+	$status_text = trim($_POST['status']);//stripslashes(trim($_POST['status']));
+	
+	if ($status_text) {
+
+		$cb = \Codebird\Codebird::getInstance();
+		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	
+		$api_options  = array();
+	
+		//	Ensure that the text is properly escaped
+		$api_options["status"] = $status_text;
+
+		//	Is this a reply?
 		$in_reply_to_id = (string) $_POST['in_reply_to_id'];
 		if (is_numeric($in_reply_to_id)) {
-			$post_data['in_reply_to_status_id'] = $in_reply_to_id;
+			$api_options["in_reply_to_status_id"] = $in_reply_to_id;
 		}
+
 		// Geolocation parameters
 		list($lat, $long) = explode(',', $_POST['location']);
-		$geo = 'N';
+		//$geo = 'N';
 		if (is_numeric($lat) && is_numeric($long)) {
-			$geo = 'Y';
-			$post_data['lat'] = $lat;
-			$post_data['long'] = $long;
+		//	$geo = 'Y';
+			$api_options['lat'] = $lat;
+			$api_options['long'] = $long;
+		}
+	
+		//	Send the status
+		$reply = $cb->statuses_update($api_options);
+
+
+
+		// $request = API_NEW.'statuses/update.json';
+		// $post_data = array('source' => 'dabr', 'status' => $status);
+		// $in_reply_to_id = (string) $_POST['in_reply_to_id'];
+		// if (is_numeric($in_reply_to_id)) {
+		// 	$post_data['in_reply_to_status_id'] = $in_reply_to_id;
+		// }
+		// // Geolocation parameters
+		// list($lat, $long) = explode(',', $_POST['location']);
+		// $geo = 'N';
+		// if (is_numeric($lat) && is_numeric($long)) {
+		// 	$geo = 'Y';
+		// 	$post_data['lat'] = $lat;
+		// 	$post_data['long'] = $long;
 			// $post_data['display_coordinates'] = 'false';
 	  		
   			// Turns out, we don't need to manually send a place ID
@@ -1111,34 +1145,34 @@ function twitter_update() {
 	  			// $post_data['place_id'] = $place_id;
 	  		}
 */	  		
-		}
-		setcookie_year('geo', $geo);
-		$b = twitter_process($request, $post_data);
+		// }
+		// setcookie_year('geo', $geo);
+		// $b = twitter_process($request, $post_data);
 	}
 	twitter_refresh($_POST['from'] ? $_POST['from'] : '');
 }
 
-function twitter_get_place($lat, $long) {
-	//	http://dev.twitter.com/doc/get/geo/reverse_geocode
-	//	http://api.twitter.com/version/geo/reverse_geocode.format 
+// function twitter_get_place($lat, $long) {
+// 	//	http://dev.twitter.com/doc/get/geo/reverse_geocode
+// 	//	http://api.twitter.com/version/geo/reverse_geocode.format 
 	
-	//	This will look up a place ID based on lat / long.
-	//	Not needed (Twitter include it automagically
-	//	Left in just incase we ever need it...
-	$request = API_OLD.'geo/reverse_geocode.json';
-	$request .= '?lat='.$lat.'&long='.$long.'&max_results=1';
+// 	//	This will look up a place ID based on lat / long.
+// 	//	Not needed (Twitter include it automagically
+// 	//	Left in just incase we ever need it...
+// 	$request = API_OLD.'geo/reverse_geocode.json';
+// 	$request .= '?lat='.$lat.'&long='.$long.'&max_results=1';
 	
-	$locations = twitter_process($request);
-	$places = $locations->result->places;
-	foreach($places as $place)
-	{
-		if ($place->id) 
-		{
-			return $place->id;
-		}
-	}
-	return false;
-}
+// 	$locations = twitter_process($request);
+// 	$places = $locations->result->places;
+// 	foreach($places as $place)
+// 	{
+// 		if ($place->id) 
+// 		{
+// 			return $place->id;
+// 		}
+// 	}
+// 	return false;
+// }
 
 function twitter_retweet($query) {
 	twitter_ensure_post_action();
@@ -1309,9 +1343,13 @@ function twitter_find_tweet_in_timeline($tweet_id, $tl) {
 }
 
 function twitter_user_page($query) {
-	$screen_name = $query[1];
-	$subaction = $query[2];
+	$screen_name    = $query[1];
+	// echo "<h1>q1 = {$screen_name}</h1>";
+	$subaction      = $query[2];
+	// echo "<h1>q2 = {$subaction}</h1>";
 	$in_reply_to_id = (string) $query[3];
+	// echo "<h1>q3 = {$in_reply_to_id}</h1>";
+	
 	$content = '';
 
 	if (!$screen_name) theme('error', 'No username given');
@@ -1338,11 +1376,10 @@ function twitter_user_page($query) {
 
 		$api_options .= "&screen_name={$screen_name}";
 
-		//echo "$api_options";	
 		$tl = twitter_standard_timeline($cb->statuses_userTimeline($api_options), 'user');
-		$content = theme('status_form');
-		$content .= theme('timeline', $tl);
-		theme('page', 'user', $content);
+		// $content = theme('status_form');
+		// $content .= theme('timeline', $tl);
+		// theme('page', 'user', $content);
 	}
 
 	// Build an array of people we're talking to
@@ -1384,7 +1421,7 @@ function twitter_user_page($query) {
 	}
 
 	$content .= theme('status_form', $status, $in_reply_to_id);
-	$content .= theme('user_header', $user);
+	// $content .= theme('user_header', $user);
 	$content .= theme('timeline', $tl);
 
 	theme('page', "User {$screen_name}", $content);

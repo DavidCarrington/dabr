@@ -9,7 +9,7 @@ function desktop_theme_status_form($text = '', $in_reply_to_id = NULL) {
 			$text = $_GET['status'];
 		}
 		
-		$output = '
+		$output = '<h1>'.$text.'</h1>
 		<form method="post" action="update">
 			<fieldset>
 				<legend><img src="'.$icon.'" width="16" height="16" /> What\'s Happening?</legend>

@@ -11,14 +11,14 @@ function theme() {
 	$function = array_shift($args);
 	$function = 'theme_'.$function;
 
-	if ($current_theme) {
-		$custom_function = $current_theme.'_'.$function;
-		if (function_exists($custom_function))
-		$function = $custom_function;
-	} else {
-		if (!function_exists($function))
-		return "<p>Error: theme function <b>{$function}</b> not found.</p>";
-	}
+	// if ($current_theme) {
+	// 	$custom_function = $current_theme.'_'.$function;
+	// 	if (function_exists($custom_function))
+	// 	$function = $custom_function;
+	// } else {
+	// 	if (!function_exists($function))
+	// 	return "<p>Error: theme function <b>{$function}</b> not found.</p>";
+	// }
 	return call_user_func_array($function, $args);
 }
 
@@ -221,7 +221,8 @@ function theme_directs_form($to) {
 	$content .= js_counter("message");
 	return $content;
 }
-function theme_status_form($text = '', $in_reply_to_id = null) {
+function theme_status_form($text,  $in_reply_to_id) { //= '', $in_reply_to_id = null) {
+
 	if (user_is_authenticated()) {
 		$icon = "images/twitter-bird-16x16.png";
 
@@ -231,16 +232,59 @@ function theme_status_form($text = '', $in_reply_to_id = null) {
 			$text = $_GET['status'];
 		}
 		
-		return "<fieldset>
-                    <legend>
-                        <img src='{$icon}' width='16' height='16' /> What's Happening?
-                    </legend>
-                    <form method='post' action='update'>
-                        <input name='status' value='{$text}' maxlength='140' />
-                        <input name='in_reply_to_id' value='{$in_reply_to_id}' type='hidden' />
-                        <input type='submit' value='Tweet' />
-                    </form>
-                </fieldset>";
+		// return "<fieldset>
+  //                   <legend>
+  //                       <img src='{$icon}' width='16' height='16' /> What's Happening?
+  //                   </legend>
+  //                   <form method='post' action='update'>
+  //                       <input name='status' value='{$text}' maxlength='140' />
+  //                       <input name='in_reply_to_id' value='{$in_reply_to_id}' type='hidden' />
+  //                       <input type='submit' value='Tweet' />
+  //                   </form>
+  //               </fieldset>" . "<h1>{$text}</h1>";
+        $output = '<h1>HOWDAY'.$text.'</h1>
+        <form method="post" action="update">
+            <fieldset>
+                <legend><img src="'.$icon.'" width="16" height="16" /> What\'s Happening?</legend>
+                <textarea id="status" name="status" rows="4" style="width:95%; max-width: 400px;">'.$text.'</textarea>
+                <div>
+                    <input name="in_reply_to_id" value="'.$in_reply_to_id.'" type="hidden" />
+                    <input type="submit" value="Tweet" />
+                    <span id="remaining">140</span> 
+                    <span id="geo" style="display: none;">
+                        <input onclick="goGeo()" type="checkbox" id="geoloc" name="location" />
+                        <label for="geoloc" id="lblGeo"></label>
+                    </span>
+                </div>
+            </fieldset>
+            <script type="text/javascript">
+                started = false;
+                chkbox = document.getElementById("geoloc");
+                if (navigator.geolocation) {
+                    geoStatus("Tweet my location");
+                    if ("'.$_COOKIE['geo'].'"=="Y") {
+                        chkbox.checked = true;
+                        goGeo();
+                    }
+                }
+                function goGeo(node) {
+                    if (started) return;
+                    started = true;
+                    geoStatus("Locating...");
+                    navigator.geolocation.getCurrentPosition(geoSuccess, geoStatus , { enableHighAccuracy: true });
+                }
+                function geoStatus(msg) {
+                    document.getElementById("geo").style.display = "inline";
+                    document.getElementById("lblGeo").innerHTML = msg;
+                }
+                function geoSuccess(position) {
+                    geoStatus("Tweet my <a href=\'http://maps.google.co.uk/m?q=" + position.coords.latitude + "," + position.coords.longitude + "\' target=\'blank\'>location</a>");
+                    chkbox.value = position.coords.latitude + "," + position.coords.longitude;
+                }
+            </script>
+        </form>';
+        $output .= js_counter('status');
+        return $output;
 	}
 }
 
