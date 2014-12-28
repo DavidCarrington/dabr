@@ -2,31 +2,32 @@
 require 'Autolink.php';
 require 'Extractor.php';
 require 'oembed.php';
-require 'Emoticons.php';
+// require 'Emoticons.php';
 		
 menu_register(array(
 	'' => array(
 		'callback' => 'twitter_home_page',
+		'display'  => '🏠'
 	),
 	'status' => array(
-		'hidden' => true,
+		'hidden'   => true,
 		'security' => true,
 		'callback' => 'twitter_status_page',
 	),
 	'update' => array(
-		'hidden' => true,
+		'hidden'   => true,
 		'security' => true,
 		'callback' => 'twitter_update',
 	),
 	'twitter-retweet' => array(
-		'hidden' => true,
+		'hidden'   => true,
 		'security' => true,
 		'callback' => 'twitter_retweet',
 	),
 	'replies' => array(
 		'security' => true,
 		'callback' => 'twitter_replies_page',
-		'display' => 'Replies'
+		'display'  => '@'
 	),
 	'favourite' => array(
 		'hidden' => true,
@@ -41,7 +42,7 @@ menu_register(array(
 	'directs' => array(
 		'security' => true,
 		'callback' => 'twitter_directs_page',
-		'display' => 'Direct Messages'
+		'display' => '✉'
 	),
 	'search' => array(
 		'security' => true,
@@ -126,17 +127,17 @@ menu_register(array(
 	'upload-picture' => array(
 		'security' => true,
 		'callback' => 'twitter_media_page',
-		'display' => 'Upload Picture'
+		'display' => '📷'
 	),
 	'trends' => array(
 		'security' => true,
 		'callback' => 'twitter_trends_page',
-		'display' => 'Trends'
+		'display' => '↗'
 	),
 	'retweets' => array(
 		'security' => true,
 		'callback' => 'twitter_retweets_page',
-		'display' => 'Retweets'
+		'display' => '♻'
 	),
 	'retweeted_by' => array(
 		'security' => true,
@@ -409,7 +410,7 @@ function twitter_media_page($query)
 		if ($code == 200) {
 			$json = json_decode($tmhOAuth->response['response']);
 			
-			if ($_SERVER['HTTPS'] == "on") {
+			if ($_SERVER['HTTPS'] == "on" || (0 === strpos(BASE_URL, "https://"))) {
 				$image_url = $json->entities->media[0]->media_url_https;
 			}
 			else {
@@ -614,7 +615,7 @@ function twitter_get_media($status) {
 		
 		foreach($status->entities->media as $media) {
 	
-			if ($_SERVER['HTTPS'] == "on") {
+			if ($_SERVER['HTTPS'] == "on" || (0 === strpos(BASE_URL, "https://"))) {
 				$image = $media->media_url_https;
 			} else {
 				$image = $media->media_url;
@@ -742,10 +743,10 @@ function twitter_parse_tags($input, $entities = false) {
 		$tok = strtok(" \n\t\n\r\0");	// Move to the next token
 	}
 
-	//	Add Emoticons :-)
-	if (setting_fetch('emoticons') != 'off') {
-		$out = emoticons($out);
-	}
+	// //	Add Emoticons :-)
+	// if (setting_fetch('emoticons') != 'off') {
+	// 	$out = emoticons($out);
+	// }
 
 	//Return the completed string
 	return $out;

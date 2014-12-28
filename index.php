@@ -21,7 +21,7 @@ require 'common/codebird.php';
 menu_register(array (
 	'about' => array (
 		'callback' => 'about_page',
-		'display' => 'About'
+		'display' => 'ℹ' // Perhaps 🛈 http://www.fileformat.info/info/unicode/char/1f6c8/index.htm
 	),
 	'logout' => array (
 		'security' => true,

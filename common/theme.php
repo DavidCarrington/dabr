@@ -242,7 +242,7 @@ function theme_status_form($text,  $in_reply_to_id) { //= '', $in_reply_to_id = 
   //                       <input type='submit' value='Tweet' />
   //                   </form>
   //               </fieldset>" . "<h1>{$text}</h1>";
-        $output = '<h1>HOWDAY'.$text.'</h1>
+        $output = '
         <form method="post" action="update">
             <fieldset>
                 <legend><img src="'.$icon.'" width="16" height="16" /> What\'s Happening?</legend>
@@ -764,10 +764,10 @@ function theme_action_icons($status) {
 		$latlong = $geo->coordinates;
 		$lat = $latlong[0];
 		$long = $latlong[1];
-		$actions[] = theme('action_icon', "https://maps.google.com/maps?q={$lat},{$long}", 'images/map.png', 'MAP');
+		$actions[] = theme('action_icon', "https://maps.google.com/maps?q={$lat},{$long}", '⌖', 'MAP');
 	}
 	//Search for @ to a user
-	$actions[] = theme('action_icon',"search?query=%40{$from}",'images/q.png','?');
+	$actions[] = theme('action_icon',"search?query=%40{$from}",'🔍','?');
 
 	return '<span class="actionicons">' . implode(' ', $actions) . '</span>';
 }
@@ -776,7 +776,7 @@ function theme_action_icon($url, $image_url, $text) {
 	// alt attribute left off to reduce bandwidth by about 720 bytes per page
 	if ($text == 'MAP')
 	{
-		return "<a href='$url' alt='$text' target='" . get_target() . "'><img src='$image_url' /></a>";
+		return "<a href='$url' target='" . get_target() . "'>{$image_url}</a>";
 	}
 
     if (0 === strpos($image_url, "images/"))
