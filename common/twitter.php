@@ -7,7 +7,6 @@ require 'Emoticons.php';
 menu_register(array(
 	'' => array(
 		'callback' => 'twitter_home_page',
-		'accesskey' => '0',
 	),
 	'status' => array(
 		'hidden' => true,
@@ -806,20 +805,40 @@ function format_interval($timestamp, $granularity = 2) {
 function twitter_status_page($query) {
 	$id = (string) $query[1];
 	if (is_numeric($id)) {
-		$request = API_NEW."statuses/show.json?id={$id}";
-		$status = twitter_process($request);
+		
+		$cb = \Codebird\Codebird::getInstance();
+		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		
+		$api_options = "id={$id}";
+			
+		$status = $cb->statuses_show_ID($api_options);
+
+		// $request = API_NEW."statuses/show.json?id={$id}";
+		// $status = twitter_process($request);
 		$text = $status->text;	//	Grab the text before it gets formatted
 
 		$content = theme('status', $status);
 
 		//	Show a link to the original tweet		
 		$screen_name = $status->from->screen_name;
-		$content .= '<p><a href="https://mobile.twitter.com/' . $screen_name . '/status/' . $id . '" target="'. get_target() . '">View orginal tweet on Twitter</a> | ';
+		$content .= '<p>
+		                <a href="https://mobile.twitter.com/' . $screen_name . '/status/' . $id . '" target="'. get_target() . '">
+		                    View orginal tweet on Twitter
+		                </a> | ';
 		
 		//	Translate the tweet
-		$content .= '<a href="http://translate.google.com/m?hl=en&sl=auto&ie=UTF-8&q=' . urlencode($text) . '" target="'. get_target() . '">Translate this tweet</a></p>';
+		$content .= '   <a href="http://translate.google.com/m?hl=en&sl=auto&ie=UTF-8&q=' . urlencode($text) . '" target="'. get_target() . '">
+		                    Translate this tweet
+		                </a>
+		            </p>';
 		
-		$content .= '<p><strong><a href="https://mobile.twitter.com/' . $screen_name . '/status/' . $id . '/report" target="'. get_target() . '">Report Abusive Tweet</a></strong></p>';
+		$content .= "<p>
+		                <strong>
+		                    <a href=\"https://mobile.twitter.com/{$screen_name}/status/{$id}/report\" target=\"". get_target() . "\">
+		                        Report Abusive Tweet
+		                    </a>
+		                </strong>
+		            </p>";
 
 		/* NO LONGER SUPPORTED WITH THE MOVE TO 1.1
 		if (!$status->user->protected) {
@@ -830,15 +849,15 @@ function twitter_status_page($query) {
 			$content .= "<p>Don't like the thread order? Go to <a href='settings'>settings</a> to reverse it. Either way - the dates/times are not always accurate.</p>";
 		}
 		*/
-		theme('page', "Status $id", $content);
+		theme('page', "{$screen_name} Status {$id}", $content);
 	}
 }
 
-function twitter_thread_timeline($thread_id) {
-	$request = "https://search.twitter.com/search/thread/{$thread_id}";
-	$tl = twitter_standard_timeline(twitter_fetch($request), 'thread');
-	return $tl;
-}
+// function twitter_thread_timeline($thread_id) {
+// 	$request = "https://search.twitter.com/search/thread/{$thread_id}";
+// 	$tl = twitter_standard_timeline(twitter_fetch($request), 'thread');
+// 	return $tl;
+// }
 
 function twitter_retweet_page($query) {
 	$id = (string) $query[1];
