@@ -129,6 +129,19 @@ function theme_error($message) {
 	theme_page('Error', $message);
 }
 
+function theme_about() {
+	return '<div id="about">
+	            <h3>What is dabr?</h3>
+                <ul>
+                    <li>A simplified and fast mobile web interface for Twitter.</li>
+                    <li>Secure - served over http<strong>s</strong>. Your Twitter login details are stored using an encrypted cookie on your machine, and <em>never</em> stored on the website.</li>
+                    <li><a href="https://github.com/edent/Dabr">Open source</a> - maintained by <a href="https://shkspr.mobi/blog/tag/dabr/">Terence Eden</a>.</li>
+                    <li>Originally by <a href="https://code.google.com/p/dabr">David Carrington</a> with inspirations from <a href="http://whatleydude.com/">@whatleydude</a>.</li>
+                </ul>
+                <p>If you have any comments, suggestions or questions then feel free to get in touch.</p>
+            </div>';
+}
+
 function theme_page($title, $content) {
 	$body = "";
 	$body .= theme('menu_top');
@@ -385,7 +398,7 @@ function theme_user_header($user) {
 		$out .= " | <a href='favourites/{$user->screen_name}'>" . pluralise('favourite', $user->favourites_count, true) . "</a>";
 	}
 
-	$out .= " | <a href='lists/{$user->screen_name}'>" . pluralise('list', $user->listed_count, true) . "</a>";
+	// $out .= " | <a href='lists/{$user->screen_name}'>" . pluralise('list', $user->listed_count, true) . "</a>";
 	if($following) {
 		$out .=	" | <a href='directs/create/{$user->screen_name}'>Direct Message</a>";
 	}
@@ -841,6 +854,22 @@ function theme_followers_list($feed, $hide_pagination = false) {
 		#$content .= theme('pagination');
 		$content .= theme('list_pagination', $feed);
 	return $content;
+}
+
+function theme_list_pagination($json) {
+	if ($cursor = (string) $json->next_cursor) {
+		$links[] = "<a href='{$_GET['q']}?cursor={$cursor}'>Next</a>";
+	}
+	if ($cursor = (string) $json->previous_cursor) {
+		//	Codebird needs a +ve cursor, but returns a -ve one?
+		if (0 === strpos($cursor, "-"))
+		{
+			//	TODO FIXME still doesn't go back to first screen?
+			$cursor = trim($cursor,"-");
+		}
+		$links[] = "<a href='{$_GET['q']}?cursor={$cursor}'>Previous</a>";
+	}
+	if (count($links) > 0) return '<p>'.implode(' | ', $links).'</p>';
 }
 
 function theme_trends_page($locales, $trends) {
