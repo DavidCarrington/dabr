@@ -192,12 +192,12 @@ function theme_profile_form($user){
 	// Profile form
 	$out .= "
 				<form name='profile' action='edit-profile' method='post' enctype='multipart/form-data'>
-					<hr />Name:			<input name='name' maxlength='20' value='"						. htmlspecialchars($user->name, ENT_QUOTES) ."' />
-					<br />Avatar:		<img src='".theme_get_avatar($user)."' /> <input type='file' name='image' />
-					<br />Bio:			<input name='description' size=40 maxlength='160' value='"	. htmlspecialchars($user->description, ENT_QUOTES) ."' />
-					<br />Link:			<input name='url' maxlength='100' size=40 value='"				. htmlspecialchars($user->url, ENT_QUOTES) ."' />
-					<br />Location:	<input name='location' maxlength='30' value='"					. htmlspecialchars($user->location, ENT_QUOTES) ."' />
-					<br /><input type='submit' value='Update Profile' />
+				    <hr />Name:     <input name='name' maxlength='20' value='"                 . htmlspecialchars($user->name, ENT_QUOTES) ."' />
+				    <br />Avatar:   <img src='".theme_get_avatar($user)."' /> <input type='file' name='image' />
+				    <br />Bio:      <textarea name='description' cols=40 rows=6 maxlength=160>". htmlspecialchars($user->description, ENT_QUOTES)."</textarea>
+				    <br />Link:     <input name='url' maxlength='100' size=40 value='"         . htmlspecialchars($user->url, ENT_QUOTES) ."' />
+				    <br />Location: <input name='location' maxlength='30' value='"             . htmlspecialchars($user->location, ENT_QUOTES) ."' />
+				    <br /><input type='submit' value='Update Profile' />
 				</form>";
 
 	return $out;
@@ -243,7 +243,7 @@ function theme_status_form($text = '', $in_reply_to_id = null) {
   //                   </form>
   //               </fieldset>" . "<h1>{$text}</h1>";
         $output = '
-        <form method="post" action="update">
+        <form method="post" action="update" enctype="multipart/form-data">
             <fieldset>
                 <legend><img src="'.$icon.'" width="16" height="16" /> What\'s Happening?</legend>
                 <textarea id="status" name="status" rows="4" style="width:95%; max-width: 400px;">'.$text.'</textarea>
@@ -256,6 +256,9 @@ function theme_status_form($text = '', $in_reply_to_id = null) {
                         <label for="geoloc" id="lblGeo"></label>
                     </span>
                 </div>
+                <div class="fileinputs">
+					Image: <input type="file" accept="image/*" name="image" class="file" />
+				</div>
             </fieldset>
             <script type="text/javascript">
                 started = false;

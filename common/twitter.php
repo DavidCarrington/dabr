@@ -124,11 +124,11 @@ menu_register(array(
 		'hidden' => true,
 		'callback' => 'twitter_hashtag_page',
 	),
-	'upload-picture' => array(
-		'security' => true,
-		'callback' => 'twitter_media_page',
-		'display' => '📷'
-	),
+	// 'upload-picture' => array(
+	// 	'security' => true,
+	// 	'callback' => 'twitter_media_page',
+	// 	'display' => '📷'
+	// ),
 	'trends' => array(
 		'security' => true,
 		'callback' => 'twitter_trends_page',
@@ -181,62 +181,35 @@ function twitter_profile_page() {
 	if ($_POST['name']){
 
 		// post profile update
-		$post_data = array(
+		$api_options = array(
 			"name"        => stripslashes($_POST['name']),
 			"url"         => stripslashes($_POST['url']),
 			"location"    => stripslashes($_POST['location']),
 			"description" => stripslashes($_POST['description']),
 		);
 
-		$url = API_NEW."account/update_profile.json";
-		$user = twitter_process($url, $post_data);
+		$cb = \Codebird\Codebird::getInstance();
+		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		
+			
+		$cb->account_updateProfile($api_options);
+
 		$content = "<h2>Profile Updated</h2>";
 	} 
 	
 	//	http://api.twitter.com/1/account/update_profile_image.format 
-	if ($_FILES['image']['tmp_name']){	
-		require 'tmhOAuth.php';
-		
-		list($oauth_token, $oauth_token_secret) = explode('|', $GLOBALS['user']['password']);
-		
-		$tmhOAuth = new tmhOAuth(array(
-			'consumer_key'    => OAUTH_CONSUMER_KEY,
-			'consumer_secret' => OAUTH_CONSUMER_SECRET,
-			'user_token'      => $oauth_token,
-			'user_secret'     => $oauth_token_secret,
-		));
-
-		// note the type and filename are set here as well
-		$params = array(
-			'image' => "@{$_FILES['image']['tmp_name']};type={$_FILES['image']['type']};filename={$_FILES['image']['name']}",
+	if ($_FILES['image']['tmp_name']) {
+		// these files to upload. You can also just upload 1 image!
+		$api_options = array(
+			"image" => $_FILES['image']['tmp_name']
 		);
 
-		$code = $tmhOAuth->request('POST', 
-											$tmhOAuth->url("1.1/account/update_profile_image"),
-											$params,
-											true, // use auth
-											true // multipart
-		);
-
-
-		if ($code == 200) {
-			$content = "<h2>Avatar Updated</h2>";			
-		} else {
-			$content = "Damn! Something went wrong. Sorry :-("  
-				."<br /> code="	. $code
-				."<br /> status="	. $status
-				."<br /> image="	. $image
-				//."<br /> response=<pre>"
-				//. print_r($tmhOAuth->response['response'], TRUE)
-				. "</pre><br /> info=<pre>"
-				. print_r($tmhOAuth->response['info'], true)
-				. "</pre><br /> code=<pre>"
-				. print_r($tmhOAuth->response['code'], true) . "</pre>";
-		}
+		$cb->account_updateProfileImage($api_options);
 	}
 	
-	// Twitter API is really slow!  If there's no delay, the old profile is returned.
+	//	Twitter API is really slow!  If there's no delay, the old profile is returned.
 	//	Wait for 5 seconds before getting the user's information, which seems to be sufficient
+	//	See https://dev.twitter.com/rest/reference/post/account/update_profile_image
 	sleep(5);
 
 	// retrieve profile information
@@ -310,13 +283,6 @@ function twitter_block_exists($user_id) {
 	$friendship = current($cb->friendships_lookup($api_options));
 	
 	return ("blocking" == $friendship->connections[0]);
-
-	//Get an array of all ids the authenticated user is blocking (limited at 5000 without cursoring)
-	// $request = API_NEW.'blocks/ids.json';
-	// $response = twitter_process($request);
-	// $blocked = $response->ids;
-	// //If the authenticate user has blocked $query it will appear in the array
-	// return in_array($query,$blocked);
 }
 
 function twitter_trends_page($query) {
@@ -934,8 +900,11 @@ function twitter_deleteDM_page($query) {
 
 	$id = (string) $query[1];
 	if (is_numeric($id)) {
-		$request = API_NEW."direct_messages/destroy.json?id={$id}";
-		twitter_process($request, true);
+		$cb = \Codebird\Codebird::getInstance();
+		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		$api_options = array("id" => $id);
+		$cb->directMessages_destroy($api_options);	
+
 		twitter_refresh('directs/');
 	}
 }
@@ -1161,18 +1130,43 @@ function twitter_retweeters_page($query) {
 function twitter_update() {
 	//	Was this request sent by POST?
 	twitter_ensure_post_action();
+	
+	$cb = \Codebird\Codebird::getInstance();
+	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	
+	$api_options  = array();
+
+	//	Upload the image (if there is one) first
+	if ($_FILES['image']['tmp_name']) {
+		// these files to upload. You can also just upload 1 image!
+		$media_files = array(
+			$_FILES['image']['tmp_name']
+		);
+
+		// will hold the uploaded IDs
+		$media_ids = array();
+
+		foreach ($media_files as $file) {	
+			// upload all media files
+			$reply = $cb->media_upload(array(
+				'media' => $file
+			));
+			// and collect their IDs
+			$media_ids[] = $reply->media_id_string;
+		}
+
+		// convert media ids to string list
+		$media_ids = implode(',', $media_ids);
+
+		// send tweet with these medias
+		$api_options['media_ids'] = $media_ids;
+	}
 
 	//	POSTing adds slashes, let's get rid of them.
 	//	Or not...
 	$status_text = trim($_POST['status']);//stripslashes(trim($_POST['status']));
 	
 	if ($status_text) {
-
-		$cb = \Codebird\Codebird::getInstance();
-		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
-	
-		$api_options  = array();
-	
 		//	Ensure that the text is properly escaped
 		$api_options["status"] = $status_text;
 
@@ -1184,10 +1178,11 @@ function twitter_update() {
 
 		// Geolocation parameters
 		list($lat, $long) = explode(',', $_POST['location']);
+
 		//$geo = 'N';
 		if (is_numeric($lat) && is_numeric($long)) {
 		//	$geo = 'Y';
-			$api_options['lat'] = $lat;
+			$api_options['lat']  = $lat;
 			$api_options['long'] = $long;
 		}
 	
@@ -1268,11 +1263,8 @@ function twitter_directs_page($query) {
 			twitter_ensure_post_action();
 			$to = trim(stripslashes(str_replace('@','',$_POST['to'])));
 			$message = trim(stripslashes($_POST['message']));
-			//direct_messages/new
 			$api_options = array('screen_name' => $to, 'text' => $message);
 			$cb->directMessages_new($api_options);
-			// $request = API_NEW.'direct_messages/new.json';
-			// twitter_process($request, array('screen_name' => $to, 'text' => $message));
 			twitter_refresh('directs/sent');
 
 		case 'sent':
