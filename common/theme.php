@@ -138,8 +138,12 @@ function theme_about() {
                     <li><a href="https://github.com/edent/Dabr">Open source</a> - maintained by <a href="https://shkspr.mobi/blog/tag/dabr/">Terence Eden</a>.</li>
                     <li>Originally by <a href="https://code.google.com/p/dabr">David Carrington</a> with inspirations from <a href="http://whatleydude.com/">@whatleydude</a>.</li>
                 </ul>
-                <p>If you have any comments, suggestions or questions then feel free to get in touch.</p>
-            </div>';
+                <p>If you have any comments, suggestions or questions then feel free to get in touch :-).</p>
+            </div>
+            <pre>
+            SESSION
+
+            ' . print_r($_SESSION, true) . 'GLOBALS' . print_r($GLOBALS, true) . '</pre>';
 }
 
 function theme_page($title, $content) {
@@ -915,8 +919,8 @@ form{margin:.3em;}
 
 body{
 	margin:0;
-	font-family:Roboto,'Droid Sans','Droid Sans Fallback',sans-serif,quiviraregular;
-	background:#{$c->bodybg};
+	font-family:'Android Emoji','NotoColorEmoji','NotoColorEmoji.ttf','/system/fonts/NotoColorEmoji.ttf','Noto Color Emoji','Android Emoji',sans-serif,quiviraregular;
+		background:#{$c->bodybg};
 	color:#{$c->bodyt};
 }
 

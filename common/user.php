@@ -5,7 +5,7 @@ function user_oauth() {
 	//require_once ('codebird.php');
 	$cb = \Codebird\Codebird::getInstance();
 	// Flag forces twitter_process() to use OAuth signing
-	$GLOBALS['user']['type'] = 'oauth';
+	// $GLOBALS['user']['type'] = 'oauth';
 
 	//	If there's no OAuth Token, take the user to Twiter's sign in page
 	if (! isset($_SESSION['oauth_token'])) {
@@ -26,7 +26,7 @@ function user_oauth() {
 		die();
 
 	}	//	If there's an OAuth Token 
-//	elseif (isset($_GET['oauth_verifier']) && isset($_SESSION['oauth_verify'])) {
+	elseif (isset($_GET['oauth_verifier']) && isset($_SESSION['oauth_verify'])) {
 		// verify the token
 		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
 		unset($_SESSION['oauth_verify']);
@@ -52,97 +52,60 @@ function user_oauth() {
 		_user_save_cookie(1);
 		// send to same URL, without oauth GET parameters
 		header('Location: '. BASE_URL);
-//		echo "Your Name is " . $user->screen_name;
 		die();
-//	}
-//	header('Location: '. BASE_URL);	
-}
-
-function user_oauth_sign(&$url, &$args = false) {
-	require_once 'OAuth.php';
-
-	$method = $args !== false ? 'POST' : 'GET';
-
-	// Move GET parameters out of $url and into $args
-	if (preg_match_all('#[?&]([^=]+)=([^&]+)#', $url, $matches, PREG_SET_ORDER)) {
-		foreach ($matches as $match) {
-			$args[$match[1]] = $match[2];
-		}
-		$url = substr($url, 0, strpos($url, '?'));
 	}
-
-	$sig_method = new OAuthSignatureMethod_HMAC_SHA1();
-	$consumer = new OAuthConsumer(OAUTH_CONSUMER_KEY, OAUTH_CONSUMER_SECRET);
-	$token = NULL;
-
-	if (($oauth_token = $_GET['oauth_token']) && $_SESSION['oauth_request_token_secret']) {
-		$oauth_token_secret = $_SESSION['oauth_request_token_secret'];
-	} else {
-		list($oauth_token, $oauth_token_secret) = explode('|', $GLOBALS['user']['password']);
-	}
-	if ($oauth_token && $oauth_token_secret) {
-		$token = new OAuthConsumer($oauth_token, $oauth_token_secret);
-	}
-
-	$request = OAuthRequest::from_consumer_and_token($consumer, $token, $method, $url, $args);
-	$request->sign_request($sig_method, $consumer, $token);
-
-	switch ($method) {
-		case 'GET':
-			$url = $request->to_url();
-			$args = false;
-			return;
-		case 'POST':
-			$url = $request->get_normalized_http_url();
-			$args = $request->to_postdata();
-			return;
-	}
-
-// echo "hello";
+	header('Location: '. BASE_URL);	
 }
 
 function user_ensure_authenticated() {
 	if (!user_is_authenticated()) {
 		$content = theme('login');
-		$content .= file_get_contents('about.html');
+		$content .= theme('about');
 		theme('page', 'Login', $content);
 	}
 }
 
 function user_logout() {
+	//	Unset everything related to OAuth
 	unset($GLOBALS['user']);
-	setcookie('USER_AUTH', '', time() - 3600, '/');
+	unset($_SESSION['oauth_token']);
+	unset($_SESSION['oauth_token_secret']);
+	setcookie('USER_AUTH',          '', time() - 3600, '/');
+	setcookie('oauth_token',        '', time() - 3600, '/');
+	setcookie('oauth_token_secret', '', time() - 3600, '/');
 }
 
 function user_is_authenticated() {
 	if (!isset($GLOBALS['user'])) {
+
 		if(array_key_exists('USER_AUTH', $_COOKIE)) {
-			_user_decrypt_cookie($_COOKIE['USER_AUTH']);
+			 // _user_decrypt_cookie($_COOKIE['USER_AUTH']);
+
+			$crypt_text = base64_decode($_COOKIE['USER_AUTH']);
+			$td = mcrypt_module_open('blowfish', '', 'cfb', '');
+			$ivsize = mcrypt_enc_get_iv_size($td);
+			$iv = substr($crypt_text, 0, $ivsize);
+			$crypt_text = substr($crypt_text, $ivsize);
+			mcrypt_generic_init($td, _user_encryption_key(), $iv);
+			$plain_text = mdecrypt_generic($td, $crypt_text);
+			mcrypt_generic_deinit($td);
+
+		//	TODO FIXME errr...
+			list($GLOBALS['user']['username'], $GLOBALS['user']['password'], $GLOBALS['user']['type']) = explode(':', $plain_text);
+
 		} else {
 			$GLOBALS['user'] = array();
 		}
+
+
 	}
-	
-	// // Auto-logout any users that aren't correctly using OAuth
-	// if (user_current_username() && user_type() !== 'oauth') {
-	// 	user_logout();
-	// 	twitter_refresh('logout');
-	// }
 
 	if (!user_current_username()) {
 		// if ($_POST['username'] && $_POST['password']) {
 		// 	$GLOBALS['user']['username'] = trim($_POST['username']);
 		// 	$GLOBALS['user']['password'] = $_POST['password'];
 		// 	$GLOBALS['user']['type'] = 'oauth';
-			
-		// 	$sql = sprintf("SELECT * FROM user WHERE username='%s' AND password=MD5('%s') LIMIT 1", mysql_escape_string($GLOBALS['user']['username']), mysql_escape_string($GLOBALS['user']['password']));
-		// 	$rs = mysql_query($sql);
-		// 	if ($rs && $user = mysql_fetch_object($rs)) {
-		// 		$GLOBALS['user']['password'] = $user->oauth_key . '|' . $user->oauth_secret;
-		// 	} else {
-		// 		theme('error', 'Invalid username or password.');
-		// 	}
-			
+						
 		// 	_user_save_cookie($_POST['stay-logged-in'] == 'yes');
 		// 	header('Location: '. BASE_URL);
 		// 	exit();
@@ -155,8 +118,6 @@ function user_is_authenticated() {
 }
 
 function user_current_username() {
-	//echo "<pre>";
-	//var_dump($GLOBALS);
 	return $GLOBALS['user']['username'];
 }
 
@@ -169,11 +130,18 @@ function user_type() {
 }
 
 function _user_save_cookie($stay_logged_in = 0) {
-	$cookie = _user_encrypt_cookie();
-	$duration = 0;
+	
 	if ($stay_logged_in) {
 		$duration = time() + (3600 * 24 * 365);
+	} else {
+			$duration = 0;
 	}
+
+	// setcookie('oauth_token',        $_SESSION['oauth_token'],        $duration);
+	// setcookie('oauth_token_secret', $_SESSION['oauth_token_secret'], $duration);
+
+	$cookie = _user_encrypt_cookie();
+	
 	setcookie('USER_AUTH', $cookie, $duration, '/');
 }
 
@@ -204,25 +172,8 @@ function _user_decrypt_cookie($crypt_text) {
 
 //	TODO FIXME errr...
 	list($GLOBALS['user']['username'], $GLOBALS['user']['password'], $GLOBALS['user']['type']) = explode(':', $plain_text);
-}
 
-function user_login() {
-// 	return theme('page', 'Login','
-// <form method="post" action="'.$_GET['q'].'">
-// <p>Username <input name="username" size="15" />
-// <br />Password <input name="password" type="password" size="15" />
-// <br /><label><input type="checkbox" checked="checked" value="yes" name="stay-logged-in" /> Stay logged in? </label>
-// <br /><input type="submit" value="Sign In" /></p>
-// </form>
-
-// <p><b>Registration steps:</b></p>
-
-// <ol>
-// 	<li><a href="oauth">Sign in via Twitter.com</a> from any computer</li>
-// 	<li>Visit the Dabr settings page to choose a password</li>
-// 	<li>Done! You can now benefit from accessing Twitter through Dabr from anywhere (even from computers that block Twitter.com)</li>
-// </ol>
-// ');
+	// echo "<h1>GLOBS</h1><pre>" . var_export($GLOBALS, true);
 }
 
 function theme_login() {
@@ -235,7 +186,7 @@ function theme_login() {
 						<a href="oauth">Sign in via Twitter.com</a>
 					</p>';
 
-	$content .= "SESSION<pre>" . print_r($_SESSION, true) . "GLOBALS" . print_r($GLOBALS, true) ;
+	// $content .= "SESSION<pre>" . print_r($_SESSION, true) . "GLOBALS" . print_r($GLOBALS, true) ;
 	
 	return $content;
 }

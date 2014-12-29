@@ -70,14 +70,6 @@ function settings_page($args) {
 		$settings['hide_avatars'] = $_POST['hide_avatars'];
 		$settings['utc_offset']   = (float)$_POST['utc_offset'];
 		
-		// // Save a user's oauth details to a MySQL table
-		// if (MYSQL_USERS == 'ON' && $newpass = $_POST['newpassword']) {
-		// 	user_is_authenticated();
-		// 	list($key, $secret) = explode('|', $GLOBALS['user']['password']);
-		// 	$sql = sprintf("REPLACE INTO user (username, oauth_key, oauth_secret, password) VALUES ('%s', '%s', '%s', MD5('%s'))",  mysql_escape_string(user_current_username()), mysql_escape_string($key), mysql_escape_string($secret), mysql_escape_string($newpass));
-		// 	mysql_query($sql);
-		// }
-		
 		setcookie_year('settings', base64_encode(serialize($settings)));
 		twitter_refresh('');
 	}
@@ -172,12 +164,6 @@ function settings_page($args) {
 	                </label>
 	            </p>';
 	$content .= '<p><label>The time in UTC is currently ' . gmdate('H:i') . ', by using an offset of <input type="text" name="utc_offset" value="'. $utc_offset .'" size="3" /> we display the time as ' . twitter_date('H:i') . '.<br />It is worth adjusting this value if the time appears to be wrong.</label></p>';
-
-	
-	// Allow users to choose a Dabr password if accounts are enabled
-	if (MYSQL_USERS == 'ON' && user_is_authenticated()) {
-		$content .= '<fieldset><legend>Dabr account</legend><small>If you want to sign in to Dabr without going via Twitter.com in the future, create a password and we\'ll remember you.</small></p><p>Change Dabr password<br /><input type="password" name="newpassword" /><br /><small>Leave blank if you don\'t want to change it</small></fieldset>';
-	}
 	
 	$content .= '<p><input type="submit" value="Save" /></p></form>';
 

@@ -32,10 +32,6 @@ menu_register(array (
 		'callback' => 'user_oauth',
 		'hidden' => 'true',
 	),
-	'login' => array(
-		'callback' => 'user_login',
-		'hidden' => 'true',
-	),
 ));
 
 function logout_page() {
@@ -47,6 +43,7 @@ function logout_page() {
 function about_page() {
 	theme('page', 'About', theme('about'));
 }
+
 session_start();
 	
 // browser_detect();

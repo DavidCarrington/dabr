@@ -2,7 +2,6 @@
 require 'Autolink.php';
 require 'Extractor.php';
 require 'oembed.php';
-// require 'Emoticons.php';
 		
 menu_register(array(
 	'' => array(
@@ -124,11 +123,6 @@ menu_register(array(
 		'hidden' => true,
 		'callback' => 'twitter_hashtag_page',
 	),
-	// 'upload-picture' => array(
-	// 	'security' => true,
-	// 	'callback' => 'twitter_media_page',
-	// 	'display' => '📷'
-	// ),
 	'trends' => array(
 		'security' => true,
 		'callback' => 'twitter_trends_page',
@@ -147,7 +141,7 @@ menu_register(array(
 	'edit-profile' => array(
 		'security' => true,
 		'callback' => 'twitter_profile_page',
-		'display' => 'My Profile'
+		'display' => 'Profile'
 	),
 	// 'showretweets' => array(
 	// 	'hidden' => true,
@@ -188,8 +182,7 @@ function twitter_profile_page() {
 			"description" => stripslashes($_POST['description']),
 		);
 
-		$cb = \Codebird\Codebird::getInstance();
-		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		$cb = get_codebird();
 		
 			
 		$cb->account_updateProfile($api_options);
@@ -250,8 +243,7 @@ function twitter_profile_page() {
 
 function friendship_exists($user_a) {
 
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 	
 	$api_options = array('target_screen_name' => $user_a);
 		
@@ -265,8 +257,7 @@ function friendship_exists($user_a) {
 }
 
 function friendship($user_a) {
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 	
 	$api_options = array('target_screen_name' => $user_a);
 		
@@ -275,8 +266,7 @@ function friendship($user_a) {
 }
 
 function twitter_block_exists($user_id) {
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 	$api_options = array("user_id" => $user_id);
 	
 	// 0th element http://stackoverflow.com/questions/3851489/return-php-object-by-index-number-not-name
@@ -298,8 +288,7 @@ function twitter_trends_page($query) {
 	if($woeid == '') $woeid = '1'; //worldwide
 
 	//fetch "local" names
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 
 	$api_options = array();
 
@@ -367,239 +356,76 @@ updateCount();
 	return $script;
 }
 
-function twitter_media_page($query) 
-{
-	$content = "";
-	$status = stripslashes($_POST['message']);
-	
-	if ($_POST['message'] && $_FILES['image']['tmp_name']) 
-	{
-		require 'tmhOAuth.php';
-		
-		// Geolocation parameters
-		list($lat, $long) = explode(',', $_POST['location']);
-		if (is_numeric($lat) && is_numeric($long)) {
-			$post_data['lat'] = $lat;
-			$post_data['long'] = $long;	
-		}
-		
-		list($oauth_token, $oauth_token_secret) = explode('|', $GLOBALS['user']['password']);
-		
-		$tmhOAuth = new tmhOAuth(array(
-			'consumer_key'    => OAUTH_CONSUMER_KEY,
-			'consumer_secret' => OAUTH_CONSUMER_SECRET,
-			'user_token'      => $oauth_token,
-			'user_secret'     => $oauth_token_secret,
-		));
+function get_codebird() { //$url, $post_data = false) {
 
-		$image = "{$_FILES['image']['tmp_name']};type={$_FILES['image']['type']};filename={$_FILES['image']['name']}";
+	//	Get the tokens
+	list($oauth_token, $oauth_token_secret) = explode('|', $GLOBALS['user']['password']);
 
-		$code = $tmhOAuth->request('POST', API_NEW.'statuses/update_with_media.json',
-											  array(
-												 'media[]'  => "@{$image}",
-												 'status'   => " " . $status, //A space is needed because twitter b0rks if first char is an @
-												 'lat'		=> $lat,
-												 'long'		=> $long,
-											  ),
-											  true, // use auth
-											  true  // multipart
-										);
+	//	Create our CodeBird
+	$cb = \Codebird\Codebird::getInstance();
+	$cb->setToken($oauth_token, $oauth_token_secret);
 
-		if ($code == 200) {
-			$json = json_decode($tmhOAuth->response['response']);
-			
-			if ($_SERVER['HTTPS'] == "on" || (0 === strpos(BASE_URL, "https://"))) {
-				$image_url = $json->entities->media[0]->media_url_https;
-			}
-			else {
-				$image_url = $json->entities->media[0]->media_url;
-			}
+	return $cb;
 
-			$text = $json->text;
-			
-			$content = "<p>Upload success. Image posted to Twitter.</p>
-							<p><img src=\"" . image_proxy($image_url, "x45/") . "\" alt='' /></p>
-							<p>". twitter_parse_tags($text) . "</p>";
-			
-		} else {
-			$content = "Damn! Something went wrong. Sorry :-("  
-				."<br /> code=" . $code
-				."<br /> status=" . $status
-				."<br /> image=" . $image
-				."<br /> response=<pre>"
-				. print_r($tmhOAuth->response['response'], true)
-				. "</pre><br /> info=<pre>"
-				. print_r($tmhOAuth->response['info'], true)
-				. "</pre><br /> code=<pre>"
-				. print_r($tmhOAuth->response['code'], true) . "</pre>";
-		}
-	}
-	
-	if($_POST) {
-		if (!$_POST['message']) {
-			$content .= "<p>Please enter a message to go with your image.</p>";
-		}
+	// global $api_time;
+	// global $rate_limit;
 
-		if (!$_FILES['image']['tmp_name']) {
-			$content .= "<p>Please select an image to upload.</p>";
-		}
-	}
-	
-	$content .=	"<form method='post' action='upload-picture' enctype='multipart/form-data'>
-						Image <input type='file' name='image' /><br />
-						Message (optional):<br />
-						<textarea name='message' style='width:90%; max-width: 400px;' rows='3' id='message'>" . $status . "</textarea><br>
-						<input type='submit' value='Send' />
-						<span id='remaining'>119</span>";
-	$content .= '	<span id="geo" style="display: none;">
-							<input onclick="goGeo()" type="checkbox" id="geoloc" name="location" />
-							<label for="geoloc" id="lblGeo"></label>
-						</span>
-						<script type="text/javascript">
-							started = false;
-							chkbox = document.getElementById("geoloc");
-							if (navigator.geolocation) {
-								geoStatus("Tweet my location");
-								if ("'.$_COOKIE['geo'].'"=="Y") {
-									chkbox.checked = true;
-									goGeo();
-								}
-							}
-							function goGeo(node) {
-								if (started) return;
-								started = true;
-								geoStatus("Locating...");
-								navigator.geolocation.getCurrentPosition(geoSuccess, geoStatus , { enableHighAccuracy: true });
-							}
-							function geoStatus(msg) {
-								document.getElementById("geo").style.display = "inline";
-								document.getElementById("lblGeo").innerHTML = msg;
-							}
-							function geoSuccess(position) {
-								geoStatus("Tweet my <a href=\'https://maps.google.com/maps?q=" + position.coords.latitude + "," + position.coords.longitude + "\' target=' . get_target() . '>location</a>");
-								chkbox.value = position.coords.latitude + "," + position.coords.longitude;
-							}
-					</script>
-					</form>';
-	$content .= js_counter("message", "119");
+	// //	Not every request is rate limited
+	// if ($headers_array['x-rate-limit-limit']) {
+	// 	$current_time = time();
+	// 	$ratelimit_time = $headers_array['x-rate-limit-reset'];
+	// 	$time_until_reset = $ratelimit_time - $current_time;
+	// 	$minutes_until_reset = round($time_until_reset / 60);
+	// 	$rate_limit .= " Rate Limit: " . $headers_array['x-rate-limit-remaining'] . " out of " . $headers_array['x-rate-limit-limit'] . " calls remaining for the next {$minutes_until_reset} minutes";
+	// }
 
-	return theme('page', 'Picture Upload', $content);
+	// $api_time += microtime(1) - $api_start;
+
+	// switch( intval( $response_info['http_code'] ) )	{
+	// 	case 200:
+	// 	case 201:
+	// 		$json = json_decode($body);
+	// 		if ($json) {
+	// 			return $json;
+	// 		}
+	// 		return $body;
+	// 	case 401:
+	// 		user_logout();
+	// 		theme('error', "<p>Error: Login credentials incorrect.</p><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
+	// 	case 429:
+	// 		theme('error', "<h2>Rate limit exceeded!</h2><p>All {$headers_array['x-rate-limit-limit']} calls used, next reset in {$minutes_until_reset} minutes.</p>");
+	// 	case 0:
+	// 		$result = $erno . ":" . $er . "<br />" ;
+	// 		/*
+	// 		foreach ($response_info as $key => $value) {
+	// 			$result .= "Key: $key; Value: $value<br />";
+	// 		}
+	// 		*/
+	// 		theme('error', "<h2>Twitter timed out</h2><p>Dabr gave up on waiting for Twitter to respond. They're probably overloaded right now, try again in a minute. <br />{$result}</p>");
+	// 	default:
+	// 		$result = json_decode($body);
+	// 		$result = $result->error ? $result->error : $body;
+	// 		if (strlen($result) > 500) {
+	// 			$result = "Something broke on Twitter's end.";
+	// 		/*
+	// 		foreach ($response_info as $key => $value) {
+	// 			$result .= "Key: $key; Value: $value<br />";
+	// 		}
+	// 		*/	
+	// 		}
+	// 		else if ($result == "Status is over 140 characters.") {
+	// 			theme('error', "<h2>Status was tooooooo loooooong!</h2><p>{$status}</p><hr>");	
+	// 			//theme('status_form',$status);
+	// 		}
+	// 		if(DEBUG_MODE == 'ON') {
+	// 			theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}<br />{$url}</p><hr>");
+	// 		}
+	// 		else {
+	// 			theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}</p><hr>");
+	// 		}
+	// }
 }
 
-function twitter_process($url, $post_data = false) {
-	if ($post_data === true) {
-		$post_data = array();
-	}
-
-	$status = $post_data['status'];
-	user_oauth_sign($url, $post_data);
-	$api_start = microtime(1);
-	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_URL, $url);
-
-	if($post_data !== false && !$_GET['page']) {
-		curl_setopt ($ch, CURLOPT_POST, true);
-		curl_setopt ($ch, CURLOPT_POSTFIELDS, $post_data);
-	}
-
-	//from  http://github.com/abraham/twitteroauth/blob/master/twitteroauth/twitteroauth.php
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
-	curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-	curl_setopt($ch, CURLOPT_HEADER, true);
-	curl_setopt($ch, CURLOPT_VERBOSE, true);
-
-	$response = curl_exec($ch);
-	$response_info = curl_getinfo($ch);
-	$erno = curl_errno($ch);
-	$er = curl_error($ch);
-	curl_close($ch);
-
-	global $api_time;
-	global $rate_limit;
-
-	//	Split that headers and the body
-	list($headers, $body) = explode("\r\n\r\n", $response, 2);
-
-	//	Place the headers into an array
-	$headers = explode("\n", $headers);
-	foreach ($headers as $header) {
-		list($key, $value) = explode(':', $header, 2);
-		$headers_array[$key] = $value;
-	}
-
-	//	Not every request is rate limited
-	if ($headers_array['x-rate-limit-limit']) {
-		$current_time = time();
-		$ratelimit_time = $headers_array['x-rate-limit-reset'];
-		$time_until_reset = $ratelimit_time - $current_time;
-		$minutes_until_reset = round($time_until_reset / 60);
-		$rate_limit .= " Rate Limit: " . $headers_array['x-rate-limit-remaining'] . " out of " . $headers_array['x-rate-limit-limit'] . " calls remaining for the next {$minutes_until_reset} minutes";
-	}
-
-	$api_time += microtime(1) - $api_start;
-
-	switch( intval( $response_info['http_code'] ) )	{
-		case 200:
-		case 201:
-			$json = json_decode($body);
-			if ($json) {
-				return $json;
-			}
-			return $body;
-		case 401:
-			user_logout();
-			theme('error', "<p>Error: Login credentials incorrect.</p><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
-		case 429:
-			theme('error', "<h2>Rate limit exceeded!</h2><p>All {$headers_array['x-rate-limit-limit']} calls used, next reset in {$minutes_until_reset} minutes.</p>");
-		case 0:
-			$result = $erno . ":" . $er . "<br />" ;
-			/*
-			foreach ($response_info as $key => $value) {
-				$result .= "Key: $key; Value: $value<br />";
-			}
-			*/
-			theme('error', "<h2>Twitter timed out</h2><p>Dabr gave up on waiting for Twitter to respond. They're probably overloaded right now, try again in a minute. <br />{$result}</p>");
-		default:
-			$result = json_decode($body);
-			$result = $result->error ? $result->error : $body;
-			if (strlen($result) > 500) {
-				$result = "Something broke on Twitter's end.";
-			/*
-			foreach ($response_info as $key => $value) {
-				$result .= "Key: $key; Value: $value<br />";
-			}
-			*/	
-			}
-			else if ($result == "Status is over 140 characters.") {
-				theme('error', "<h2>Status was tooooooo loooooong!</h2><p>{$status}</p><hr>");	
-				//theme('status_form',$status);
-			}
-			if(DEBUG_MODE == 'ON') {
-				theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}<br />{$url}</p><hr>");
-			}
-			else {
-				theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}</p><hr>");
-			}
-	}
-}
-
-function twitter_fetch($url) {
-	global $services_time;
-	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_URL, $url);
-	curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-	$user_agent = "Mozilla/5.0 (compatible; dabr; " . BASE_URL . ")";
-	curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	$fetch_start = microtime(1);
-	$response = curl_exec($ch);
-	curl_close($ch);
-	
-	$services_time += microtime(1) - $fetch_start;
-	return $response;
-}
 
 //	http://dev.twitter.com/pages/tweet_entities
 function twitter_get_media($status) {
@@ -805,8 +631,7 @@ function twitter_status_page($query) {
 	$id = (string) $query[1];
 	if (is_numeric($id)) {
 		
-		$cb = \Codebird\Codebird::getInstance();
-		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		$cb = get_codebird();
 		
 		$api_options = "id={$id}";
 			
@@ -859,8 +684,7 @@ function twitter_status_page($query) {
 function twitter_retweet_page($query) {
 	$id = (string) $query[1];
 	if (is_numeric($id)) {
-		$cb = \Codebird\Codebird::getInstance();
-		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		$cb = get_codebird();
 		
 		$api_options = array("id" => $id);
 		$tl = $cb->statuses_show_ID($api_options);
@@ -885,8 +709,7 @@ function twitter_delete_page($query) {
 
 	$id = (string) $query[1];
 	if (is_numeric($id)) {
-		$cb = \Codebird\Codebird::getInstance();
-		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		$cb = get_codebird();
 		$api_options = array("id" => $id);
 		$cb->statuses_destroy_ID($api_options);	
 
@@ -900,8 +723,7 @@ function twitter_deleteDM_page($query) {
 
 	$id = (string) $query[1];
 	if (is_numeric($id)) {
-		$cb = \Codebird\Codebird::getInstance();
-		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		$cb = get_codebird();
 		$api_options = array("id" => $id);
 		$cb->directMessages_destroy($api_options);	
 
@@ -920,8 +742,7 @@ function twitter_ensure_post_action() {
 function twitter_follow_page($screen_name) {
 	$screen_name = $query[1];
 	if ($screen_name) {
-		$cb = \Codebird\Codebird::getInstance();
-		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		$cb = get_codebird();
 		$api_options = array("screen_name" => $screen_name);
 		
 		if($query[0] == 'follow'){
@@ -938,8 +759,7 @@ function twitter_block_page($query) {
 	$screen_name = $query[1];
 	if ($screen_name) {
 
-		$cb = \Codebird\Codebird::getInstance();
-		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		$cb = get_codebird();
 		$api_options = array("screen_name" => $screen_name);
 		
 		if($query[0] == 'block'){
@@ -959,8 +779,7 @@ function twitter_spam_page($query)
 	twitter_ensure_post_action();
 	$screen_name = $query[1];
 
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 	$api_options = array("screen_name" => $screen_name);
 	$cb->users_reportSpam($api_options);
 
@@ -1069,8 +888,7 @@ function twitter_friends_page($query) {
 		$cursor = -1;
 	}	
 
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 
 	$api_options = array("screen_name" => $user);
 	
@@ -1095,8 +913,7 @@ function twitter_followers_page($query) {
 		$cursor = -1;
 	}	
 
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 
 	$api_options = array("screen_name" => $user);
 	
@@ -1115,8 +932,7 @@ function twitter_retweeters_page($query) {
 	// Which tweet are we looking for?
 	$id = $query[1];
 
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 	$api_options = array("id" => $id);
 	$users = $cb->statuses_retweets_ID($api_options);
 	unset($users->httpstatus);
@@ -1131,8 +947,7 @@ function twitter_update() {
 	//	Was this request sent by POST?
 	twitter_ensure_post_action();
 	
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 	
 	$api_options  = array();
 
@@ -1197,8 +1012,7 @@ function twitter_retweet($query) {
 	$id = $query[1];
 	if (is_numeric($id)) {
 
-		$cb = \Codebird\Codebird::getInstance();
-		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		$cb = get_codebird();
 		$api_options = array("id" => $id);
 		$cb->statuses_retweet_ID($api_options);
 
@@ -1207,8 +1021,7 @@ function twitter_retweet($query) {
 }
 
 function twitter_replies_page() {
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 	
 	$api_options = "";
 	
@@ -1227,9 +1040,7 @@ function twitter_replies_page() {
 }
 
 function twitter_retweets_page() {
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
-	
+	$cb = get_codebird();
 	$api_options = "";
 	
 	$per_page = setting_fetch('perPage', 20);	
@@ -1248,8 +1059,7 @@ function twitter_retweets_page() {
 
 function twitter_directs_page($query) {
 
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 	$api_options = array("count" => setting_fetch('perPage', 20));
 	
 	$action = strtolower(trim($query[1]));
@@ -1325,8 +1135,7 @@ function twitter_search($search_query, $lat = null, $long = null, $radius = null
 
 	$per_page = setting_fetch('perPage', 20);
 
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 	$api_options = array("q" => urlencode($search_query), 
 		                 "count" => $per_page,
 		                 "result_type" => "recent" // Make this customisable?
@@ -1365,8 +1174,7 @@ function twitter_find_tweet_in_timeline($tweet_id, $tl) {
 		// Found the tweet
 		$tweet = $tl[$tweet_id];
 	} else {
-		$cb = \Codebird\Codebird::getInstance();
-		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		$cb = get_codebird();
 		$api_options = array("id" => $tweet_id);
 		$tweet = $cb->statuses_show_ID($api_options);
 	}
@@ -1392,8 +1200,7 @@ function twitter_user_page($query) {
 	if (isset($user->status)) {
 		// Fetch the timeline early, so we can try find the tweet they're replying to
 
-		$cb = \Codebird\Codebird::getInstance();
-		$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+		$cb = get_codebird();
 		
 		$api_options = "";
 
@@ -1459,14 +1266,13 @@ function twitter_user_page($query) {
 }
 
 function twitter_favourites_page($query) {
+	$cb = get_codebird();
+
 	$screen_name = $query[1];
 	if (!$screen_name) {
 		user_ensure_authenticated();
 		$screen_name = user_current_username();
 	}
-
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
 
 	$api_options = "";
 
@@ -1491,8 +1297,7 @@ function twitter_mark_favourite_page($query) {
 	$id = (string) $query[1];
 	if (!is_numeric($id)) return;
 
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 
 	$api_options = array('id' => $id);
 
@@ -1508,8 +1313,7 @@ function twitter_mark_favourite_page($query) {
 function twitter_home_page() {
 	user_ensure_authenticated();
 
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 
 	$api_options = "";
 
@@ -1701,8 +1505,7 @@ function preg_match_one($pattern, $subject, $flags = null) {
 function twitter_user_info($username = null) {
 	// if (!$username) 
 
-	$cb = \Codebird\Codebird::getInstance();
-	$cb->setToken($_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+	$cb = get_codebird();
 	
 	$api_options = "screen_name={$username}";
 
