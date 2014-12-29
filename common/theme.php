@@ -886,21 +886,36 @@ function theme_css() {
 	
 @font-face {
     font-family: 'quiviraregular';
-    src: url('".BASE_URL."/fonts/quivira-webfont.eot');
-    src: url('".BASE_URL."/fonts/quivira-webfont.eot?#iefix') format('embedded-opentype'),
-         url('".BASE_URL."/fonts/fonts/quivira-webfont.woff2') format('woff2'),
-         url('".BASE_URL."/fonts/quivira-webfont.woff') format('woff'),
-         url('".BASE_URL."/fonts/quivira-webfont.ttf') format('truetype');
+    src: url('".BASE_URL."fonts/quivira-webfont.eot');
+    src: url('".BASE_URL."fonts/quivira-webfont.eot?#iefix') format('embedded-opentype'),
+         url('".BASE_URL."fonts/fonts/quivira-webfont.woff2') format('woff2'),
+         url('".BASE_URL."fonts/quivira-webfont.woff') format('woff'),
+         url('".BASE_URL."fonts/quivira-webfont.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
-
+	
 }
+
+@font-face {
+	font-family: 'emoji';
+	src:  local('Android Emoji'),
+	src:  local('NotoEmoji'),
+	src:  local('NotoColorEmoji'),
+	src:  local('AndroidEmoji'),
+	src:  local('NotoEmoji.ttf'),
+	src:  local('/system/fonts/NotoColorEmoji.ttf'),
+	src:  local('AndroidEmoji.ttf'),
+	src:  local('Noto Emoji'),
+	src:  local('Noto Color Emoji'),
+	src:  local('Android Emoji');
+}
+
 
 form{margin:.3em;}
 
 body{
 	margin:0;
-	font-family:quiviraregular,sans-serif;
+	font-family:Roboto,'Droid Sans','Droid Sans Fallback',sans-serif,quiviraregular;
 	background:#{$c->bodybg};
 	color:#{$c->bodyt};
 }
