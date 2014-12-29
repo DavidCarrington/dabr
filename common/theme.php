@@ -767,13 +767,13 @@ function theme_action_icons($status) {
 	}
 	if (!$status->is_direct) {
 		if ($status->favorited == '1') {
-			$actions[] = theme('action_icon', "unfavourite/{$status->id}", '★', 'UNFAV');
+			$actions[] = theme('action_icon', "unfavourite/{$status->id}", '<span style="color:#FFFF00;">★</span>', 'UNFAV');
 		} else {
 			$actions[] = theme('action_icon', "favourite/{$status->id}", '☆', 'FAV');
 		}
 		// Show a diffrent retweet icon to indicate to the user this is an RT
 		if ($status->retweeted || user_is_current_user($retweeted_by)) {
-			$actions[] = theme('action_icon', "retweet/{$status->id}", 'images/retweeted.png', 'RT');
+			$actions[] = theme('action_icon', "retweet/{$status->id}", '<span style="color:#009933;">♻</span>', 'RT');
 		}
 		else {
 			$actions[] = theme('action_icon', "retweet/{$status->id}", '♻', 'RT');

@@ -9,7 +9,6 @@ header('Pragma: no-cache');
 header('Content-Type: text/html; charset=utf-8');
 
 require 'config.php';
-require 'common/browser.php';
 require 'common/menu.php';
 require 'common/user.php';
 require 'common/theme.php';
@@ -45,6 +44,4 @@ function about_page() {
 }
 
 session_start();
-	
-// browser_detect();
 menu_execute_active_handler();

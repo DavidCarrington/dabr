@@ -90,9 +90,9 @@ function settings_page($args) {
 		 '30'	=>  '30 Tweets Per Page',
 		 '40'	=>  '40 Tweets Per Page',
 		 '50'	=>  '50 Tweets Per Page',
-		'100' 	=> '100 Tweets Per Page',
-		'150' 	=> '150 Tweets Per Page',
-		'200' 	=> '200 Tweets Per Page',
+		'100' 	=> '100 Tweets Per Page (Slow)',
+		'150' 	=> '150 Tweets Per Page (Very Slow)',
+		'200' 	=> '200 Tweets Per Page (Extremely Slow)',
 	);
 
 	$colour_schemes = array();
