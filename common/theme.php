@@ -472,7 +472,7 @@ function theme_timeline($feed, $paginate = true) {
 	// Only embed images in suitable browsers
 	
 	if(!setting_fetch('hide_inline')) {
-		// oembed_embed_thumbnails($feed);
+		oembed_embed_thumbnails($feed);
 	}
 
 	foreach ($feed as $status) {
@@ -1054,15 +1054,13 @@ small,small a{
 }
 
 .embed{
-	/*
-	margin:-55px;
-	overflow-x:auto;
-	clear:both;
-	*/
 	left: 0px;
 	display: block;
 	overflow-x: auto;
 	clear: both;
+}
+.embedded {
+	max-width:80%;
 }
 
 .date{

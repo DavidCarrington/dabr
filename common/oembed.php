@@ -1,5 +1,21 @@
 <?php
 
+function url_fetch($url) {
+	global $services_time;
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $url);
+	curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+	$user_agent = "Mozilla/5.0 (compatible; dabr; " . BASE_URL . ")";
+	curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	$fetch_start = microtime(1);
+	$response = curl_exec($ch);
+	curl_close($ch);
+	
+	$services_time += microtime(1) - $fetch_start;
+	return $response;
+}
+
 function oembed_embed_thumbnails(&$feed) {
 
 	foreach($feed as &$status) { // Loop through the feed
@@ -27,8 +43,7 @@ function oembed_embed_thumbnails(&$feed) {
 		$count = count($justUrls);
 		if ($count == 0) return;
 		// if ($count > 20) {
-		// 	// Embedly has a limit of 10 URLs processed at a time. Not ideal for @dabr, but fair enough to ignore images after that.
-		// 	// http://embed.ly/docs/embed/api/arguments
+		// 	// Things can slow down with lots of links.
 		// 	$justUrls = array_chunk ($justUrls, 10);
 		// 	$justUrls = $justUrls[0];
 		// }
@@ -36,35 +51,36 @@ function oembed_embed_thumbnails(&$feed) {
 		$embedly_json = url_fetch($url);
 		$oembeds = json_decode($embedly_json);
 
-		echo "<pre>$url		";
-		var_dump($oembeds);
-		
-		// Put the thumbnails into the $feed
 		if($oembeds->type != 'error') {
+
+			//	Single statuses don't come back in an array
+			if (!is_array($oembeds))
+			{
+				$temp = array(0 => $oembeds);
+				$oembeds = $temp;
+			}
+			
 			foreach ($justUrls as $index => $url) {
-				if ($thumb = $oembeds[$index]->thumbnail_url) {
-					$html = theme('external_link', urldecode($url), "<img src='" . image_proxy($thumb, "x45/") . "' class=\"embeded\" />");
+				$thumb = "";
+				//	Direct links to files
+				if ($oembeds[$index]->links->file)
+				{
+					$thumb = $oembeds[$index]->links->file[0]->href;
+				}
+
+				//	Thumbnails from websites
+				if ($oembeds[$index]->links->thumbnail[0]->href)
+				{
+					$thumb = $oembeds[$index]->links->thumbnail[0]->href;	
+				}
+
+				if ($thumb) {
+					$html = theme('external_link', urldecode($url), "<img src='" . image_proxy($thumb, "x45/") . "' class=\"embedded\" />");
 					foreach ($matched_urls[$url] as $statusId) {
 						$feed[$statusId]->text = $feed[$statusId]->text . '<br />' . '<span class="embed">' . $html . '</span>';
 					}
 				}
 			}
 		}
-	}
-
-	function url_fetch($url) {
-		global $services_time;
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-		$user_agent = "Mozilla/5.0 (compatible; dabr; " . BASE_URL . ")";
-		curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		$fetch_start = microtime(1);
-		$response = curl_exec($ch);
-		curl_close($ch);
-		
-		$services_time += microtime(1) - $fetch_start;
-		return $response;
 	}
 }

@@ -451,7 +451,7 @@ function twitter_get_media($status) {
 			$height = $media->sizes->small->h;
 
 			$media_html .= "<span class=\"embed\"><a href=\"" . image_proxy($image) . ":large\" target=\"" . get_target() . "\" >";
-			$media_html .= 	"<img src=\"{$image}:small\" width=\"{$width}\" height=\"{$height}\" class=\"embeded\" >";
+			$media_html .= 	"<img src=\"{$image}:small\" width=\"{$width}\" height=\"{$height}\" class=\"embedded\" >";
 			$media_html .= "</a></span>";
 		}
 	
@@ -1571,7 +1571,8 @@ function x_times($count) {
 
 function image_proxy($src, $size = "") {
 	if(defined('IMAGE_PROXY_URL') && IMAGE_PROXY_URL != "") {
-		return IMAGE_PROXY_URL . $size . $src;
+		$size = "";
+		return IMAGE_PROXY_URL . urlencode($src);
 	}
 	else {
 		return $src;

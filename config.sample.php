@@ -26,7 +26,8 @@ define('ENCRYPTION_KEY', 'Example Key - Change Me!');
 define('EMBEDKIT_KEY', '');
 
 // Optional: Image Proxy URL
-define('IMAGE_PROXY_URL', '');
+//	Documentation include http://carlo.zottmann.org/2013/04/14/google-image-resizer/
+define('IMAGE_PROXY_URL', '//images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&resize_w=800&refresh=2592000&url=');
 
 // Optional: Enable to view page processing and API time
 define('DEBUG_MODE', 'OFF');
