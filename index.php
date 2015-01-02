@@ -20,12 +20,12 @@ require 'common/codebird.php';
 menu_register(array (
 	'about' => array (
 		'callback' => 'about_page',
-		'display' => 'ℹ' // Perhaps 🛈 http://www.fileformat.info/info/unicode/char/1f6c8/index.htm
+		'display' => '🛈' // Perhaps ℹ http://www.fileformat.info/info/unicode/char/1f6c8/index.htm
 	),
 	'logout' => array (
 		'security' => true,
 		'callback' => 'logout_page',
-		'display' => 'Logout'
+		'display' => ''
 	),
 	'oauth' => array(
 		'callback' => 'user_oauth',

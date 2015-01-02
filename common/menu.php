@@ -68,8 +68,8 @@ function theme_menu_both($menu) {
 		}
 	}
 	if (user_is_authenticated()) {
-		$user = user_current_username();
-		array_unshift($links, "<b><a href='user/$user'>$user</a></b>");
+		// $user = user_current_username();
+		// array_unshift($links, "<b><a href='user/$user'>$user</a></b>");
 	}
 	if ($menu == 'bottom') {
 		// $links[] = "<a href='{$_GET['q']}' accesskey='5'>refresh</a> 5";

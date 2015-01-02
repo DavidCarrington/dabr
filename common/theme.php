@@ -139,11 +139,7 @@ function theme_about() {
                     <li>Originally by <a href="https://code.google.com/p/dabr">David Carrington</a> with inspirations from <a href="http://whatleydude.com/">@whatleydude</a>.</li>
                 </ul>
                 <p>If you have any comments, suggestions or questions then feel free to get in touch :-).</p>
-            </div>
-            <pre>
-            SESSION
-
-            ' . print_r($_SESSION, true) . 'GLOBALS' . print_r($GLOBALS, true) . '</pre>';
+            </div>';
 }
 
 function theme_page($title, $content) {
@@ -234,14 +230,20 @@ function theme_directs_form($to) {
 	} else {
 		$html_to .= "To: <input name='to'><br />Message:";
 	}
-	$content = "<form action='directs/send' method='post'>$html_to<br><textarea name='message' style='width:90%; max-width: 400px;' rows='3' id='message'></textarea><br><input type='submit' value='Send'><span id='remaining'>140</span></form>";
+	$content = "<form action='directs/send' method='post'>$html_to
+	                <br>
+	                <textarea name='message' style='width:90%; max-width: 400px;' rows='3' id='message'></textarea>
+	                <br>
+	                <input type='submit' value='Send' />
+	                <span id='remaining'>140</span>
+	            </form>";
 	$content .= js_counter("message");
 	return $content;
 }
 function theme_status_form($text = '', $in_reply_to_id = null) {
 
 	if (user_is_authenticated()) {
-		$icon = "images/twitter-bird-16x16.png";
+		$icon = "";//"images/twitter-bird-16x16.png";
 
 		//	adding ?status=foo will automaticall add "foo" to the text area.
 		if ($_GET['status'])
@@ -249,20 +251,10 @@ function theme_status_form($text = '', $in_reply_to_id = null) {
 			$text = $_GET['status'];
 		}
 		
-		// return "<fieldset>
-  //                   <legend>
-  //                       <img src='{$icon}' width='16' height='16' /> What's Happening?
-  //                   </legend>
-  //                   <form method='post' action='update'>
-  //                       <input name='status' value='{$text}' maxlength='140' />
-  //                       <input name='in_reply_to_id' value='{$in_reply_to_id}' type='hidden' />
-  //                       <input type='submit' value='Tweet' />
-  //                   </form>
-  //               </fieldset>" . "<h1>{$text}</h1>";
         $output = '
         <form method="post" action="update" enctype="multipart/form-data">
             <fieldset>
-                <legend><img src="'.$icon.'" width="16" height="16" /> What\'s Happening?</legend>
+                <legend><span class="icons" id="twitterbird">'.$icon.'</span> What\'s Happening?</legend>
                 <textarea id="status" name="status" rows="4" style="width:95%; max-width: 400px;">'.$text.'</textarea>
                 <div>
                     <input name="in_reply_to_id" value="'.$in_reply_to_id.'" type="hidden" />
@@ -274,7 +266,7 @@ function theme_status_form($text = '', $in_reply_to_id = null) {
                     </span>
                 </div>
                 <div class="fileinputs">
-					Image: <input type="file" accept="image/*" name="image" class="file" />
+					<span class="icons">📷</span> <input type="file" accept="image/*" name="image" class="file" />
 				</div>
             </fieldset>
             <script type="text/javascript">
@@ -367,10 +359,9 @@ function theme_user_header($user) {
 	$out = "<div class='profile'>
 	            <span class='avatar'>".theme('external_link', $full_avatar, theme('avatar', theme_get_avatar($user)))."</span>
 	            <span class='status shift'><b>{$name}</b>
-	            <br />
 	            <span class='about'>";
 	if ($user->verified == true) {
-		$out .= '   <strong>Verified ✔</strong><br />';
+		$out .= '   <strong>Verified</strong> '.theme('action_icon', "", '✔', 'verified').'<br />';
 	}
 	if ($user->protected == true) {
 		$out .= '   <strong>Private/Protected Tweets</strong><br />';
@@ -378,7 +369,7 @@ function theme_user_header($user) {
 
 	$out .= "       Bio: {$bio}<br />
 	                Link: {$link}<br />
-	                Location: <a href=\"https://maps.google.com/maps?q={$cleanLocation}\" target=\"" . get_target() . "\">
+	                <span class='icons'>⌖</span> <a href=\"https://maps.google.com/maps?q={$cleanLocation}\" target=\"" . get_target() . "\">
 	                              {$user->location}
 	                          </a><br />
 	                Joined: {$date_joined} (~" . pluralise('tweet', $tweets_per_day, true) . " per day)
@@ -517,27 +508,28 @@ function theme_timeline($feed, $paginate = true) {
 			$avatar = theme('avatar', theme_get_avatar($status->from));
 		}
 		
-		$source = $status->source ? " from ".str_replace('rel="nofollow"', 'rel="nofollow" target="' . get_target() . '"', preg_replace('/&(?![a-z][a-z0-9]*;|#[0-9]+;|#x[0-9a-f]+;)/i', '&amp;', $status->source)) : ''; //need to replace & in links with &amps and force new window on links
-		if ($status->place->name) {
-			$source .= ", " . $status->place->name . ", " . $status->place->country;
-		}
+		$source = "";
+
 		if ($status->in_reply_to_status_id)	{
-			$source .= ", in reply to <a href='status/{$status->in_reply_to_status_id_str}'>{$status->in_reply_to_screen_name}</a>";
+			$source .= "In reply to <a href='status/{$status->in_reply_to_status_id_str}'>{$status->in_reply_to_screen_name}</a><br />";
 		}
-		if ($status->retweet_count)	{
-			$source .= ", <a href='retweeted_by/{$status->id}'>retweeted " . x_times($status->retweet_count) . "</a>";
+
+		if ($status->place->name) {
+			$source .= theme('action_icon', "https://maps.google.com/maps?q={$status->place->name},{$status->place->country}", "<span class='icons'>⌖</span> {$status->place->name}, {$status->place->country}<br />", 'MAP'); //"⌖ " . $status->place->name . ", " . $status->place->country . "<br />";
 		}
-		$retweeted = '';
-		if ($status->retweeted_by) {
-			$retweeted_by = $status->retweeted_by->user->screen_name;
-			$retweeted = "<br /><small>" . theme('action_icon', "retweeted_by/{$status->id}", "♻", 'RT') . "retweeted by <a href='user/{$retweeted_by}'>{$retweeted_by}</a></small>";
-			//$source .= "<br /><a href='retweeted_by/{$status->id}'>retweeted</a> by <a href='user/{$retweeted_by}'>{$retweeted_by}</a>";
-		}
-		if($status->favorite_count) {
-			$source .= ', favourited ' . x_times($status->favorite_count);
-		}
-		//$html = "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link<br />{$text}<br />$media<small>$source</small>";
-		$html = "<b><a href='user/{$status->from->screen_name}'>{$status->from->screen_name}</a></b> $actions $link{$retweeted}<br />{$text}<br />$media<span class='from'>$source</span>";
+
+		//need to replace & in links with &amps and force new window on links
+		$source .= $status->source ? " Via ".str_replace('rel="nofollow"', 'rel="nofollow" target="' . get_target() . '"', preg_replace('/&(?![a-z][a-z0-9]*;|#[0-9]+;|#x[0-9a-f]+;)/i', '&amp;', $status->source)) : ''; 
+		
+		//	Build up the status to display
+		$html = "<b>" . theme_full_name($status->from) . "</b>
+		        $link
+		        $retweeted
+		        <br />
+		        $text
+		        <br />$media
+		        $actions 
+		        <span class='from'>$source</span>";
 
 		unset($row);
 		$class = 'status';
@@ -590,8 +582,8 @@ function theme_followers($feed, $nextPageURL) {
 		if($user->location != "")
 			$content .= "Location: {$user->location}<br />";
 		$content .= "Info: ";
-		$content .= pluralise('tweet', (int)$user->statuses_count, true) . ", ";
-		$content .= pluralise('friend', (int)$user->friends_count, true) . ", ";
+		$content .= pluralise('tweet',    (int)$user->statuses_count, true)  . ", ";
+		$content .= pluralise('friend',   (int)$user->friends_count, true)   . ", ";
 		$content .= pluralise('follower', (int)$user->followers_count, true) . ", ";
 		$content .= "~" . pluralise('tweet', $tweets_per_day, true) . " per day<br />";
 		$content .= "Last tweet: ";
@@ -632,8 +624,8 @@ function theme_retweeters($feed, $hide_pagination = false) {
 		if($user->location != "")
 			$content .= "Location: {$user->location}<br />";
 		$content .= "Info: ";
-		$content .= pluralise('tweet', (int)$user->statuses_count, true) . ", ";
-		$content .= pluralise('friend', (int)$user->friends_count, true) . ", ";
+		$content .= pluralise('tweet',    (int)$user->statuses_count,  true) . ", ";
+		$content .= pluralise('friend',   (int)$user->friends_count,   true) . ", ";
 		$content .= pluralise('follower', (int)$user->followers_count, true) . ", ";
 		$content .= "~" . pluralise('tweet', $tweets_per_day, true) . " per day<br />";
 		$content .= "</span>";
@@ -651,18 +643,27 @@ function theme_retweeters($feed, $hide_pagination = false) {
 }
 
 function theme_full_name($user) {
-	$name = "<a href='user/{$user->screen_name}'>{$user->screen_name}</a>";
-	//THIS IF STATEMENT IS RETURNING FALSE EVERYTIME ?!?
-	//if ($user->name && $user->name != $user->screen_name) {
-	if($user->name != "") {
-		$name .= " ({$user->name})";
+	
+	//	Link to the screen name but display as "Ms E Xample (@Example"
+	if ($user->name == $user->screen_name || "" == $user->name)
+	{
+		$name = "@<a href='user/{$user->screen_name}'>{$user->screen_name}</a>";
+	} else  {
+		$name = "<a href='user/{$user->screen_name}'>{$user->name}</a> (@{$user->screen_name})";
+	} 
+
+	//	Add the veified tick
+	if($user->verified)
+	{
+		$name .= " " . theme('action_icon', "", '✔', 'verified');
 	}
+
 	return $name;
 }
 
 // http://groups.google.com/group/twitter-development-talk/browse_thread/thread/50fd4d953e5b5229#
 function theme_get_avatar($object) {
-	if ($_SERVER['HTTPS'] == "on" || (0 === strpos(BASE_URL, "https://"))) { //$object->profile_image_url_https) {
+	if ($_SERVER['HTTPS'] == "on" || (0 === strpos(BASE_URL, "https://"))) {
 		return image_proxy($object->profile_image_url_https, "48/48/");
 	}
 	else {
@@ -691,9 +692,7 @@ function theme_search_results($feed) {
 		$actions = theme('action_icons', $status);
 
 		$row = array(
-		theme('avatar', theme_get_avatar($status)),
-      "<a href='user/{$status->from_user}'>{$status->from_user}</a> $actions - {$link}<br />{$text}",
-		);
+		theme('avatar', theme_get_avatar($status)), "<a href='user/{$status->from_user}'>{$status->from_user}</a> $actions - {$link}<br />{$text}",);
 		if (twitter_is_reply($status)) {
 			$row = array('class' => 'reply', 'data' => $row);
 		}
@@ -707,7 +706,9 @@ function theme_search_results($feed) {
 function theme_search_form($query) {
 	$query = stripslashes(htmlentities($query,ENT_QUOTES,"UTF-8"));
 	return '
-	<form action="search" method="get"><input name="query" value="'. $query .'" />
+	<form action="search" method="get">
+	    🔍
+	    <input name="query" value="'. $query .'" />
 		<input type="submit" value="Search" />
 	</form>';
 }
@@ -755,7 +756,7 @@ function theme_action_icons($status) {
 	$actions = array();
 
 	if (!$status->is_direct) {
-		$actions[] = theme('action_icon', "user/{$from}/reply/{$status->id}", '↩', '@');
+		$actions[] = theme('action_icon', "user/{$from}/reply/{$status->id}", '@', '@');
 	}
 	//Reply All functionality.
 	if( $status->entities->user_mentions ) {
@@ -771,6 +772,11 @@ function theme_action_icons($status) {
 		} else {
 			$actions[] = theme('action_icon', "favourite/{$status->id}", '☆', 'FAV');
 		}
+		//	Display favourite count
+		if($status->favorite_count) {
+			$actions[] = "<sup>" . number_format($status->favorite_count) . "</sup>";
+		}
+
 		// Show a diffrent retweet icon to indicate to the user this is an RT
 		if ($status->retweeted || user_is_current_user($retweeted_by)) {
 			$actions[] = theme('action_icon', "retweet/{$status->id}", '<span style="color:#009933;">♻</span>', 'RT');
@@ -778,16 +784,23 @@ function theme_action_icons($status) {
 		else {
 			$actions[] = theme('action_icon', "retweet/{$status->id}", '♻', 'RT');
 		}
+		//	Display number of RT
+		if ($status->retweet_count)	{
+			$actions[] = "<sup><a href='retweeted_by/{$status->id}' class='action'>" . number_format($status->retweet_count) . "</a></sup>";
+		}
+
 		if (user_is_current_user($from)) {
 			$actions[] = theme('action_icon', "confirm/delete/{$status->id}", '🗑', 'DEL');
 		}
+
 		//Allow users to delete what they have retweeted
 		if (user_is_current_user($retweeted_by)) {
 			$actions[] = theme('action_icon', "confirm/delete/{$retweeted_id}", '🗑', 'DEL');
-		}		
+		}
+	
 	}
 	else {
-		$actions[] = theme('action_icon', "confirm/deleteDM/{$status->id}", 'images/trash.gif', 'DEL');
+		$actions[] = theme('action_icon', "confirm/deleteDM/{$status->id}", '🗑', 'DEL');
 	}
 	if ($geo !== null) {
 		$latlong = $geo->coordinates;
@@ -798,20 +811,32 @@ function theme_action_icons($status) {
 	//Search for @ to a user
 	$actions[] = theme('action_icon',"search?query=%40{$from}",'🔍','?');
 
+	// Put the retweet info on the same line
+	if ($status->retweeted_by) {
+		$retweeted_by = $status->retweeted_by->user->screen_name;
+		$actions[] = "<small>RT by <a href='user/{$retweeted_by}'>{$retweeted_by}</a></small>";
+	}
+
 	return '<span class="actionicons">' . implode(' ', $actions) . '</span>';
 }
 
 function theme_action_icon($url, $image_url, $text) {
-	// alt attribute left off to reduce bandwidth by about 720 bytes per page
+	// Maps open in a new tab
 	if ($text == 'MAP')
 	{
-		return "<a href='$url' target='" . get_target() . "'>{$image_url}</a>";
+		return "<a href='$url' target='" . get_target() . "' class='action'>{$image_url}</a>";
 	}
 
-    if (0 === strpos($image_url, "images/"))
-    {
-        return "<a href='$url'><img src='$image_url' alt='$text' /></a>";
-    }
+	//	Verified ticks & RT notifications don't need to be linked
+	if ("verified" == $text || "retweeted" == $text)
+	{
+		return "<span class='action'>{$image_url}</span>";
+	}
+
+    // if (0 === strpos($image_url, "images/"))
+    // {
+    //     return "<a href='$url'><img src='$image_url' alt='$text' /></a>";
+    // }
 
     return "<a href='{$url}' class='action' >{$image_url}</a>";
 	
@@ -825,16 +850,20 @@ function theme_followers_list($feed, $hide_pagination = false) {
 	if (count($users) == 0 || $users == '[]') return '<p>No users to display.</p>';
 
 	foreach($users as $user) {
+		$content = "";
 		if($user->user) $user = $user->user;
 		$name = theme('full_name', $user);
 		$tweets_per_day = twitter_tweets_per_day($user);
 		$last_tweet = strtotime($user->status->created_at);
-		#$vicon = ($user->verified) ? theme('action_icon', "", 'images/verified.png', '&#10004;') : '';
-		$content = "{$vicon}{$name}<br /><span class='about'>";
+		$vicon = ($user->verified) ? theme('action_icon', "", '✔', 'verified') : '';
+		$content = "{$name}<br />";//" <span class=\"actionicons\">{$vicon}</span>";
+		$content .= "<span class='about'>";
 		if($user->description != "")
 			$content .= "Bio: {$user->description}<br />";
-		if($user->location != "")
-			$content .= "Location: {$user->location}<br />";
+		if($user->location != "") {
+			$content .= theme('action_icon', "https://maps.google.com/maps?q={$user->location}", "<span class='icons'>⌖</span> {$user->location}", 'MAP');
+			$content .= "<br />";
+		}
 		$content .= "Info: ";
 		$content .= pluralise('tweet', $user->statuses_count, true) . ", ";
 		$content .= pluralise('friend', $user->friends_count, true) . ", ";
@@ -887,7 +916,20 @@ function theme_trends_page($locales, $trends) {
 function theme_css() {
 	$c = theme('colours');
 	return "<style type='text/css'>
-	
+@charset \"UTF-8\";
+
+@font-face {
+	font-family: 'icons';
+	src: url('".BASE_URL."fonts/dabr-icons.eot');
+	src: url('".BASE_URL."fonts/dabr-icons.eot#iefix') format('embedded-opentype'),
+         url('".BASE_URL."fonts/dabr-icons-icons.woff2') format('woff2'),
+	     url('".BASE_URL."fonts/dabr-icons.woff') format('woff'),
+	     url('".BASE_URL."fonts/dabr-icons.ttf') format('truetype'),
+	     url('".BASE_URL."fonts/dabr-icons.svg#dabr') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
 @font-face {
     font-family: 'quiviraregular';
     src: url('".BASE_URL."fonts/quivira-webfont.eot');
@@ -896,74 +938,147 @@ function theme_css() {
          url('".BASE_URL."fonts/quivira-webfont.woff') format('woff'),
          url('".BASE_URL."fonts/quivira-webfont.ttf') format('truetype');
     font-weight: normal;
-    font-style: normal;
-	
+    font-style: normal;	
 }
-
-@font-face {
-	font-family: 'emoji';
-	src:  local('Android Emoji'),
-	src:  local('NotoEmoji'),
-	src:  local('NotoColorEmoji'),
-	src:  local('AndroidEmoji'),
-	src:  local('NotoEmoji.ttf'),
-	src:  local('/system/fonts/NotoColorEmoji.ttf'),
-	src:  local('AndroidEmoji.ttf'),
-	src:  local('Noto Emoji'),
-	src:  local('Noto Color Emoji'),
-	src:  local('Android Emoji');
-}
-
-
-form{margin:.3em;}
 
 body{
 	margin:0;
-	font-family:'Android Emoji','NotoColorEmoji','NotoColorEmoji.ttf','/system/fonts/NotoColorEmoji.ttf','Noto Color Emoji','Android Emoji',sans-serif,quiviraregular;
-		background:#{$c->bodybg};
+	font-family:sans-serif,quiviraregular;
+	background:#{$c->bodybg};
 	color:#{$c->bodyt};
 }
 
+.profile {
+	padding: 0.5em;
+}
+
+.menu{
+	font-family:icons,sans-serif;
+	font-size: 1.75em;
+}
+
+.actionicons {
+	font-family:icons,sans-serif;
+	font-size: 1em;
+	display: block;
+	margin: 0.3em; 
+	clear: both;
+}
+
+.icons {
+	font-family:icons,sans-serif;
+	font-size: 1em;
+}
+
+.button {
+	text-decoration: none;
+	background-color: #EEE;
+	color: #333;
+	padding: 0.1em 1em;
+	border: 0.15em solid black;
+}
+
+#twitterbird {
+	color: #00acee;
+}
+
+.action {
+	text-decoration: none;
+}
+form{margin:.3em;}
+
 a{color:#{$c->links}}
-small,small a{color:#{$c->small}}
-.odd{background:#{$c->odd}}
-.even{background:#{$c->even}}
-.reply{background:#{$c->replyodd}}
-.reply.even{background:#{$c->replyeven}}
-.menu{color:#{$c->menut};background:#{$c->menubg};padding: 2px}
-.menu a{color:#{$c->menua};text-decoration: none}
-.tweet,.features{padding-top:5px;padding-bottom:5px;}
+
+small,small a{
+	color:#{$c->small}
+}
+.odd{
+	background:#{$c->odd};
+}
+.even{
+	background:#{$c->even};
+}
+.reply{
+	background:#{$c->replyodd};
+}
+.reply.even{
+	background:#{$c->replyeven};
+}
+.menu{
+	color:#{$c->menut};
+	background:#{$c->menubg};
+	padding: 2px;
+}
+.menu a{
+	color:#{$c->menua};
+	text-decoration: none;
+}
+
+.tweet{
+	padding: 0.5em;
+}
 
 .timeline a img{
-	padding:2px;
+	/*padding:2px;*/
 }
 
 .avatar{
+	/*
 	left:5px;
 	margin-top:1px;
 	position:absolute;
+	*/
+	height: auto;
+	width: auto;
+	float: left;
+	margin-right: 10px;
 }
 
 .shift{
 }
 
 .status {
-	display:block;
 	word-wrap:break-word;
-	margin-left:58px;
 	min-height:50px;
+	/*margin-top: -10px;*/
 }
 
 .embed{
+	/*
 	margin:-55px;
 	overflow-x:auto;
 	clear:both;
+	*/
+	left: 0px;
+	display: block;
+	overflow-x: auto;
+	clear: both;
 }
 
-.date{padding:5px;font-size:0.8em;font-weight:bold;color:#{$c->small}}
-.about,.time{font-size:0.75em;color:#{$c->small}}
-.from{font-size:0.75em;color:#{$c->small};font-family:serif;}.
-from a{color:#{$c->small};}
+.date{
+	padding:5px;
+	font-size:0.8em;
+	font-weight:bold;
+	color:#{$c->small}
+}
+
+.about{
+	color:#{$c->small}
+}
+
+.time{
+	font-size:1em;
+	color:#{$c->small}
+}
+
+.from{
+	font-size:0.75em;
+	color:#{$c->small};
+	font-family:serif;
+}
+.from a{
+	color:#{$c->small};
+}
 </style>";
 }
 

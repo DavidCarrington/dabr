@@ -96,12 +96,12 @@ menu_register(array(
 	'followers' => array(
 		'security' => true,
 		'callback' => 'twitter_followers_page',
-		'display' => 'Followers'
+		'display' => '☻'
 	),
 	'friends' => array(
 		'security' => true,
 		'callback' => 'twitter_friends_page',
-		'display' => 'Friends'
+		'display' => '😉'
 	),
 	'delete' => array(
 		'hidden' => true,
@@ -141,7 +141,7 @@ menu_register(array(
 	'edit-profile' => array(
 		'security' => true,
 		'callback' => 'twitter_profile_page',
-		'display' => 'Profile'
+		'display' => '☺'
 	),
 	// 'showretweets' => array(
 	// 	'hidden' => true,
@@ -455,7 +455,7 @@ function twitter_get_media($status) {
 			$media_html .= "</a></span>";
 		}
 	
-		return $media_html . "<br/>";
+		return $media_html ;//. "<br/>";
 	}	
 }
 
@@ -739,7 +739,7 @@ function twitter_ensure_post_action() {
 	}
 }
 
-function twitter_follow_page($screen_name) {
+function twitter_follow_page($query) {
 	$screen_name = $query[1];
 	if ($screen_name) {
 		$cb = get_codebird();
@@ -1234,11 +1234,11 @@ function twitter_user_page($query) {
 
 		$content .= "<p>In reply to:<br />{$out}</p>";
 
-		if ($subaction == 'replyall') {
+		// if ($subaction == 'replyall') {
 			$found = Twitter_Extractor::create($tweet->text)
 				->extractMentionedUsernames();
 			$to_users = array_unique(array_merge($to_users, $found));
-		}
+		// }
 				
 		if ($tweet->entities->hashtags) {
 			$hashtags = $tweet->entities->hashtags;
@@ -1333,7 +1333,7 @@ function twitter_home_page() {
 
 	//echo "$api_options";	
 	$tl = twitter_standard_timeline($cb->statuses_homeTimeline($api_options), 'friends');
-	// $content = theme('status_form');
+	$content = theme('status_form');
 	$content .= theme('timeline', $tl);
 	theme('page', 'Home', $content);
 }
