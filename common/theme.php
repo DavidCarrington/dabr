@@ -146,7 +146,7 @@ function theme_page($title, $content) {
 	$body = "";
 	$body .= theme('menu_top');
 	$body .= $content;
-	$body .= theme('menu_bottom');
+	//$body .= theme('menu_bottom');
 	//$body .= theme('google_analytics');
 	if (DEBUG_MODE == 'ON') {
 		global $dabr_start, $api_time, $services_time, $rate_limit;
@@ -350,7 +350,7 @@ function theme_user_header($user) {
 	$name = theme('full_name', $user);
 	$full_avatar = theme_get_full_avatar($user);
 	$link = twitter_parse_tags($user->url, $user->entities->url);
-	//Some locations have a prefix which should be removed (UbertTwitter and iPhone)
+	//Some locations have a prefix which should be removed (UberTwitter and iPhone)
 	$cleanLocation = str_replace(array("iPhone: ","ÜT: "),"",$user->location);
 	$raw_date_joined = strtotime($user->created_at);
 	$date_joined = date('jS M Y', $raw_date_joined);
@@ -663,7 +663,7 @@ function theme_full_name($user) {
 
 // http://groups.google.com/group/twitter-development-talk/browse_thread/thread/50fd4d953e5b5229#
 function theme_get_avatar($object) {
-	if ($_SERVER['HTTPS'] == "on" || (0 === strpos(BASE_URL, "https://"))) {
+	if ($_SERVER['HTTPS'] == "on" || (0 == strpos(BASE_URL, "https://"))) {
 		return image_proxy($object->profile_image_url_https, "48/48/");
 	}
 	else {
@@ -672,7 +672,9 @@ function theme_get_avatar($object) {
 }
 
 function theme_get_full_avatar($object) {
-	if ($_SERVER['HTTPS'] == "on" && $object->profile_image_url_https) {
+	//	Strip off the "_normal" from the image name to get full sized.
+
+	if ($_SERVER['HTTPS'] == "on" || (0 == strpos(BASE_URL, "https://"))) {
 		return image_proxy(str_replace('_normal.', '.', $object->profile_image_url_https));
 	}
 	else {
@@ -734,18 +736,19 @@ function theme_pagination($max_id = false) {
 		$query = $matches[0];
 	}
 	if($max_id) {
-		$links[] = "<a href='{$_GET['q']}?max_id=".$max_id."$query' accesskey='9'>Older</a> 9";
+		$links[] = "<a href='{$_GET['q']}?max_id=".$max_id."$query' class='button'>← Older</a>";
 	}
 	else {
 		if ($page == 0) $page = 1;
-		$links[] = "<a href='{$_GET['q']}?page=".($page+1)."$query' accesskey='9'>Older</a> 9";
-		if ($page > 1) $links[] = "<a href='{$_GET['q']}?page=".($page-1)."$query' accesskey='8'>Newer</a> 8";
+		$links[] = "<a href='{$_GET['q']}?page=".($page+1)."$query' class='button'>← Older</a>";
+		if ($page > 1) $links[] = "<a href='{$_GET['q']}?page=".($page-1)."$query' class='button'>Newer →</a> ";
 	}
 	if($query) {
 		$query = '?' . substr($query, 1);
 	}
-	$links[] = "<a href='{$_GET['q']}?$query'>First</a>";
-	return '<p>'.implode(' | ', $links).'</p>';
+	$links[] =  theme('menu_bottom_button');
+	$links[] = "<a href='{$_GET['q']}?$query' class='button'>First →</a>";
+	if (count($links) > 0) return '<div class="bottom">'.implode(' ', $links).'</div>';
 }
 
 function theme_action_icons($status) {
@@ -880,7 +883,7 @@ function theme_followers_list($feed, $hide_pagination = false) {
 		}
 		$content .= "</span>";
 
-		$rows[] = array('data' => array(array('data' => theme('avatar', $user->profile_image_url), 'class' => 'avatar'),
+		$rows[] = array('data' => array(array('data' => theme('avatar', theme_get_avatar($user)), 'class' => 'avatar'),
 		                                array('data' => $content, 'class' => 'status shift')),
 		                'class' => 'tweet');
 
@@ -895,8 +898,11 @@ function theme_followers_list($feed, $hide_pagination = false) {
 
 function theme_list_pagination($json) {
 	if ($cursor = (string) $json->next_cursor) {
-		$links[] = "<a href='{$_GET['q']}?cursor={$cursor}'>Next</a>";
+		$links[] = "<a href='{$_GET['q']}?cursor={$cursor}' class='button'>← Older</a>";
 	}
+
+	$links[] = theme('menu_bottom_button');
+
 	if ($cursor = (string) $json->previous_cursor) {
 		//	Codebird needs a +ve cursor, but returns a -ve one?
 		if (0 === strpos($cursor, "-"))
@@ -904,9 +910,9 @@ function theme_list_pagination($json) {
 			//	TODO FIXME still doesn't go back to first screen?
 			$cursor = trim($cursor,"-");
 		}
-		$links[] = "<a href='{$_GET['q']}?cursor={$cursor}'>Previous</a>";
+		$links[] = "<a href='{$_GET['q']}?cursor={$cursor}' class='button'>Newer →</a>";
 	}
-	if (count($links) > 0) return '<p>'.implode(' | ', $links).'</p>';
+	if (count($links) > 0) return '<div class="bottom">'.implode(' ', $links).'</div>';
 }
 
 function theme_trends_page($locales, $trends) {
@@ -948,8 +954,12 @@ body{
 	color:#{$c->bodyt};
 }
 
-.profile {
+.profile,.bottom {
 	padding: 0.5em;
+}
+
+.bottom {
+	text-align: center;
 }
 
 .menu{

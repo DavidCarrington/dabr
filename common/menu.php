@@ -50,8 +50,8 @@ function theme_menu_top() {
 	return theme('menu_both', 'top');
 }
 
-function theme_menu_bottom() {
-	return theme('menu_both', 'bottom');
+function theme_menu_bottom_button() {
+	return '<a href="#menu" class="button">↑ Top ↑</a>';
 }
 
 function theme_menu_both($menu) {
@@ -61,11 +61,14 @@ function theme_menu_both($menu) {
 		// $title = str_replace("-", " ", $title);
 		$title = $page['display'];
 		if (!$url) $url = BASE_URL; // Shouldn't be required, due to <base> element but some browsers are stupid.
-		if ($menu == 'bottom' ) { //&& isset($page['accesskey'])) {
-			$links[] = "<a href='$url'>$title</a> {$page['accesskey']}";
-		} else {
-			$links[] = "<a href='$url'>$title</a>";
-		}
+		// if ($menu == 'bottom' ) { //&& isset($page['accesskey'])) {
+		// 	$links[] = "<a href='$url'>$title</a> {$page['accesskey']}";
+		// } else {
+		// 	// $links[] = "<a href='$url'>$title</a>";
+		// }
+
+		$links[] = "<a href=\"{$url}\">$title</a>"	;
+		 
 	}
 	if (user_is_authenticated()) {
 		// $user = user_current_username();
@@ -74,5 +77,5 @@ function theme_menu_both($menu) {
 	if ($menu == 'bottom') {
 		// $links[] = "<a href='{$_GET['q']}' accesskey='5'>refresh</a> 5";
 	}
-	return "<div class='menu menu-$menu'>".implode(' | ', $links).'</div>';
+	return "<div class='menu' id='menu'>".implode(' | ', $links).'</div>';
 }
