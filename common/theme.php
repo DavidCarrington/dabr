@@ -726,27 +726,33 @@ function theme_action_icons($status) {
 		$actions[] = theme('action_icon', "directs/create/{$from}", '✉', 'Direct Message');
 	}
 	if (!$status->is_direct) {
-		if ($status->favorited == '1') {
-			$actions[] = theme('action_icon', "unfavourite/{$status->id}", '<span style="color:#FFFF00;">★</span>', 'Unfavourite');
-		} else {
-			$actions[] = theme('action_icon', "favourite/{$status->id}", '☆', 'Favourite');
-		}
+
+		$favourite_count = "";
 		//	Display favourite count
 		if($status->favorite_count) {
-			$actions[] = "<sup>" . number_format($status->favorite_count) . "</sup>";
+			$favourite_count = "<sup>" . number_format($status->favorite_count) . "</sup>";
+		}
+
+		if ($status->favorited == '1') {
+			$actions[] = theme('action_icon', "unfavourite/{$status->id}", '<span style="color:#FFFF00;">★</span>', 'Unfavourite') . $favourite_count;
+		} else {
+			$actions[] = theme('action_icon', "favourite/{$status->id}", '☆', 'Favourite') . $favourite_count;
+		}
+		
+		$retweet_count = "";
+		//	Display number of RT
+		if ($status->retweet_count)	{
+			$retweet_count = "<sup><a href='retweeted_by/{$status->id}' class='action'>" . number_format($status->retweet_count) . "</a></sup>";
 		}
 
 		// Show a diffrent retweet icon to indicate to the user this is an RT
 		if ($status->retweeted || user_is_current_user($retweeted_by)) {
-			$actions[] = theme('action_icon', "retweet/{$status->id}", '<span style="color:#009933;">♻</span>', 'Retweet');
+			$actions[] = theme('action_icon', "retweet/{$status->id}", '<span style="color:#009933;">♻</span>', 'Retweet') . $retweet_count;
 		}
 		else {
-			$actions[] = theme('action_icon', "retweet/{$status->id}", '♻', 'Retweet');
+			$actions[] = theme('action_icon', "retweet/{$status->id}", '♻', 'Retweet') . $retweet_count;
 		}
-		//	Display number of RT
-		if ($status->retweet_count)	{
-			$actions[] = "<sup><a href='retweeted_by/{$status->id}' class='action'>" . number_format($status->retweet_count) . "</a></sup>";
-		}
+		
 
 		if (user_is_current_user($from)) {
 			$actions[] = theme('action_icon', "confirm/delete/{$status->id}", '🗑', 'Delete');
@@ -776,7 +782,7 @@ function theme_action_icons($status) {
 		$actions[] = "<small>RT by <a href='user/{$retweeted_by}'>{$retweeted_by}</a></small>";
 	}
 
-	return '<span class="actionicons">' . implode(' ', $actions) . '</span>';
+	return '<span class="actionicons">' . implode('&emsp;', $actions) . '</span>';
 }
 
 function theme_action_icon($url, $image_url, $text) {
@@ -885,7 +891,7 @@ function theme_css() {
 	font-family: 'icons';
 	src: url('".BASE_URL."fonts/dabr-icons.eot');
 	src: url('".BASE_URL."fonts/dabr-icons.eot#iefix') format('embedded-opentype'),
-         url('".BASE_URL."fonts/dabr-icons-icons.woff2') format('woff2'),
+         url('".BASE_URL."fonts/dabr-icons.woff2') format('woff2'),
 	     url('".BASE_URL."fonts/dabr-icons.woff') format('woff'),
 	     url('".BASE_URL."fonts/dabr-icons.ttf') format('truetype'),
 	     url('".BASE_URL."fonts/dabr-icons.svg#dabr') format('svg');
@@ -915,7 +921,7 @@ body{
 
 .actionicons {
 	font-family:icons,sans-serif;
-	font-size: 1em;
+	font-size: 1.2em;
 	display: block;
 	margin: 0.3em; 
 	clear: both;

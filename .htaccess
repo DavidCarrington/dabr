@@ -10,3 +10,13 @@ RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
 Header set Cache-Control "max-age=604800, public"
 </FilesMatch>
 </IfModule>
+
+<IfModule mod_mime.c>
+# Mime types for fonts
+AddType application/vnd.ms-fontobject    .eot
+AddType application/x-font-opentype      .otf
+AddType image/svg+xml                    .svg
+AddType application/x-font-ttf           .ttf
+AddType application/font-woff            .woff
+AddType application/font-woff2           .woff2
+</IfModule>
