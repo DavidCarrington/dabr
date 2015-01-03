@@ -185,7 +185,7 @@ function twitter_profile_page() {
 		$cb = get_codebird();
 		
 			
-		$cb->account_updateProfile($api_options);
+		twitter_api_status($cb->account_updateProfile($api_options));
 
 		$content = "<h2>Profile Updated</h2>";
 	} 
@@ -197,7 +197,7 @@ function twitter_profile_page() {
 			"image" => $_FILES['image']['tmp_name']
 		);
 
-		$cb->account_updateProfileImage($api_options);
+		twitter_api_status($cb->account_updateProfileImage($api_options));
 	}
 	
 	//	Twitter API is really slow!  If there's no delay, the old profile is returned.
@@ -248,6 +248,7 @@ function friendship_exists($user_a) {
 	$api_options = array('target_screen_name' => $user_a);
 		
 	$friendship = $cb->friendships_show($api_options);
+	twitter_api_status($friendship);
 
 	if ($friendship->relationship->target->following == 1) {
 		return true;
@@ -262,6 +263,7 @@ function friendship($user_a) {
 	$api_options = array('target_screen_name' => $user_a);
 		
 	$friendship = $cb->friendships_show($api_options);
+	twitter_api_status($friendship);
 	return $friendship;
 }
 
@@ -293,10 +295,9 @@ function twitter_trends_page($query) {
 	$api_options = array();
 
 	$local_object = $cb->trends_available($api_options);
+	twitter_api_status($local_object);
 	$local = (array)$local_object;
-	unset($local->httpstatus);
-	twitter_rate_limit($local->rate);
-	unset($local->rate);
+	
 
 	$header = '<form method="get" action="trends"><select name="woeid">';
 	$header .= '<option value="1"' . (($woeid == 1) ? ' selected="selected"' : '') . '>Worldwide</option>';
@@ -321,6 +322,7 @@ function twitter_trends_page($query) {
 	$api_options = array("id" => $woeid);
 
 	$trends_object = $cb->trends_place($api_options);
+	twitter_api_status($trends_object);
 	$trends = (array)$trends_object;
 	unset($trends->httpstatus);
 	twitter_rate_limit($trends->rate);
@@ -381,51 +383,7 @@ function get_codebird() { //$url, $post_data = false) {
 	// 	$rate_limit .= " Rate Limit: " . $headers_array['x-rate-limit-remaining'] . " out of " . $headers_array['x-rate-limit-limit'] . " calls remaining for the next {$minutes_until_reset} minutes";
 	// }
 
-	// $api_time += microtime(1) - $api_start;
-
-	// switch( intval( $response_info['http_code'] ) )	{
-	// 	case 200:
-	// 	case 201:
-	// 		$json = json_decode($body);
-	// 		if ($json) {
-	// 			return $json;
-	// 		}
-	// 		return $body;
-	// 	case 401:
-	// 		user_logout();
-	// 		theme('error', "<p>Error: Login credentials incorrect.</p><p>{$response_info['http_code']}: {$result}</p><hr><p>$url</p>");
-	// 	case 429:
-	// 		theme('error', "<h2>Rate limit exceeded!</h2><p>All {$headers_array['x-rate-limit-limit']} calls used, next reset in {$minutes_until_reset} minutes.</p>");
-	// 	case 0:
-	// 		$result = $erno . ":" . $er . "<br />" ;
-	// 		/*
-	// 		foreach ($response_info as $key => $value) {
-	// 			$result .= "Key: $key; Value: $value<br />";
-	// 		}
-	// 		*/
-	// 		theme('error', "<h2>Twitter timed out</h2><p>Dabr gave up on waiting for Twitter to respond. They're probably overloaded right now, try again in a minute. <br />{$result}</p>");
-	// 	default:
-	// 		$result = json_decode($body);
-	// 		$result = $result->error ? $result->error : $body;
-	// 		if (strlen($result) > 500) {
-	// 			$result = "Something broke on Twitter's end.";
-	// 		/*
-	// 		foreach ($response_info as $key => $value) {
-	// 			$result .= "Key: $key; Value: $value<br />";
-	// 		}
-	// 		*/	
-	// 		}
-	// 		else if ($result == "Status is over 140 characters.") {
-	// 			theme('error', "<h2>Status was tooooooo loooooong!</h2><p>{$status}</p><hr>");	
-	// 			//theme('status_form',$status);
-	// 		}
-	// 		if(DEBUG_MODE == 'ON') {
-	// 			theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}<br />{$url}</p><hr>");
-	// 		}
-	// 		else {
-	// 			theme('error', "<h2>An error occured while calling the Twitter API</h2><p>{$response_info['http_code']}: {$result}</p><hr>");
-	// 		}
-	// }
+	// $api_time += microtime(1) - $api_start;	
 }
 
 
@@ -604,9 +562,9 @@ function twitter_status_page($query) {
 		$api_options = "id={$id}";
 			
 		$status = $cb->statuses_show_ID($api_options);
+		twitter_api_status($status);
 
 		$text = $status->text;	//	Grab the text before it gets formatted
-		twitter_rate_limit($status->rate);
 
 		$content = theme('status', $status);
 
@@ -657,6 +615,7 @@ function twitter_retweet_page($query) {
 		
 		$api_options = array("id" => $id);
 		$tl = $cb->statuses_show_ID($api_options);
+		twitter_api_status($tl);
 
 		$content = theme('retweet', $tl);
 		theme('page', 'Retweet', $content);
@@ -680,7 +639,8 @@ function twitter_delete_page($query) {
 	if (is_numeric($id)) {
 		$cb = get_codebird();
 		$api_options = array("id" => $id);
-		$cb->statuses_destroy_ID($api_options);	
+		$response = $cb->statuses_destroy_ID($api_options);	
+		twitter_api_status($response);
 
 		twitter_refresh('user/'.user_current_username());
 	}
@@ -694,7 +654,8 @@ function twitter_deleteDM_page($query) {
 	if (is_numeric($id)) {
 		$cb = get_codebird();
 		$api_options = array("id" => $id);
-		$cb->directMessages_destroy($api_options);	
+		$response = $cb->directMessages_destroy($api_options);	
+		twitter_api_status($response);
 
 		twitter_refresh('directs/');
 	}
@@ -715,9 +676,9 @@ function twitter_follow_page($query) {
 		$api_options = array("screen_name" => $screen_name);
 		
 		if($query[0] == 'follow'){
-			$cb->friendships_create($api_options);
+			twitter_api_status($cb->friendships_create($api_options));
 		} else {
-			$cb->friendships_destroy($api_options);
+			twitter_api_status($cb->friendships_destroy($api_options));
 		}
 		twitter_refresh('friends');
 	}
@@ -732,10 +693,10 @@ function twitter_block_page($query) {
 		$api_options = array("screen_name" => $screen_name);
 		
 		if($query[0] == 'block'){
-			$cb->blocks_create($api_options);
+			twitter_api_status($cb->blocks_create($api_options));
 			twitter_refresh("confirmed/block/{$screen_name}");
 		} else {
-			$cb->blocks_destroy($api_options);
+			twitter_api_status($cb->blocks_destroy($api_options));
 			twitter_refresh("confirmed/unblock/{$screen_name}");
 		}
 	}
@@ -750,7 +711,7 @@ function twitter_spam_page($query)
 
 	$cb = get_codebird();
 	$api_options = array("screen_name" => $screen_name);
-	$cb->users_reportSpam($api_options);
+	twitter_api_status($cb->users_reportSpam($api_options));
 
 	//Where should we return the user to?  Back to the user
 	twitter_refresh("confirmed/spam/{$screen_name}");
@@ -866,6 +827,7 @@ function twitter_friends_page($query) {
 	}
 	
 	$tl = $cb->friends_list($api_options);
+	twitter_api_status($tl);
 
 	$content = theme('followers_list', $tl);
 	theme('page', 'Friends', $content);
@@ -891,6 +853,7 @@ function twitter_followers_page($query) {
 	}
 	
 	$tl = $cb->followers_list($api_options);
+	twitter_api_status($tl);
 
 	$content = theme('followers_list', $tl);
 	theme('page', 'Followers', $content);
@@ -904,9 +867,10 @@ function twitter_retweeters_page($query) {
 	$cb = get_codebird();
 	$api_options = array("id" => $id);
 	$users = $cb->statuses_retweets_ID($api_options);
-	unset($users->httpstatus);
-	twitter_rate_limit($users->rate);
-	unset($users->rate);
+	twitter_api_status($users);
+	// unset($users->httpstatus);
+	// twitter_rate_limit($users->rate);
+	// unset($users->rate);
 
 	// Format the output
 	$content = theme('followers_list', $users);
@@ -936,6 +900,7 @@ function twitter_update() {
 			$reply = $cb->media_upload(array(
 				'media' => $file
 			));
+			twitter_api_status($reply);
 			// and collect their IDs
 			$media_ids[] = $reply->media_id_string;
 		}
@@ -973,6 +938,7 @@ function twitter_update() {
 	
 		//	Send the status
 		$reply = $cb->statuses_update($api_options);
+		twitter_api_status($reply);
 	}
 	twitter_refresh($_POST['from'] ? $_POST['from'] : '');
 }
@@ -984,7 +950,7 @@ function twitter_retweet($query) {
 
 		$cb = get_codebird();
 		$api_options = array("id" => $id);
-		$cb->statuses_retweet_ID($api_options);
+		twitter_api_status($cb->statuses_retweet_ID($api_options));
 
 	}
 	twitter_refresh($_POST['from'] ? $_POST['from'] : '');
@@ -1002,8 +968,11 @@ function twitter_replies_page() {
 	if ($_GET['max_id']) {
 		$api_options .= '&max_id='.$_GET['max_id'];
 	}
-		
-	$tl = twitter_standard_timeline($cb->statuses_mentionsTimeline($api_options), 'replies');
+	
+	$replies = $cb->statuses_mentionsTimeline($api_options);
+	twitter_api_status($replies);
+
+	$tl = twitter_standard_timeline($replies, 'replies');
 	$content = theme('status_form');
 	$content .= theme('timeline', $tl);
 	theme('page', 'Replies', $content);
@@ -1020,8 +989,11 @@ function twitter_retweets_page() {
 	if ($_GET['max_id']) {
 		$api_options .= '&max_id='.$_GET['max_id'];
 	}
-		
-	$tl = twitter_standard_timeline($cb->statuses_retweetsOfMe($api_options), 'replies');
+	
+	$retweets = $cb->statuses_retweetsOfMe($api_options);
+	twitter_api_status($retweets);
+
+	$tl = twitter_standard_timeline($retweets, 'replies');
 	$content = theme('status_form');
 	$content .= theme('timeline', $tl);
 	theme('page', 'Retweets', $content);
@@ -1044,7 +1016,7 @@ function twitter_directs_page($query) {
 			$to = trim(stripslashes(str_replace('@','',$_POST['to'])));
 			$message = trim(stripslashes($_POST['message']));
 			$api_options = array('screen_name' => $to, 'text' => $message);
-			$cb->directMessages_new($api_options);
+			twitter_api_status($cb->directMessages_new($api_options));
 			twitter_refresh('directs/sent');
 
 		case 'sent':
@@ -1053,6 +1025,7 @@ function twitter_directs_page($query) {
 			}
 
 			$tl = $cb->directMessages_sent($api_options);
+			twitter_api_status($tl);
 			
 			$tl = twitter_standard_timeline($tl, 'directs_sent');	
 			$content = theme_directs_menu();
@@ -1066,6 +1039,7 @@ function twitter_directs_page($query) {
 			}
 
 			$tl = $cb->directMessages($api_options);
+			twitter_api_status($tl);
 			$tl = twitter_standard_timeline($tl, 'directs_inbox');	
 			$content = theme_directs_menu();
 			$content .= theme('timeline', $tl);
@@ -1130,6 +1104,7 @@ function twitter_search($search_query, $lat = null, $long = null, $radius = null
 	}
 
 	$tl = $cb->search_tweets($api_options);
+	twitter_api_status($tl);
 	
 	$tl = twitter_standard_timeline($tl->statuses, 'search');
 	return $tl;
@@ -1147,6 +1122,7 @@ function twitter_find_tweet_in_timeline($tweet_id, $tl) {
 		$cb = get_codebird();
 		$api_options = array("id" => $tweet_id);
 		$tweet = $cb->statuses_show_ID($api_options);
+		twitter_api_status($tweet);
 	}
 	return $tweet;
 }
@@ -1184,7 +1160,10 @@ function twitter_user_page($query) {
 
 		$api_options .= "&screen_name={$screen_name}";
 
-		$tl = twitter_standard_timeline($cb->statuses_userTimeline($api_options), 'user');
+		$user_timeline = $cb->statuses_userTimeline($api_options);
+		twitter_api_status($user_timeline);
+
+		$tl = twitter_standard_timeline($user_timeline, 'user');
 		// $content = theme('status_form');
 		// $content .= theme('timeline', $tl);
 		// theme('page', 'user', $content);
@@ -1257,7 +1236,9 @@ function twitter_favourites_page($query) {
 	$api_options .= "&screen_name={$screen_name}";
 
 	//echo "$api_options";	
-	$tl = twitter_standard_timeline($cb->favorites_list($api_options), 'favourites');
+	$favorites_list = $cb->favorites_list($api_options);
+	twitter_api_status($favorites_list);
+	$tl = twitter_standard_timeline($favorites_list, 'favourites');
 	// $content = theme('status_form');
 	$content .= theme('timeline', $tl);
 	theme('page', 'Favourites', $content);
@@ -1272,10 +1253,10 @@ function twitter_mark_favourite_page($query) {
 	$api_options = array('id' => $id);
 
 	if ($query[0] == 'unfavourite') {
-		$cb->favorites_destroy($api_options);
+		twitter_api_status($cb->favorites_destroy($api_options));
 	}
 	else {
-		$cb->favorites_create($api_options);
+		twitter_api_status($cb->favorites_create($api_options));
 	}
 	twitter_refresh();
 }
@@ -1302,7 +1283,9 @@ function twitter_home_page() {
 	$api_options .= "&screen_name={$screen_name}";
 
 	//echo "$api_options";	
-	$tl = twitter_standard_timeline($cb->statuses_homeTimeline($api_options), 'friends');
+	$home_timeline = $cb->statuses_homeTimeline($api_options);
+	twitter_api_status($home_timeline);
+	$tl = twitter_standard_timeline($home_timeline, 'friends');
 	$content = theme('status_form');
 	$content .= theme('timeline', $tl);
 	theme('page', 'Home', $content);
@@ -1481,8 +1464,9 @@ function twitter_user_info($username = null) {
 	$cb = get_codebird();
 	
 	$api_options = "screen_name={$username}";
-
-	return $cb->users_show($api_options);
+	$user_info = $cb->users_show($api_options);
+	twitter_api_status($user_info);
+	return $user_info;
 }
 
 
@@ -1553,11 +1537,51 @@ function image_proxy($src, $size = "") {
 }
 
 function twitter_rate_limit($rate) {
-	global $rate_limit;
 	// echo "<br> RATE <pre>" . var_export($rate,true). "</pre>";
-	$ratelimit_time = $rate["reset"]- time();
-	$ratelimit_time = floor($ratelimit_time / 60);
-	$rate_limit = $rate["remaining"] . "/" . $rate["limit"] . " reset in {$ratelimit_time} minutes";
-	$backtrace = debug_backtrace();
+	if ($rate){
+		global $rate_limit;
+		$ratelimit_time = $rate["reset"]- time();
+		$ratelimit_time = floor($ratelimit_time / 60);
+		$rate_limit = $rate["remaining"] . "/" . $rate["limit"] . " reset in {$ratelimit_time} minutes";		
+	}
+	// $backtrace = debug_backtrace();
 	// echo "<BR> Called by <pre>". var_export($backtrace,true). "</pre><br/>";
+}
+
+function twitter_api_status(&$response) {
+	global $rate_limit;
+	// echo "response <pre>".var_export($response,true)."</pre>";
+	//	Store the rate limit
+	if ($response->rate) {
+		twitter_rate_limit($response->rate);
+		unset($response->rate);
+	}
+
+	//	Have we any errors?
+	if ($response->httpstatus) {
+		$httpstatus = intval($response->httpstatus);
+		// echo "STATUS <pre>$httpstatus</pre>";
+
+		if ($response->errors) {
+			$errors = current($response->errors);
+			$error_message = $errors->message;
+			$error_code = $errors->code;
+		}
+
+		switch($httpstatus)	{
+			case 200:
+			case 201:
+				unset($response->httpstatus);	//	A-OK
+				return;
+			case 401:
+				user_logout();
+				theme('error', "<p>Error: Login credentials incorrect.</p><p>Twitter says: {$error_message} (Code {$error_code})</p>");
+			case 429:
+				theme('error', "<h2>Rate limit exceeded!</h2><p>{$rate_limit}.</p>");
+			case 403:
+				theme('error', "<h2>Status was tooooooo loooooong!</h2><p>Twitter says: {$error_message} (Code {$error_code})</p>");
+			default:
+				theme('error', "<h2>Something went wrong.</h2><p>Twitter says: {$error_message} (Code {$error_code})</p>");
+		}
+	}
 }
