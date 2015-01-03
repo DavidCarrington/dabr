@@ -1579,7 +1579,7 @@ function twitter_api_status(&$response) {
 			case 429:
 				theme('error', "<h2>Rate limit exceeded!</h2><p>{$rate_limit}.</p>");
 			case 403:
-				theme('error', "<h2>Status was tooooooo loooooong!</h2><p>Twitter says: {$error_message} (Code {$error_code})</p>");
+				theme('error', "<h2>{$error_message}</h2><p>Twitter says: {$error_message} (Code {$error_code})</p>");
 			default:
 				theme('error', "<h2>Something went wrong.</h2><p>Twitter says: {$error_message} (Code {$error_code})</p>");
 		}
