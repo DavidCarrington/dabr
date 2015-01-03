@@ -565,48 +565,6 @@ function theme_timeline($feed, $paginate = true) {
 	return $content;
 }
 
-function theme_followers($feed, $nextPageURL) {
-	$rows = array();
-	if (count($feed) == 0 || $feed == '[]') return '<p>No users to display.</p>';
-
-	foreach ($feed as $user) {
-
-		$name = theme('full_name', $user);
-		$tweets_per_day = twitter_tweets_per_day($user);
-		$last_tweet = strtotime($user->status->created_at);
-		$content = "{$name}<br /><span class='about'>";
-		if($user->description != "")
-			$content .= "Bio: " . twitter_parse_tags($user->description) . "<br />";
-		if($user->location != "")
-			$content .= "Location: {$user->location}<br />";
-		$content .= "Info: ";
-		$content .= pluralise('tweet',    (int)$user->statuses_count, true)  . ", ";
-		$content .= pluralise('friend',   (int)$user->friends_count, true)   . ", ";
-		$content .= pluralise('follower', (int)$user->followers_count, true) . ", ";
-		$content .= "~" . pluralise('tweet', $tweets_per_day, true) . " per day<br />";
-		$content .= "Last tweet: ";
-		if($user->protected == 'true' && $last_tweet == 0)
-			$content .= "Private";
-		else if($last_tweet == 0)
-			$content .= "Never tweeted";
-		else
-			$content .= twitter_date('l jS F Y', $last_tweet);
-		$content .= "</span>";
-
-		$rows[] = array('data' => array(array('data' => theme('avatar', theme_get_avatar($user)), 'class' => 'avatar'),
-		                                array('data' => $content, 'class' => 'status shift')),
-		                'class' => 'tweet');
-
-	}
-
-	$content = theme('table', array(), $rows, array('class' => 'followers'));
-	if ($nextPageURL)
-		$content .= "<a href='{$nextPageURL}'>Next</a>";
-	return $content;
-}
-
-// Annoyingly, retweeted_by.xml and followers.xml are subtly different. 
-// TODO merge theme_retweeters with theme_followers
 function theme_retweeters($feed, $hide_pagination = false) {
 	$rows = array();
 	if (count($feed) == 0 || $feed == '[]') return '<p>No one has retweeted this status.</p>';
@@ -842,7 +800,7 @@ function theme_action_icon($url, $image_url, $text) {
     return "<a href='{$url}' class='action' title='{$text}'>{$image_url}</a>";
 	
 }
-function theme_followers_list($feed, $hide_pagination = false) {
+function theme_users_list($feed, $hide_pagination = false) {
 	if(isset($feed->users))
 		$users = $feed->users;
 	else
@@ -856,11 +814,12 @@ function theme_followers_list($feed, $hide_pagination = false) {
 		$name = theme('full_name', $user);
 		$tweets_per_day = twitter_tweets_per_day($user);
 		$last_tweet = strtotime($user->status->created_at);
-		$vicon = ($user->verified) ? theme('action_icon', "", '✔', 'verified') : '';
+		// $vicon = ($user->verified) ? theme('action_icon', "", '✔', 'verified') : '';
 		$content = "{$name}<br />";//" <span class=\"actionicons\">{$vicon}</span>";
 		$content .= "<span class='about'>";
-		if($user->description != "")
-			$content .= "Bio: {$user->description}<br />";
+		if($user->description != "") {
+			$content .= "Bio: " . twitter_parse_tags($user->description, $user->entities->description) . "<br />";
+		}
 		if($user->location != "") {
 			$content .= theme('action_icon', "https://maps.google.com/maps?q={$user->location}", "<span class='icons'>⌖</span> {$user->location}", 'Location');
 			$content .= "<br />";
@@ -960,6 +919,7 @@ body{
 	display: block;
 	margin: 0.3em; 
 	clear: both;
+	text-decoration: none;
 }
 
 .icons {
@@ -980,6 +940,7 @@ body{
 }
 
 .action {
+	font-family:icons,sans-serif;
 	text-decoration: none;
 }
 form{margin:.3em;}

@@ -829,7 +829,7 @@ function twitter_friends_page($query) {
 	$tl = $cb->friends_list($api_options);
 	twitter_api_status($tl);
 
-	$content = theme('followers_list', $tl);
+	$content = theme('users_list', $tl);
 	theme('page', 'Friends', $content);
 }
 
@@ -855,7 +855,7 @@ function twitter_followers_page($query) {
 	$tl = $cb->followers_list($api_options);
 	twitter_api_status($tl);
 
-	$content = theme('followers_list', $tl);
+	$content = theme('users_list', $tl);
 	theme('page', 'Followers', $content);
 }
 
@@ -873,7 +873,7 @@ function twitter_retweeters_page($query) {
 	// unset($users->rate);
 
 	// Format the output
-	$content = theme('followers_list', $users);
+	$content = theme('users_list', $users);
 	theme('page', "Everyone who retweeted {$id}", $content);
 }
 
