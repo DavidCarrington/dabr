@@ -74,15 +74,6 @@ function settings_page($args) {
 		setcookie_year('settings', base64_encode(serialize($settings)));
 		twitter_refresh('');
 	}
-
-	$modes = array(
-		'mobile' 	=> 'Normal phone',
-		'touch'		=> 'Touch Screen',
-		'bigtouch'	=> 'Touch Screen Big Icons',
-		'desktop'	=> 'PC/Laptop',
-		'text'		=> 'Text only',
-		'worksafe'	=> 'Work Safe',
-	);
 	
 	$perPage = array(
 		  '5'	=>   '5 Tweets Per Page',
@@ -119,12 +110,6 @@ function settings_page($args) {
 	                    <br />
 	                    <select name="colours">';
 	$content .= theme('options', $colour_schemes, setting_fetch('colours', 0));
-	$content .=         '</select>
-	                </p>
-	                <p>Mode:
-	                     <br />
-	                     <select name="browser">';
-	$content .=              theme('options', $modes, $GLOBALS['current_theme']);
 	$content .=         '</select>
 	                </p>';
 	
