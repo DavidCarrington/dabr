@@ -30,7 +30,6 @@ menu_register(array(
 
 function cookie_monster() {
 	$cookies = array(
-		'browser',
 		'settings',
 		'utc_offset',
 		'search_favourite',
@@ -61,7 +60,6 @@ function setcookie_year($name, $value) {
 
 function settings_page($args) {
 	if ($args[1] == 'save') {
-		$settings['browser']      = $_POST['browser'];
 		$settings['perPage']      = $_POST['perPage'];
 		$settings['gwt']          = $_POST['gwt'];
 		$settings['colours']      = $_POST['colours'];

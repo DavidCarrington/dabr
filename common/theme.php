@@ -1,6 +1,4 @@
 <?php
-// require_once ("common/advert.php");
-
 $current_theme = false;
 
 //	Setup
@@ -146,12 +144,10 @@ function theme_page($title, $content) {
 	$body = "";
 	$body .= theme('menu_top');
 	$body .= $content;
-	//$body .= theme('menu_bottom');
-	//$body .= theme('google_analytics');
 	if (DEBUG_MODE == 'ON') {
 		global $dabr_start, $api_time, $services_time, $rate_limit;
 		$time = microtime(1) - $dabr_start;
-		$body .= '<p>Processed in '.round($time, 4).' seconds ('.round(($time - $api_time - $services_time) / $time * 100).'% Dabr, '.round($api_time / $time * 100).'% Twitter, '.round($services_time / $time * 100).'% other services). '.$rate_limit.'.</p>';
+		$body .= '<p>Processed in '.round($time, 4).' seconds ('.round(($time - $api_time - $services_time) / $time * 100).'% Dabr, '.round($api_time / $time * 100).'% Twitter, '.round($services_time / $time * 100).'% Embedding Media). '.$rate_limit.'.</p>';
 	}
     $meta = '';
 	if ($title == 'Login') {
@@ -170,7 +166,6 @@ function theme_page($title, $content) {
 					'.$meta.theme('css').'
 				</head>
 				<body id="thepage">';
-//	echo 				"<div id=\"advert\">" . show_advert() . "</div>";
 	echo 				$body;
 	if (setting_fetch('colours') == null)
 	{
@@ -469,7 +464,7 @@ function theme_timeline($feed, $paginate = true) {
 	}
 	unset($status);
 	
-	// Only embed images in suitable browsers
+	// Only embed images if user hasn't hidden them
 	
 	if(!setting_fetch('hide_inline')) {
 		oembed_embed_thumbnails($feed);
@@ -936,20 +931,9 @@ function theme_css() {
 	font-style: normal;
 }
 
-@font-face {
-    font-family: 'quiviraregular';
-    src: url('".BASE_URL."fonts/quivira-webfont.eot');
-    src: url('".BASE_URL."fonts/quivira-webfont.eot?#iefix') format('embedded-opentype'),
-         url('".BASE_URL."fonts/fonts/quivira-webfont.woff2') format('woff2'),
-         url('".BASE_URL."fonts/quivira-webfont.woff') format('woff'),
-         url('".BASE_URL."fonts/quivira-webfont.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;	
-}
-
 body{
 	margin:0;
-	font-family:sans-serif,quiviraregular;
+	font-family:sans-serif;
 	background:#{$c->bodybg};
 	color:#{$c->bodyt};
 }
@@ -1088,11 +1072,4 @@ small,small a{
 	color:#{$c->small};
 }
 </style>";
-}
-
-function theme_google_analytics() {
-	global $GA_ACCOUNT;
-	if (!$GA_ACCOUNT) return '';
-	$googleAnalyticsImageUrl = googleAnalyticsGetImageUrl();
-	return "<img src='{$googleAnalyticsImageUrl}' />";
 }

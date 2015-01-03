@@ -11,7 +11,8 @@ function user_oauth() {
 	if (! isset($_SESSION['oauth_token'])) {
 		// get the request token
 		$reply = $cb->oauth_requestToken(array(
-			'oauth_callback' => 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']
+			// 'oauth_callback' => 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']
+			'oauth_callback' => SERVER_NAME . $_SERVER['REQUEST_URI']
 		));
 
 		// store the token
@@ -172,8 +173,6 @@ function _user_decrypt_cookie($crypt_text) {
 
 //	TODO FIXME errr...
 	list($GLOBALS['user']['username'], $GLOBALS['user']['password'], $GLOBALS['user']['type']) = explode(':', $plain_text);
-
-	// echo "<h1>GLOBS</h1><pre>" . var_export($GLOBALS, true);
 }
 
 function theme_login() {

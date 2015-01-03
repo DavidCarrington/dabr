@@ -295,6 +295,7 @@ function twitter_trends_page($query) {
 	$local_object = $cb->trends_available($api_options);
 	$local = (array)$local_object;
 	unset($local->httpstatus);
+	twitter_rate_limit($local->rate);
 	unset($local->rate);
 
 	$header = '<form method="get" action="trends"><select name="woeid">';
@@ -322,6 +323,7 @@ function twitter_trends_page($query) {
 	$trends_object = $cb->trends_place($api_options);
 	$trends = (array)$trends_object;
 	unset($trends->httpstatus);
+	twitter_rate_limit($trends->rate);
 	unset($trends->rate);
 
 	$search_url = 'search?query=';
@@ -429,8 +431,8 @@ function get_codebird() { //$url, $post_data = false) {
 
 //	http://dev.twitter.com/pages/tweet_entities
 function twitter_get_media($status) {
-	//don't display images if: a) in the settings, b) type of theme, c) NSFW
-	if(setting_fetch('hide_inline') || in_array(setting_fetch('browser'), array('text', 'worksafe')) ||	stripos($status->text, 'NSFW') !== false) {
+	//don't display images if: a) in the settings, b) NSFW
+	if(setting_fetch('hide_inline') || stripos($status->text, 'NSFW') !== false) {
 		return;
 	}
 	if($status->entities->media) {
@@ -567,43 +569,9 @@ function twitter_parse_tags($input, $entities = false) {
 		$tok = strtok(" \n\t\n\r\0");	// Move to the next token
 	}
 
-	// //	Add Emoticons :-)
-	// if (setting_fetch('emoticons') != 'off') {
-	// 	$out = emoticons($out);
-	// }
-
 	//Return the completed string
 	return $out;
 }
-
-// function flickr_decode($num) {
-// 	$alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
-// 	$decoded = 0;
-// 	$multi = 1;
-// 	while (strlen($num) > 0) {
-// 		$digit = $num[strlen($num)-1];
-// 		$decoded += $multi * strpos($alphabet, $digit);
-// 		$multi = $multi * strlen($alphabet);
-// 		$num = substr($num, 0, -1);
-// 	}
-// 	return $decoded;
-// }
-
-// function flickr_encode($num) {
-// 	$alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
-// 	$base_count = strlen($alphabet);
-// 	$encoded = '';
-// 	while ($num >= $base_count) {
-// 		$div = $num/$base_count;
-// 		$mod = ($num-($base_count*intval($div)));
-// 		$encoded = $alphabet[$mod] . $encoded;
-// 		$num = intval($div);
-// 	}
-// 	if ($num) $encoded = $alphabet[$num] . $encoded;
-// 	return $encoded;
-// }
-
-
 
 function format_interval($timestamp, $granularity = 2) {
 	$units = array(
@@ -638,6 +606,7 @@ function twitter_status_page($query) {
 		$status = $cb->statuses_show_ID($api_options);
 
 		$text = $status->text;	//	Grab the text before it gets formatted
+		twitter_rate_limit($status->rate);
 
 		$content = theme('status', $status);
 
@@ -649,7 +618,7 @@ function twitter_status_page($query) {
 		                </a> | ';
 		
 		//	Translate the tweet
-		$content .= '   <a href="http://translate.google.com/m?hl=en&sl=auto&ie=UTF-8&q=' . urlencode($text) . '" target="'. get_target() . '">
+		$content .= '   <a href="https://translate.google.com/m?hl=en&sl=auto&ie=UTF-8&q=' . urlencode($text) . '" target="'. get_target() . '">
 		                    Translate this tweet
 		                </a>
 		            </p>';
@@ -936,6 +905,7 @@ function twitter_retweeters_page($query) {
 	$api_options = array("id" => $id);
 	$users = $cb->statuses_retweets_ID($api_options);
 	unset($users->httpstatus);
+	twitter_rate_limit($users->rate);
 	unset($users->rate);
 
 	// Format the output
@@ -1388,7 +1358,10 @@ function twitter_standard_timeline($feed, $source) {
 //	echo json_encode($feed);
 	//	Remove the status elements from the array
 	unset($feed->httpstatus);
-	unset($feed->rate);
+	if ($feed->rate){
+		twitter_rate_limit($feed->rate);
+		unset($feed->rate);
+	}
 
 	$output = array();
 //	if (!is_array($feed) && $source != 'thread') return $output;
@@ -1578,4 +1551,13 @@ function image_proxy($src, $size = "") {
 		return $src;
 	}
 }
-?>
+
+function twitter_rate_limit($rate) {
+	global $rate_limit;
+	// echo "<br> RATE <pre>" . var_export($rate,true). "</pre>";
+	$ratelimit_time = $rate["reset"]- time();
+	$ratelimit_time = floor($ratelimit_time / 60);
+	$rate_limit = $rate["remaining"] . "/" . $rate["limit"] . " reset in {$ratelimit_time} minutes";
+	$backtrace = debug_backtrace();
+	// echo "<BR> Called by <pre>". var_export($backtrace,true). "</pre><br/>";
+}

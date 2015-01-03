@@ -32,6 +32,9 @@ function oembed_embed_thumbnails(&$feed) {
 						}
 						$matched_urls[urlencode($url)][] = $status->id;
 					}
+				} else {
+					//	No URLs, do nothing
+					return null;
 				}
 			}
 		}
