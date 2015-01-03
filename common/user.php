@@ -176,17 +176,17 @@ function _user_decrypt_cookie($crypt_text) {
 }
 
 function theme_login() {
-	$content = '<div style="margin:1em; font-size: 1.2em">
+	$content = '<div class="tweet">
 					<p>
 						<a href="oauth">
-							<img src="images/twitter_button_2_lo.gif" alt="Sign in with Twitter/" width="165" height="28" />
-						</a>
+							<img src="images/sign-in-with-twitter-gray.png" 
+							     alt="Sign in with Twitter" 
+							     width="158" 
+							     height="28" 
+							     class="action" /></a>
 						<br />
 						<a href="oauth">Sign in via Twitter.com</a>
 					</p>';
-
-	// $content .= "SESSION<pre>" . print_r($_SESSION, true) . "GLOBALS" . print_r($GLOBALS, true) ;
-	
 	return $content;
 }
 

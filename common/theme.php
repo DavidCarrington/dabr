@@ -129,14 +129,14 @@ function theme_error($message) {
 
 function theme_about() {
 	return '<div id="about">
-	            <h3>What is dabr?</h3>
+	            <h3>What is Dabr?</h3>
                 <ul>
                     <li>A simplified and fast mobile web interface for Twitter.</li>
                     <li>Secure - served over http<strong>s</strong>. Your Twitter login details are stored using an encrypted cookie on your machine, and <em>never</em> stored on the website.</li>
                     <li><a href="https://github.com/edent/Dabr">Open source</a> - maintained by <a href="https://shkspr.mobi/blog/tag/dabr/">Terence Eden</a>.</li>
                     <li>Originally by <a href="https://code.google.com/p/dabr">David Carrington</a> with inspirations from <a href="http://whatleydude.com/">@whatleydude</a>.</li>
                 </ul>
-                <p>If you have any comments, suggestions or questions then feel free to get in touch :-).</p>
+                <p>If you have any comments, suggestions or questions then feel free to get in touch ☺</p>
             </div>';
 }
 
