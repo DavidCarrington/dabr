@@ -704,7 +704,7 @@ function theme_search_form($query) {
 	$query = stripslashes(htmlentities($query,ENT_QUOTES,"UTF-8"));
 	return '
 	<form action="search" method="get">
-	    🔍
+	    <span class="icons">🔍</span>
 	    <input name="query" value="'. $query .'" />
 		<input type="submit" value="Search" />
 	</form>';
