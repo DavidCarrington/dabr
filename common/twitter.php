@@ -185,7 +185,7 @@ function twitter_profile_page() {
 		$cb = get_codebird();
 		
 			
-		twitter_api_status($cb->account_updateProfile($api_options));
+		@twitter_api_status($cb->account_updateProfile($api_options));
 
 		$content = "<h2>Profile Updated</h2>";
 	} 
@@ -197,7 +197,7 @@ function twitter_profile_page() {
 			"image" => $_FILES['image']['tmp_name']
 		);
 
-		twitter_api_status($cb->account_updateProfileImage($api_options));
+		@twitter_api_status($cb->account_updateProfileImage($api_options));
 	}
 	
 	//	Twitter API is really slow!  If there's no delay, the old profile is returned.
@@ -676,9 +676,9 @@ function twitter_follow_page($query) {
 		$api_options = array("screen_name" => $screen_name);
 		
 		if($query[0] == 'follow'){
-			twitter_api_status($cb->friendships_create($api_options));
+			@twitter_api_status($cb->friendships_create($api_options));
 		} else {
-			twitter_api_status($cb->friendships_destroy($api_options));
+			@twitter_api_status($cb->friendships_destroy($api_options));
 		}
 		twitter_refresh('friends');
 	}
@@ -693,10 +693,10 @@ function twitter_block_page($query) {
 		$api_options = array("screen_name" => $screen_name);
 		
 		if($query[0] == 'block'){
-			twitter_api_status($cb->blocks_create($api_options));
+			@twitter_api_status($cb->blocks_create($api_options));
 			twitter_refresh("confirmed/block/{$screen_name}");
 		} else {
-			twitter_api_status($cb->blocks_destroy($api_options));
+			@twitter_api_status($cb->blocks_destroy($api_options));
 			twitter_refresh("confirmed/unblock/{$screen_name}");
 		}
 	}
@@ -711,7 +711,7 @@ function twitter_spam_page($query)
 
 	$cb = get_codebird();
 	$api_options = array("screen_name" => $screen_name);
-	twitter_api_status($cb->users_reportSpam($api_options));
+	@twitter_api_status($cb->users_reportSpam($api_options));
 
 	//Where should we return the user to?  Back to the user
 	twitter_refresh("confirmed/spam/{$screen_name}");
@@ -950,7 +950,7 @@ function twitter_retweet($query) {
 
 		$cb = get_codebird();
 		$api_options = array("id" => $id);
-		twitter_api_status($cb->statuses_retweet_ID($api_options));
+		$cb->statuses_retweet_ID($api_options);
 
 	}
 	twitter_refresh($_POST['from'] ? $_POST['from'] : '');
@@ -1016,7 +1016,7 @@ function twitter_directs_page($query) {
 			$to = trim(stripslashes(str_replace('@','',$_POST['to'])));
 			$message = trim(stripslashes($_POST['message']));
 			$api_options = array('screen_name' => $to, 'text' => $message);
-			twitter_api_status($cb->directMessages_new($api_options));
+			@twitter_api_status($cb->directMessages_new($api_options));
 			twitter_refresh('directs/sent');
 
 		case 'sent':
@@ -1253,10 +1253,10 @@ function twitter_mark_favourite_page($query) {
 	$api_options = array('id' => $id);
 
 	if ($query[0] == 'unfavourite') {
-		twitter_api_status($cb->favorites_destroy($api_options));
+		@twitter_api_status($cb->favorites_destroy($api_options));
 	}
 	else {
-		twitter_api_status($cb->favorites_create($api_options));
+		@twitter_api_status($cb->favorites_create($api_options));
 	}
 	twitter_refresh();
 }
