@@ -26,4 +26,4 @@ Found a bug? Got a suggestion?  Please create an issue on GitHub - or contact me
 - The Dabr code is [MIT License](http://opensource.org/licenses/mit-license.php)
 - The [CodeBird Twitter Library](https://github.com/jublonet/codebird-php/) is GPLv3.
 - The fonts were generated at [Fontello.com](http://fontello.com) and have various free licenses which can be found in `fonts/LICENSE.txt`
-- Dabr Bunny from [Iconfinder](https://www.iconfinder.com/iconsets/toys)
+- Dabr icon is from [Iconfinder](https://www.iconfinder.com/iconsets/toys)
