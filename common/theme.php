@@ -1044,7 +1044,9 @@ small,small a{
 	clear: both;
 }
 .embedded {
-	max-width:80%;
+	/*max-width:80%;*/
+	max-width:30em;
+	height:auto;
 }
 
 .date{
