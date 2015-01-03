@@ -59,9 +59,9 @@ function theme_menu_bottom_button() {
 function theme_menu_both($menu) {
 	$links = array();
 	foreach (menu_visible_items() as $url => $page) {
-		// $title = $url ? $url : 'home';
-		// $title = str_replace("-", " ", $title);
-		$title = $page['display'];
+		$title = $url ? $url : 'home';
+		$title = ucwords(str_replace("-", " ", $title));
+		$display = $page['display'];
 		if (!$url) $url = BASE_URL; // Shouldn't be required, due to <base> element but some browsers are stupid.
 		// if ($menu == 'bottom' ) { //&& isset($page['accesskey'])) {
 		// 	$links[] = "<a href='$url'>$title</a> {$page['accesskey']}";
@@ -69,7 +69,7 @@ function theme_menu_both($menu) {
 		// 	// $links[] = "<a href='$url'>$title</a>";
 		// }
 
-		$links[] = "<a href=\"{$url}\">$title</a>"	;
+		$links[] = "<a href=\"{$url}\" title=\"{$title}\">$display</a>"	;
 		 
 	}
 	if (user_is_authenticated()) {

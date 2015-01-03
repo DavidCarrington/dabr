@@ -361,7 +361,7 @@ function theme_user_header($user) {
 	            <span class='status shift'><b>{$name}</b>
 	            <span class='about'>";
 	if ($user->verified == true) {
-		$out .= '   <strong>Verified</strong> '.theme('action_icon', "", '✔', 'verified').'<br />';
+		$out .= '   <strong>Verified</strong> '.theme('action_icon', "", '✔', 'Verified').'<br />';
 	}
 	if ($user->protected == true) {
 		$out .= '   <strong>Private/Protected Tweets</strong><br />';
@@ -515,7 +515,7 @@ function theme_timeline($feed, $paginate = true) {
 		}
 
 		if ($status->place->name) {
-			$source .= theme('action_icon', "https://maps.google.com/maps?q={$status->place->name},{$status->place->country}", "<span class='icons'>⌖</span> {$status->place->name}, {$status->place->country}<br />", 'MAP'); //"⌖ " . $status->place->name . ", " . $status->place->country . "<br />";
+			$source .= theme('action_icon', "https://maps.google.com/maps?q={$status->place->name},{$status->place->country}", "<span class='icons' title='location'>⌖</span> {$status->place->name}, {$status->place->country}<br />", 'MAP'); //"⌖ " . $status->place->name . ", " . $status->place->country . "<br />";
 		}
 
 		//need to replace & in links with &amps and force new window on links
@@ -655,7 +655,7 @@ function theme_full_name($user) {
 	//	Add the veified tick
 	if($user->verified)
 	{
-		$name .= " " . theme('action_icon', "", '✔', 'verified');
+		$name .= " " . theme('action_icon', "", '✔', 'Verified');
 	}
 
 	return $name;
@@ -759,7 +759,7 @@ function theme_action_icons($status) {
 	$actions = array();
 
 	if (!$status->is_direct) {
-		$actions[] = theme('action_icon', "user/{$from}/reply/{$status->id}", '@', '@');
+		$actions[] = theme('action_icon', "user/{$from}/reply/{$status->id}", '@', 'Reply');
 	}
 	//Reply All functionality.
 	if( $status->entities->user_mentions ) {
@@ -767,13 +767,13 @@ function theme_action_icons($status) {
 	}
 
 	if (!user_is_current_user($from)) {
-		$actions[] = theme('action_icon', "directs/create/{$from}", '✉', 'DM');
+		$actions[] = theme('action_icon', "directs/create/{$from}", '✉', 'Direct Message');
 	}
 	if (!$status->is_direct) {
 		if ($status->favorited == '1') {
-			$actions[] = theme('action_icon', "unfavourite/{$status->id}", '<span style="color:#FFFF00;">★</span>', 'UNFAV');
+			$actions[] = theme('action_icon', "unfavourite/{$status->id}", '<span style="color:#FFFF00;">★</span>', 'Unfavourite');
 		} else {
-			$actions[] = theme('action_icon', "favourite/{$status->id}", '☆', 'FAV');
+			$actions[] = theme('action_icon', "favourite/{$status->id}", '☆', 'Favourite');
 		}
 		//	Display favourite count
 		if($status->favorite_count) {
@@ -782,10 +782,10 @@ function theme_action_icons($status) {
 
 		// Show a diffrent retweet icon to indicate to the user this is an RT
 		if ($status->retweeted || user_is_current_user($retweeted_by)) {
-			$actions[] = theme('action_icon', "retweet/{$status->id}", '<span style="color:#009933;">♻</span>', 'RT');
+			$actions[] = theme('action_icon', "retweet/{$status->id}", '<span style="color:#009933;">♻</span>', 'Retweet');
 		}
 		else {
-			$actions[] = theme('action_icon', "retweet/{$status->id}", '♻', 'RT');
+			$actions[] = theme('action_icon', "retweet/{$status->id}", '♻', 'Retweet');
 		}
 		//	Display number of RT
 		if ($status->retweet_count)	{
@@ -793,26 +793,26 @@ function theme_action_icons($status) {
 		}
 
 		if (user_is_current_user($from)) {
-			$actions[] = theme('action_icon', "confirm/delete/{$status->id}", '🗑', 'DEL');
+			$actions[] = theme('action_icon', "confirm/delete/{$status->id}", '🗑', 'Delete');
 		}
 
 		//Allow users to delete what they have retweeted
 		if (user_is_current_user($retweeted_by)) {
-			$actions[] = theme('action_icon', "confirm/delete/{$retweeted_id}", '🗑', 'DEL');
+			$actions[] = theme('action_icon', "confirm/delete/{$retweeted_id}", '🗑', 'Delete');
 		}
 	
 	}
 	else {
-		$actions[] = theme('action_icon', "confirm/deleteDM/{$status->id}", '🗑', 'DEL');
+		$actions[] = theme('action_icon', "confirm/deleteDM/{$status->id}", '🗑', 'Delete');
 	}
 	if ($geo !== null) {
 		$latlong = $geo->coordinates;
 		$lat = $latlong[0];
 		$long = $latlong[1];
-		$actions[] = theme('action_icon', "https://maps.google.com/maps?q={$lat},{$long}", '⌖', 'MAP');
+		$actions[] = theme('action_icon', "https://maps.google.com/maps?q={$lat},{$long}", '⌖', 'Location');
 	}
 	//Search for @ to a user
-	$actions[] = theme('action_icon',"search?query=%40{$from}",'🔍','?');
+	$actions[] = theme('action_icon',"search?query=%40{$from}",'🔍','Search');
 
 	// Put the retweet info on the same line
 	if ($status->retweeted_by) {
@@ -825,15 +825,15 @@ function theme_action_icons($status) {
 
 function theme_action_icon($url, $image_url, $text) {
 	// Maps open in a new tab
-	if ($text == 'MAP')
+	if ($text == 'Location')
 	{
 		return "<a href='$url' target='" . get_target() . "' class='action'>{$image_url}</a>";
 	}
 
 	//	Verified ticks & RT notifications don't need to be linked
-	if ("verified" == $text || "retweeted" == $text)
+	if ("Verified" == $text || "retweeted" == $text)
 	{
-		return "<span class='action'>{$image_url}</span>";
+		return "<span class='action' title='{$text}'>{$image_url}</span>";
 	}
 
     // if (0 === strpos($image_url, "images/"))
@@ -841,7 +841,7 @@ function theme_action_icon($url, $image_url, $text) {
     //     return "<a href='$url'><img src='$image_url' alt='$text' /></a>";
     // }
 
-    return "<a href='{$url}' class='action' >{$image_url}</a>";
+    return "<a href='{$url}' class='action' title='{$text}'>{$image_url}</a>";
 	
 }
 function theme_followers_list($feed, $hide_pagination = false) {
@@ -864,7 +864,7 @@ function theme_followers_list($feed, $hide_pagination = false) {
 		if($user->description != "")
 			$content .= "Bio: {$user->description}<br />";
 		if($user->location != "") {
-			$content .= theme('action_icon', "https://maps.google.com/maps?q={$user->location}", "<span class='icons'>⌖</span> {$user->location}", 'MAP');
+			$content .= theme('action_icon', "https://maps.google.com/maps?q={$user->location}", "<span class='icons'>⌖</span> {$user->location}", 'Location');
 			$content .= "<br />";
 		}
 		$content .= "Info: ";
