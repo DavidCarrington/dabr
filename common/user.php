@@ -176,6 +176,9 @@ function _user_decrypt_cookie($crypt_text) {
 }
 
 function theme_login() {
+	//	Reset stale OAuth data
+	setting_clear_session_oauth();
+
 	$content = '<div class="tweet">
 					<p>
 						<a href="oauth">
@@ -187,6 +190,7 @@ function theme_login() {
 						<br />
 						<a href="oauth">Sign in via Twitter.com</a>
 					</p>';
+
 	return $content;
 }
 

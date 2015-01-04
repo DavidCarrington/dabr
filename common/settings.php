@@ -29,6 +29,7 @@ menu_register(array(
 ));
 
 function cookie_monster() {
+	//	Delete Cookies
 	$cookies = array(
 		'settings',
 		'utc_offset',
@@ -41,7 +42,17 @@ function cookie_monster() {
 		setcookie($cookie, null, $duration, '/');
 		setcookie($cookie, null, $duration);
 	}
+
+	setting_clear_session_oauth();
+
 	return theme('page', 'Cookie Monster', '<p>The cookie monster has logged you out and cleared all settings. Try logging in again now.</p>');
+}
+
+function setting_clear_session_oauth() {
+	//	Reset OAuth data
+	unset($_SESSION['oauth_token']);
+	unset($_SESSION['oauth_token_secret']);
+	unset($_SESSION['oauth_verify']);
 }
 
 function setting_fetch($setting, $default = null) {
