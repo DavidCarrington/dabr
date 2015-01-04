@@ -39,6 +39,7 @@ function oembed_embed_thumbnails(&$feed) {
 				} else {
 					//	No URLs, do nothing
 					//return null;
+					$matched_urls[] = null;
 				}
 			}
 		}
