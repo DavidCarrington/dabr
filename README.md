@@ -12,7 +12,7 @@ This is a fork of the [original Dabr code](https://code.google.com/p/dabr/) by o
 
 Dabr is designed to be *as simple as possible* to install on your webserver.  If you can run PHP v5.3.0 on your server, you can run Dabr.
 
-1. Download the code from GitHub.
+1. [Download the code](https://github.com/edent/Dabr/archive/master.zip) from GitHub.
 2. Edit the file `config.sample.php` and rename it to `config.php`.
     - You'll need to [register for a Twitter API key](https://apps.twitter.com/) for your app. 
 3. Upload everything onto your server - you should be good to go!
