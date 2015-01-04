@@ -570,7 +570,7 @@ function twitter_status_page($query) {
 		//	Show a link to the original tweet		
 		$screen_name = $status->from->screen_name;
 		$content .= '<p>
-		                <a href="https://mobile.twitter.com/' . $screen_name . '/status/' . $id . '" target="'. get_target() . '">
+		                <a href="https://twitter.com/' . $screen_name . '/status/' . $id . '" target="'. get_target() . '">
 		                    View orginal tweet on Twitter
 		                </a> | ';
 		
