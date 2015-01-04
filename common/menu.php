@@ -52,7 +52,7 @@ function theme_menu_top() {
 
 function theme_menu_bottom_button() {
 	//	Trim the first slash
-	$request = ltrim($_SERVER['REQUEST_URI'],'/');
+	$request = htmlspecialchars(ltrim($_SERVER['REQUEST_URI'],'/'));
 	return '<a href="'. SERVER_NAME . $request . '#menu" class="button">↑ Top ↑</a>';
 }
 
