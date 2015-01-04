@@ -17,14 +17,18 @@ function url_fetch($url) {
 }
 
 function oembed_embed_thumbnails(&$feed) {
-
-	foreach($feed as &$status) { // Loop through the feed
-		if(stripos($status->text, 'NSFW') === FALSE) { // Ignore image fetching for tweets containing NSFW
-			if ($status->entities) { // If there are entities
+	foreach($feed as &$status) 
+	{ // Loop through the feed
+		if(stripos($status->text, 'NSFW') === FALSE) 
+		{ // Ignore image fetching for tweets containing NSFW
+			if ($status->entities) 
+			{ // If there are entities
 				$entities = $status->entities;
-				if($entities->urls)	{
-					foreach($entities->urls as $urls) {	// Loop through the URL entities
-						if($urls->expanded_url != "") {	// Use the expanded URL, if it exists, to pass to Embedly
+				if($entities->urls)	
+				{
+					foreach($entities->urls as $urls) 
+					{	// Loop through the URL entities
+						if($urls->expanded_url != "") {	// Use the expanded URL, if it exists, to pass to Oembed provider
 							$url = $urls->expanded_url;
 						}
 						else {
@@ -34,7 +38,7 @@ function oembed_embed_thumbnails(&$feed) {
 					}
 				} else {
 					//	No URLs, do nothing
-					return null;
+					//return null;
 				}
 			}
 		}
@@ -51,6 +55,7 @@ function oembed_embed_thumbnails(&$feed) {
 		// 	$justUrls = $justUrls[0];
 		// }
 		$url = 'https://embedkit.com/api/v1/extract?key='.EMBEDKIT_KEY.'&urls=' . implode(',', $justUrls) . '&format=json';
+		// echo "<pre>URL = {$url}</pre>";
 		$embedly_json = url_fetch($url);
 		$oembeds = json_decode($embedly_json);
 

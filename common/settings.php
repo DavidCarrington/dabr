@@ -66,6 +66,7 @@ function settings_page($args) {
 		$settings['reverse']      = $_POST['reverse'];
 		$settings['timestamp']    = $_POST['timestamp'];
 		$settings['hide_inline']  = $_POST['hide_inline'];
+		$settings['show_oembed']  = $_POST['show_oembed'];
 		$settings['hide_avatars'] = $_POST['hide_avatars'];
 		$settings['utc_offset']   = (float)$_POST['utc_offset'];
 		
@@ -137,7 +138,15 @@ function settings_page($args) {
 	$content .= '<p>
 	                <label>
 	                    <input type="checkbox" name="hide_inline" value="yes" '. (setting_fetch('hide_inline') == 'yes' ? ' checked="checked" ' : '') .' /> 
-	                    Hide inline media (eg pictures, videos, thumbnails).
+	                    Hide Twitter photos.
+	                </label>
+	            </p>';
+	
+	//	Hide oembeds by default. Keep things fast & save API calls.
+	$content .= '<p>
+	                <label>
+	                    <input type="checkbox" name="show_oembed" value="yes" '. (setting_fetch('show_oembed') == yes ? ' checked="checked" ' : '') .' /> 
+	                    Show link previews (YouTube Videos, etc).
 	                </label>
 	            </p>';
 

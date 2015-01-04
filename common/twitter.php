@@ -1,7 +1,6 @@
 <?php
 require 'Autolink.php';
 require 'Extractor.php';
-require 'oembed.php';
 		
 menu_register(array(
 	'' => array(

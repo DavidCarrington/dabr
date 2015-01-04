@@ -1,4 +1,6 @@
 <?php
+require 'oembed.php';
+
 $current_theme = false;
 
 //	Setup
@@ -19,14 +21,6 @@ function theme() {
 	// }
 	return call_user_func_array($function, $args);
 }
-
-// function theme_csv($headers, $rows) {
-// 	$out = implode(',', $headers)."\n";
-// 	foreach ($rows as $row) {
-// 		$out .= implode(',', $row)."\n";
-// 	}
-// 	return $out;
-// }
 
 function theme_list($items, $attributes) {
 	if (!is_array($items) || count($items) == 0) {
@@ -469,7 +463,7 @@ function theme_timeline($feed, $paginate = true) {
 	
 	// Only embed images if user hasn't hidden them
 	
-	if(!setting_fetch('hide_inline')) {
+	if(setting_fetch('show_oembed')) {
 		oembed_embed_thumbnails($feed);
 	}
 
