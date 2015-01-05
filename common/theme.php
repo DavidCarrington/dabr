@@ -60,11 +60,11 @@ function theme_info($info) {
 function theme_table($headers, $rows, $attributes = null) {
 	$out = '<div'.theme_attributes($attributes).'>';
 	if (count($headers) > 0) {
-		$out .= '<thead><tr>';
+		// $out .= '<thead><tr>';
 		foreach ($headers as $cell) {
 			$out .= theme_table_cell($cell, true);
 		}
-		$out .= '</tr></thead>';
+		// $out .= '</tr></thead>';
 	}
 	if (count($rows) > 0) {
 		$out .= theme('table_rows', $rows);
@@ -1035,6 +1035,15 @@ small,small a{
 }
 .from a{
 	color:#{$c->small};
+}
+.table {
+	display: table;
+}
+.row {
+	display: table-row;
+}
+.cell {
+	display: table-cell;
 }
 </style>";
 }

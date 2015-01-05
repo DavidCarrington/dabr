@@ -1,6 +1,7 @@
 <?php
 require 'Autolink.php';
 require 'Extractor.php';
+require 'lists.php';
 		
 menu_register(array(
 	'' => array(
@@ -132,6 +133,11 @@ menu_register(array(
 		'callback' => 'twitter_retweets_page',
 		'display' => '♻'
 	),
+ 	'lists' => array(
+ 		'security' => true,
+ 		'callback' => 'lists_controller',
+ 		'display'  => '≡'
+ 	),
 	'retweeted_by' => array(
 		'security' => true,
 		'hidden' => true,
