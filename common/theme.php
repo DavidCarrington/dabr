@@ -489,6 +489,14 @@ function theme_timeline($feed, $paginate = true) {
 		else {
 			$date = $status->created_at;
 		}
+
+		if ($status->retweeted_by) {
+			$retweeted_by = $status->retweeted_by->user->screen_name;
+			$retweeted = "<br /><small>RT by <a href='user/{$retweeted_by}'>{$retweeted_by}</a></small>";
+		} else {
+			$retweeted = "";
+		}
+
 		$text = $status->text;
 		if ("yes" != setting_fetch('hide_inline')) {
 			$media = twitter_get_media($status);
@@ -768,12 +776,6 @@ function theme_action_icons($status) {
 	}
 	//Search for @ to a user
 	$actions[] = theme('action_icon',"search?query=%40{$from}",'🔍','Search');
-
-	// Put the retweet info on the same line
-	if ($status->retweeted_by) {
-		$retweeted_by = $status->retweeted_by->user->screen_name;
-		$actions[] = "<small>RT by <a href='user/{$retweeted_by}'>{$retweeted_by}</a></small>";
-	}
 
 	return '<span class="actionicons">' . implode('&emsp;', $actions) . '</span>';
 }
