@@ -1073,7 +1073,11 @@ function twitter_search_page() {
 	if ($search_query) {
 		$tl = twitter_search($search_query, $lat, $long, $radius);
 		if ($search_query !== $_COOKIE['search_favourite']) {
-			$content .= '<form action="search/bookmark" method="post"><input type="hidden" name="query" value="'.$search_query.'" /><input type="submit" value="Save as default search" /></form>';
+			//	Should probably be in theme.php ... TODO
+			$content .= '<form action="search/bookmark" method="post">
+			                <input type="hidden" name="query" value="'.$search_query.'" />
+			                <input type="submit" value="Save as default search" />
+			            </form>';
 		}
 		$content .= theme('timeline', $tl);
 	}

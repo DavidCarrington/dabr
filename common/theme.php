@@ -668,7 +668,7 @@ function theme_search_form($query) {
 	return '
 	<form action="search" method="get">
 	    <span class="icons">🔍</span>
-	    <input name="query" value="'. $query .'" />
+	    <input type="search" name="query" value="'. $query .'" />
 		<input type="submit" value="Search" />
 	</form>';
 }
