@@ -148,16 +148,16 @@ menu_register(array(
 		'callback' => 'twitter_profile_page',
 		'display' => '☺'
 	),
-	// 'showretweets' => array(
-	// 	'hidden' => true,
-	// 	'security' => true,
-	// 	'callback' => 'twitter_retweets',
-	// ),
-	// 'hideretweets' => array(
-	// 	'hidden' => true,
-	// 	'security' => true,
-	// 	'callback' => 'twitter_retweets',
-	// ),
+	'showretweets' => array(
+		'hidden' => true,
+		'security' => true,
+		'callback' => 'twitter_retweets',
+	),
+	'hideretweets' => array(
+		'hidden' => true,
+		'security' => true,
+		'callback' => 'twitter_retweets',
+	),
 ));
 
 // How should external links be opened?
@@ -767,8 +767,16 @@ function twitter_confirmation_page($query)
 
 		case 'hideretweets':
 			$content  = "<p>Are you really sure you want to hide the Retweets from <strong>$target</strong>?</p>";
-			$content .= "<ul><li>They will no longer appear in your timeline.</li><li>However you will still see them when looking at {$target}'s timeline.</li></ul>";
+			$content .= "<ul><li>The tweets that {$target} shares will no longer appear in your timeline.</li>
+			                 <li>However you will still see them when looking at {$target}'s timeline.</li></ul>";
 			break;
+
+		case 'showretweets':
+			$content  = "<p>Are you really sure you want to show the Retweets from <strong>$target</strong>?</p>";
+			$content .= "<ul><li>The tweets that {$target} shares will appear in your timeline.</li>
+			                 <li>You can turn these off at any time.</li></ul>";
+			break;
+
 
 	}
 	$content .= "<form action='$action/$target' method='post'>
@@ -797,18 +805,24 @@ function twitter_confirmed_page($query)
  	theme ('Page', 'Confirmed', $content);
 }
 
-// function twitter_retweets($query) {
-// 	$user = $query[1];	//The name of the user we are doing this action on
-// 	if($user) {
-// 		if($query[0] == 'hideretweets') {
-// 			$request = API_NEW."friendships/update.json?screen_name={$user}&retweets=false";
-// 		} else {
-// 			$request = API_NEW."friendships/update.json?screen_name={$user}&retweets=true";
-// 		}
-// 		twitter_process($request, true);
-// 		twitter_refresh("user/{$user}");
-// 	}	
-// }
+function twitter_retweets($query) {
+	$user = $query[1];	//The name of the user we are doing this action on
+
+	$cb = get_codebird();
+
+	$api_options = array("screen_name" => $user);
+
+	if($user) {
+		if($query[0] == 'hideretweets') {
+			$api_options["retweets"] = false;
+			@twitter_api_status($cb->friendships_update($api_options));
+		} else {
+			$api_options["retweets"] = true;
+			@twitter_api_status($cb->friendships_update($api_options));
+		}
+		twitter_refresh("user/{$user}");
+	}	
+}
 
 function twitter_friends_page($query) {
 	$user = $query[1];

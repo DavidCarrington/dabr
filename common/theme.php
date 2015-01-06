@@ -398,14 +398,14 @@ function theme_user_header($user) {
 		}
 		else {
 			$out .= " | <a href='unfollow/{$user->screen_name}'>Unfollow</a>";
-		}
 
-		// if($friendship->relationship->source->want_retweets) {
-		// 	$out .= " | <a href='confirm/hideretweets/{$user->screen_name}'>Hide Retweets</a>";
-		// }
-		// else {
-		// 	$out .= " | <a href='showretweets/{$user->screen_name}'>Show Retweets</a>";
-		// }
+			if($friendship->relationship->source->want_retweets) {
+				$out .= " | <a href='confirm/hideretweets/{$user->screen_name}'>Hide Retweets</a>";
+			}
+			else {
+				$out .= " | <a href='confirm/showretweets/{$user->screen_name}'>Show Retweets</a>";
+			}
+		}
 
 		//We need to pass the User Name and the User ID.  The Name is presented in the UI, the ID is used in checking
 		$blocked = $friendship->relationship->source->blocking; //The $user is blocked by the authenticating
