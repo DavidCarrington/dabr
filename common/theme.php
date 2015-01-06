@@ -247,7 +247,7 @@ function theme_status_form($text = '', $in_reply_to_id = null) {
         <form method="post" action="update" enctype="multipart/form-data">
             <fieldset>
                 <legend><span class="icons" id="twitterbird">'.$icon.'</span> What\'s Happening?</legend>
-                <textarea id="status" name="status" rows="4" style="width:95%; max-width: 400px;">'.$text.'</textarea>
+                <textarea id="status" name="status" rows="4" class="statusbox">'.$text.'</textarea>
                 <div>
                     <input name="in_reply_to_id" value="'.$in_reply_to_id.'" type="hidden" />
                     <input type="submit" value="Tweet" />
@@ -257,8 +257,9 @@ function theme_status_form($text = '', $in_reply_to_id = null) {
                         <label for="geoloc" id="lblGeo"></label>
                     </span>
                 </div>
+                <span class="icons" style="float:right;">📷</span> 
                 <div class="fileinputs">
-					<span class="icons">📷</span> <input type="file" accept="image/*" name="image" class="file" />
+					<input type="file" accept="image/*" name="image" class="file" />
 				</div>
             </fieldset>
             <script type="text/javascript">
@@ -899,6 +900,25 @@ body{
 	font-family:sans-serif;
 	background:#{$c->bodybg};
 	color:#{$c->bodyt};
+}
+
+fieldset {
+	border-radius:1em;
+	max-width:30em;
+}
+textarea {
+	width: 100%;
+	border-radius: 0.5em;
+	max-width: 39.5em;
+}
+.fileinputs {
+	float: right;
+	direction: rtl;
+	margin-right: 1em;
+}
+
+#geo {
+	float:right;
 }
 
 .profile,.bottom {
