@@ -53,7 +53,7 @@ function theme_menu_top() {
 function theme_menu_bottom_button() {
 	//	Trim the first slash
 	$request = htmlspecialchars(ltrim($_SERVER['REQUEST_URI'],'/'));
-	return '<a href="'. SERVER_NAME . $request . '#menu" class="button">↑ Top ↑</a>';
+	return '<a href="'. SERVER_NAME . $request . '#menu" class="button">↑ Menu ↑</a>';
 }
 
 function theme_menu_both($menu) {
@@ -79,5 +79,5 @@ function theme_menu_both($menu) {
 	if ($menu == 'bottom') {
 		// $links[] = "<a href='{$_GET['q']}' accesskey='5'>refresh</a> 5";
 	}
-	return "<div class='menu' id='menu'>".implode(' | ', $links).'</div>';
+	return "<div class='menu' id='menu'>".implode('&ensp;', $links).'</div>';
 }
