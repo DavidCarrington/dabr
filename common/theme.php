@@ -200,11 +200,10 @@ function theme_profile_form($user){
 				    <hr />Name:     <input name='name' maxlength='20' value='"                 . htmlspecialchars($user->name, ENT_QUOTES) ."' />
 				    <br />Avatar:   <img src='".theme_get_avatar($user)."' /> <input type='file' name='image' />
 				    <br />Bio:      <textarea name='description' cols=40 rows=6 maxlength=160>". htmlspecialchars($user->description, ENT_QUOTES)."</textarea>
-				    <br />Link:     <input name='url' maxlength='100' size=40 value='"         . htmlspecialchars($user->url, ENT_QUOTES) ."' />
+				    <br />Link:     <input name='url' type='url' size=40 value='"              . htmlspecialchars($user->entities->url->urls[0]->expanded_url, ENT_QUOTES) ."' />
 				    <br />Location: <input name='location' maxlength='30' value='"             . htmlspecialchars($user->location, ENT_QUOTES) ."' />
 				    <br /><input type='submit' value='Update Profile' />
 				</form>";
-
 	return $out;
 }
 function theme_directs_menu() {
