@@ -179,17 +179,17 @@ function theme_colours() {
 	list(, $bits) = explode('|', $info);
 	$colours = explode(',', $bits);
 	return (object) array(
-		'links'     => $colours[0],
-		'bodybg'    => $colours[1],
-		'bodyt'     => $colours[2],
-		'small'     => $colours[3],
-		'odd'       => $colours[4],
-		'even'      => $colours[5],
-		'replyodd'  => $colours[6],
-		'replyeven' => $colours[7],
-		'menubg'    => $colours[8],
-		'menut'     => $colours[9],
-		'menua'     => $colours[10],
+		'links'           => trim($colours[0]),
+		'body_background' => trim($colours[1]),
+		'body_text'       => trim($colours[2]),
+		'small'           => trim($colours[3]),
+		'odd'             => trim($colours[4]),
+		'even'            => trim($colours[5]),
+		'replyodd'        => trim($colours[6]),
+		'replyeven'       => trim($colours[7]),
+		'menu_background' => trim($colours[8]),
+		'menu_text'       => trim($colours[9]),
+		'menu_link'       => trim($colours[10]),
 	);
 }
 
@@ -730,6 +730,7 @@ function theme_action_icons($status) {
 //		$actions[] = theme('action_icon', "user/{$from}/replyall/{$status->id}", 'images/replyall.png', 'REPLY ALL');
 	}
 
+	//	DM only shows up if we can actually send a DM
 	if (!user_is_current_user($from)) {
 		$actions[] = theme('action_icon', "directs/create/{$from}", '✉', 'Direct Message');
 	}
@@ -916,8 +917,8 @@ function theme_css() {
 body{
 	margin:0;
 	font-family:sans-serif;
-	background:#{$c->bodybg};
-	color:#{$c->bodyt};
+	background:#{$c->body_background};
+	color:#{$c->body_text};
 }
 
 fieldset {
@@ -1003,8 +1004,8 @@ small,small a{
 }
 
 .menu{
-	color:#{$c->menut};
-	background:#{$c->menubg};
+	color:#{$c->menu_text};
+	background:#{$c->menu_background};
 	padding: 2px;
 	font-family:icons,sans-serif;
 	font-size: 1.75em;
@@ -1012,17 +1013,17 @@ small,small a{
 
 .menu-text{
 	
-	background:#{$c->menubg};
+	background:#{$c->menu_background};
 	font-family:sans-serif;
 }
 
 .menu a{
-	color:#{$c->menua};
+	color:#{$c->menu_link};
 	text-decoration: none;
 }
 
 .menu-text a{
-	color:#{$c->menua};
+	color:#{$c->menu_link};
 	text-decoration: none;
 }
 

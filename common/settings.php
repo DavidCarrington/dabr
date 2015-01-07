@@ -3,18 +3,19 @@
 /*
 Assembled in theme_css()
 Syntax is 
-'Name|links,bodybg,bodyt,small,odd,even,replyodd,replyeven,menubg,menut,menua',
+         'Name|          links, body_background,body_text,small, odd,   even,  replyodd,replyeven,menu_background,menu_text,menu_link',
 */
 
 $GLOBALS['colour_schemes'] = array(
-	0 => 'Pretty In Pink|c06,fcd,623,c8a,fee,fde,ffa,dd9,c06,fee,fee',
-	1 => 'Ugly Orange|b50,ddd,111,555,fff,eee,ffa,dd9,e81,c40,fff',
-	2 => 'Touch Blue|138,ddd,111,555,fff,eee,ffa,dd9,138,fff,fff',
-	3 => 'Sickly Green|293C03,ccc,000,555,fff,eee,CCE691,ACC671,495C23,919C35,fff',
-	4 => 'Kris\' Purple|d5d,000,ddd,999,222,111,202,101,909,222,000,000',
-	5 => '#red|d12,ddd,111,555,fff,eee,ffa,dd9,c12,fff,fff',
-	6 => 'Blaq|0049DA,FFFFCC,333300,333300,F5EFC0,EDE8B1,CCFF99,99FF99,FFFFCC,003300,003300',
-	//   'Name|links ,bodybg,bodyt ,small ,odd   ,even,replyodd,replyeven,menubg,menut,menua',
+	//   'Name|          links, body_background,body_text,small, odd,   even,  replyodd,replyeven,menu_background,menu_text,menu_link',
+	0 => 'Pretty In Pink|c06,   fcd,            623,      623,   fee,   fde,   ffa,     dd9,      c06,            fee,      fee',
+	1 => 'Ugly Orange|   b50,   ddd,            111,      555,   fff,   eee,   ffa,     dd9,      e81,            c40,      fff',
+	2 => 'Touch Blue|    138,   ddd,            111,      313460,fff,   eee,   ffa,     dd9,      138,            fff,      fff',
+	3 => 'Sickly Green|  293C03,ccc,            000,      555,   fff,   eee,   CCE691,  ACC671,   495C23,         919C35,   fff',
+	4 => 'Night Mode|    d5d,   000,            ddd,      B7A3A3,222,   111,   202,     101,      909,            222,      000',
+	5 => '#red|          d12,   ddd,            111,      555,   fff,   eee,   ffa,     dd9,      c12,            fff,      fff',
+	6 => 'Mellow Yellow| 0049DA,FFFFCC,         333300,   333300,F5EFC0,EDE8B1,CCFF99,  99FF99,   FFFFCC,         003300,   003300',
+	//   'Name|          links, body_background,body_text,small, odd,   even,  replyodd,replyeven,menu_background,menu_text,menu_link',
 );
 
 menu_register(array(
