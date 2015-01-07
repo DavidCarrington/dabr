@@ -241,6 +241,13 @@ function theme_status_form($text = '', $in_reply_to_id = null) {
 		{
 			$text = $_GET['status'];
 		}
+
+		if ('yes' == setting_fetch('menu_icons'))
+		{
+			$camera = "📷";
+		} else {
+			$camera = "Add photo";
+		}
 		
         $output = '
         <form method="post" action="update" enctype="multipart/form-data">
@@ -256,7 +263,7 @@ function theme_status_form($text = '', $in_reply_to_id = null) {
                         <label for="geoloc" id="lblGeo"></label>
                     </span>
                 </div>
-                <span class="icons" style="float:right;">📷</span> 
+                <span class="icons" style="float:right;">'.$camera.'</span>
                 <div class="fileinputs">
 					<input type="file" accept="image/*" name="image" class="file" />
 				</div>
@@ -743,7 +750,9 @@ function theme_action_icons($status) {
 		$retweet_count = "";
 		//	Display number of RT
 		if ($status->retweet_count)	{
-			$retweet_count = "<sup><a href='retweeted_by/{$status->id}' class='action'>" . number_format($status->retweet_count) . "</a></sup>";
+			$retweet_count = "<sup>" . 
+			                    theme('action_icon', "retweeted_by/{$status->id}", number_format($status->retweet_count), number_format($status->retweet_count)) .
+			                "</sup>";
 		}
 
 		// Show a diffrent retweet icon to indicate to the user this is an RT
@@ -780,17 +789,27 @@ function theme_action_icons($status) {
 	return '<span class="actionicons">' . implode('&emsp;', $actions) . '</span>';
 }
 
-function theme_action_icon($url, $image_url, $text) {
+function theme_action_icon($url, $display, $text) {
+
+	//	If the user doesn't want icons, display as text
+	if ('yes' !== setting_fetch('menu_icons'))
+	{
+		$display = $text;
+		$class = "action-text";
+	} else {
+		$class = "action";
+	}
+
 	// Maps open in a new tab
 	if ($text == 'Location')
 	{
-		return "<a href='$url' target='" . get_target() . "' class='action'>{$image_url}</a>";
+		return "<a href='$url' target='" . get_target() . "' class='{$class}'>{$display}</a>";
 	}
 
 	//	Verified ticks & RT notifications don't need to be linked
 	if ("Verified" == $text || "retweeted" == $text)
 	{
-		return "<span class='action' title='{$text}'>{$image_url}</span>";
+		return "<span class='{$class}' title='{$text}'>{$display}</span>";
 	}
 
     // if (0 === strpos($image_url, "images/"))
@@ -798,7 +817,7 @@ function theme_action_icon($url, $image_url, $text) {
     //     return "<a href='$url'><img src='$image_url' alt='$text' /></a>";
     // }
 
-    return "<a href='{$url}' class='action' title='{$text}'>{$image_url}</a>";
+    return "<a href='{$url}' class='{$class}' title='{$text}'>{$display}</a>";
 	
 }
 function theme_users_list($feed, $hide_pagination = false) {
@@ -928,18 +947,18 @@ textarea {
 	text-align: center;
 }
 
-.menu{
-	font-family:icons,sans-serif;
-	font-size: 1.75em;
-}
-
 .actionicons {
-	font-family:icons,sans-serif;
-	font-size: 1.2em;
 	display: block;
 	margin: 0.3em; 
 	clear: both;
+}
+.actionicons a{
+	font-family:icons,sans-serif;
+	font-size: 1.2em;
 	text-decoration: none;
+}
+.actionicons .action-text {
+	font-size:0.9em;
 }
 
 .icons {
@@ -982,12 +1001,27 @@ small,small a{
 .reply.even{
 	background:#{$c->replyeven};
 }
+
 .menu{
 	color:#{$c->menut};
 	background:#{$c->menubg};
 	padding: 2px;
+	font-family:icons,sans-serif;
+	font-size: 1.75em;
 }
+
+.menu-text{
+	
+	background:#{$c->menubg};
+	font-family:sans-serif;
+}
+
 .menu a{
+	color:#{$c->menua};
+	text-decoration: none;
+}
+
+.menu-text a{
 	color:#{$c->menua};
 	text-decoration: none;
 }

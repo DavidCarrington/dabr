@@ -79,6 +79,7 @@ function settings_page($args) {
 		$settings['hide_inline']  = $_POST['hide_inline'];
 		$settings['show_oembed']  = $_POST['show_oembed'];
 		$settings['hide_avatars'] = $_POST['hide_avatars'];
+		$settings['menu_icons']   = $_POST['menu_icons'];
 		$settings['utc_offset']   = (float)$_POST['utc_offset'];
 		
 		setcookie_year('settings', base64_encode(serialize($settings)));
@@ -167,6 +168,14 @@ function settings_page($args) {
 	                    Hide users\' profile images.
 	                </label>
 	            </p>';
+
+	$content .= '<p>
+	                <label>
+	                    <input type="checkbox" name="menu_icons" value="yes" '. (setting_fetch('menu_icons') == 'yes' ? ' checked="checked" ' : '') .' /> 
+	                    Show Menu icons like <span class="icons">🏠⌖</span>.
+	                </label>
+	            </p>';
+
 	$content .= '<p><label>The time in UTC is currently ' . gmdate('H:i') . ', by using an offset of <input type="text" name="utc_offset" value="'. $utc_offset .'" size="3" /> we display the time as ' . twitter_date('H:i') . '.<br />It is worth adjusting this value if the time appears to be wrong.</label></p>';
 	
 	$content .= '<p><input type="submit" value="Save" /></p></form>';

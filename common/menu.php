@@ -61,7 +61,15 @@ function theme_menu_both($menu) {
 	foreach (menu_visible_items() as $url => $page) {
 		$title = $url ? $url : 'home';
 		$title = ucwords(str_replace("-", " ", $title));
-		$display = $page['display'];
+
+		if ('yes' == setting_fetch('menu_icons'))
+		{
+			$display = $page['display'];
+			$class = "menu";
+		} else {
+			$display = $title . " |";
+			$class = "menu-text";
+		}
 		if (!$url) $url = BASE_URL; // Shouldn't be required, due to <base> element but some browsers are stupid.
 		// if ($menu == 'bottom' ) { //&& isset($page['accesskey'])) {
 		// 	$links[] = "<a href='$url'>$title</a> {$page['accesskey']}";
@@ -79,5 +87,5 @@ function theme_menu_both($menu) {
 	if ($menu == 'bottom') {
 		// $links[] = "<a href='{$_GET['q']}' accesskey='5'>refresh</a> 5";
 	}
-	return "<div class='menu' id='menu'>".implode('&ensp;', $links).'</div>';
+	return "<div class='{$class}' id='menu'>".implode('&ensp;', $links).'</div>';
 }
