@@ -519,25 +519,25 @@ function theme_timeline($feed, $paginate = true) {
 		$source = "";
 
 		if ($status->in_reply_to_status_id)	{
-			$source .= "In reply to <a href='status/{$status->in_reply_to_status_id_str}'>{$status->in_reply_to_screen_name}</a><br />";
+			$source .= "In reply to <a href='status/{$status->in_reply_to_status_id_str}'>{$status->in_reply_to_screen_name}</a>.";
 		}
 
 		if ($status->place->name) {
-			$source .= theme('action_icon', "https://maps.google.com/maps?q=" . urlencode("{$status->place->name},{$status->place->country}") , "<span class='icons' title='location'>⌖</span> {$status->place->name}, {$status->place->country}<br />", 'MAP'); //"⌖ " . $status->place->name . ", " . $status->place->country . "<br />";
+			$source .= " " . theme('action_icon', "https://maps.google.com/maps?q=" . urlencode("{$status->place->name},{$status->place->country}") , "<span class='icons' title='location'>⌖</span> {$status->place->name}, {$status->place->country}.", 'MAP');
 		}
 
 		//need to replace & in links with &amps and force new window on links
-		$source .= $status->source ? " Via ".str_replace('rel="nofollow"', 'rel="nofollow" target="' . get_target() . '"', preg_replace('/&(?![a-z][a-z0-9]*;|#[0-9]+;|#x[0-9a-f]+;)/i', '&amp;', $status->source)) : ''; 
+		$source .= " " . $status->source ? " Via ".str_replace('rel="nofollow"', 'target="' . get_target() . '"', preg_replace('/&(?![a-z][a-z0-9]*;|#[0-9]+;|#x[0-9a-f]+;)/i', '&amp;', $status->source)) . "." : ''; 
 		
 		//	Build up the status to display
 		$html = "<b>" . theme_full_name($status->from) . "</b>
-		        $link
-		        $retweeted
+		        {$link}
+		        {$retweeted}
 		        <br />
-		        $text
-		        <br />$media
-		        $actions 
-		        <span class='from'>$source</span>";
+		        {$text}
+		        <br />{$media}
+		        {$actions} 
+		        <span class='from'>{$source}</span>";
 
 		unset($row);
 		$class = 'status';
