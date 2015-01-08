@@ -357,24 +357,25 @@ function theme_user_header($user) {
 	$bio = twitter_parse_tags($user->description, $user->entities->description);
 	$out = "<div class='profile'>
 	            <span class='avatar'>".theme('external_link', $full_avatar, theme('avatar', theme_get_avatar($user)))."</span>
-	            <span class='status shift'><b>{$name}</b>
-	            <span class='about'>";
-	if ($user->verified == true) {
-		$out .= '   <strong>Verified</strong> '.theme('action_icon', "", '✔', 'Verified').'<br />';
-	}
+	            <span class='status shift'><b>{$name}</b><br/>
+	               <span class='about'>";
+	// if ($user->verified == true) {
+	// 	$out .= '   <strong>Verified</strong> '.theme('action_icon', "", '✔', 'Verified').'<br />';
+	// }
 	if ($user->protected == true) {
-		$out .= '   <strong>Private/Protected Tweets</strong><br />';
+		$out .=       '<strong>Private/Protected Tweets</strong><br />';
 	}
 
-	$out .= "       Bio: {$bio}<br />
-	                Link: {$link}<br />
-	                <span class='icons'>⌖</span> <a href=\"https://maps.google.com/maps?q={$cleanLocation}\" target=\"" . get_target() . "\">
+	$out .=             "Bio: {$bio}<br />
+	                     Link: {$link}<br />
+	                     <span class='icons'>⌖</span> <a href=\"https://maps.google.com/maps?q={$cleanLocation}\" target=\"" . get_target() . "\">
 	                              {$user->location}
-	                          </a><br />
-	                Joined: {$date_joined} (~" . pluralise('tweet', $tweets_per_day, true) . " per day)
-	           </span>
-	        </span>
-	    <div class='features'>";
+	                          </a>
+	                    <br />
+	                    Joined: {$date_joined} (~" . pluralise('tweet', $tweets_per_day, true) . " per day)
+	                </span>
+	            </span>
+	        <div class='features'>";
 	
 	$out .= pluralise('tweet', $user->statuses_count, true);
 
