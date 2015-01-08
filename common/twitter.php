@@ -374,6 +374,10 @@ function get_codebird() { //$url, $post_data = false) {
 	$cb = \Codebird\Codebird::getInstance();
 	$cb->setToken($oauth_token, $oauth_token_secret);
 
+	//	Start the API timer
+	global $api_start;
+	$api_start = microtime(1);
+
 	return $cb;
 
 	// global $api_time;
@@ -883,9 +887,6 @@ function twitter_retweeters_page($query) {
 	$api_options = array("id" => $id);
 	$users = $cb->statuses_retweets_ID($api_options);
 	twitter_api_status($users);
-	// unset($users->httpstatus);
-	// twitter_rate_limit($users->rate);
-	// unset($users->rate);
 
 	// Format the output
 	$content = theme('users_list', $users);
@@ -1569,7 +1570,10 @@ function twitter_rate_limit($rate) {
 
 function twitter_api_status(&$response) {
 	global $rate_limit;
-	// echo "response <pre>".var_export($response,true)."</pre>";
+	global $api_time;
+	global $api_start;
+	$api_time += microtime(1) - $api_start;
+
 	//	Store the rate limit
 	if ($response->rate) {
 		twitter_rate_limit($response->rate);
