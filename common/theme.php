@@ -1066,6 +1066,7 @@ small,small a{
 	/*max-width:80%;*/
 	max-width:30em;
 	height:auto;
+	margin-top: 0.25em;
 }
 
 .date{
