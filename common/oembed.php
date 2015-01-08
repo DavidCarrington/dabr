@@ -1,6 +1,7 @@
 <?php
 
-function url_fetch($url) {
+function url_fetch($url) 
+{
 	global $services_time;
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, $url);
@@ -16,7 +17,8 @@ function url_fetch($url) {
 	return $response;
 }
 
-function oembed_embed_thumbnails(&$feed) {
+function oembed_embed_thumbnails(&$feed) 
+{
 	foreach($feed as &$status) 
 	{ // Loop through the feed
 		if(stripos($status->text, 'NSFW') === FALSE) 
@@ -34,20 +36,31 @@ function oembed_embed_thumbnails(&$feed) {
 						else {
 							$url = $urls->url;
 						}
-						$matched_urls[urlencode($url)][] = $status->id;
+						$matched_urls[urlencode($url)][] = $status->id;		
 					}
 				} else {
 					//	No URLs, do nothing
-					//return null;
 					$matched_urls[] = null;
 				}
 			}
 		}
 	}
 
+	//	Reduce the array of empty items
+	foreach ($matched_urls as $key => $value) 
+	{
+		if (null == $value)
+		{
+			unset($matched_urls[$key]);
+		}
+	}
+
 	// Make a single API call to Embedkit.
-	if(defined('EMBEDKIT_KEY') && EMBEDKIT_KEY != "") {
+	if(defined('EMBEDKIT_KEY') && EMBEDKIT_KEY != "") 
+	{
+		//	Only the URLs which we're going to pass to Embedkit
 		$justUrls = array_keys($matched_urls);
+	
 		$count = count($justUrls);
 		if ($count == 0) return;
 		// if ($count > 20) {
@@ -56,12 +69,12 @@ function oembed_embed_thumbnails(&$feed) {
 		// 	$justUrls = $justUrls[0];
 		// }
 		$url = 'https://embedkit.com/api/v1/extract?key='.EMBEDKIT_KEY.'&urls=' . implode(',', $justUrls) . '&format=json';
-		// echo "<pre>URL = {$url}</pre>";
+
 		$embedly_json = url_fetch($url);
 		$oembeds = json_decode($embedly_json);
 
-		if($oembeds->type != 'error') {
-
+		if($oembeds->type != 'error') 
+		{
 			//	Single statuses don't come back in an array
 			if (!is_array($oembeds))
 			{
@@ -69,23 +82,26 @@ function oembed_embed_thumbnails(&$feed) {
 				$oembeds = $temp;
 			}
 			
-			foreach ($justUrls as $index => $url) {
+			foreach ($justUrls as $index => $url)
+			{
 				$thumb = "";
-				//	Direct links to files
-				if ($oembeds[$index]->links->file)
-				{
+				
+				if ($oembeds[$index]->links->file) {
+					//	Direct links to files
 					$thumb = $oembeds[$index]->links->file[0]->href;
-				}
-
-				//	Thumbnails from websites
-				if ($oembeds[$index]->links->thumbnail[0]->href)
-				{
+				} elseif ($oembeds[$index]->links->image[0]->href) {
+					//	Image
+					$thumb = $oembeds[$index]->links->image[0]->href;	
+				} elseif ($oembeds[$index]->links->thumbnail[0]->href) {
+					//	Thumbnail
 					$thumb = $oembeds[$index]->links->thumbnail[0]->href;	
 				}
 
-				if ($thumb) {
-					$html = theme('external_link', urldecode($url), "<img src='" . image_proxy($thumb, "x45/") . "' class=\"embedded\" />");
-					foreach ($matched_urls[$url] as $statusId) {
+				if ($thumb) 
+				{
+					$html = theme('external_link', urldecode($url), "<img src='" . image_proxy($thumb, "") . "' class=\"embedded\" />");
+					foreach ($matched_urls[$url] as $statusId) 
+					{
 						$feed[$statusId]->text = $feed[$statusId]->text . '<br />' . '<span class="embed">' . $html . '</span>';
 					}
 				}
