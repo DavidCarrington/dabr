@@ -159,7 +159,7 @@ function settings_page($args) {
 	$content .= '<p>
 	                <label>
 	                    <input type="checkbox" name="show_oembed" value="yes" '. (setting_fetch('show_oembed') == yes ? ' checked="checked" ' : '') .' /> 
-	                    Show link previews (YouTube Videos, etc).
+	                    Show link previews (YouTube, Instagram, Blogs, etc).
 	                </label>
 	            </p>';
 
