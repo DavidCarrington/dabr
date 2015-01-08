@@ -1,14 +1,14 @@
 <?php
 
-function lists_paginated_process($url) {
-	// Adds cursor/pagination parameters to a query
-	$cursor = $_GET['cursor'];
-	if (!is_numeric($cursor)) {
-		$cursor = -1;
-	}
-	$url .= '&cursor='.$cursor;
-	return twitter_process($url);
-}
+// function lists_paginated_process($url) {
+// 	// Adds cursor/pagination parameters to a query
+// 	$cursor = $_GET['cursor'];
+// 	if (!is_numeric($cursor)) {
+// 		$cursor = -1;
+// 	}
+// 	$url .= '&cursor='.$cursor;
+// 	return twitter_process($url);
+// }
 
 function twitter_lists_tweets($user, $list) {
 	// Tweets belonging to a list
@@ -19,13 +19,13 @@ function twitter_lists_tweets($user, $list) {
 	// return twitter_process($url);
 	$cb = get_codebird();
 	$api_options = array("owner_screen_name" => $user, "slug" => $list);
-	$cursor = $_GET['cursor'];
+	$max_id = $_GET['max_id'];
 	
-	if (!is_numeric($cursor)) {
-		$cursor = -1;
+	if (!is_numeric($max_id)) {
+		$max_id = -1;
 	}
-	if ($cursor > 0) {
-		$api_options["cursor"] = $cursor;
+	if ($max_id > 0) {
+		$api_options["max_id"] = $max_id;
 	}
 
 	$list = $cb->lists_statuses($api_options);
@@ -75,10 +75,17 @@ function twitter_lists_user_memberships($user) {
 
 function twitter_lists_list_members($user, $list) {
 	// Members of a list
-	// return lists_paginated_process(API_NEW."lists/members.json?owner_screen_name={$user}&slug={$list}");
 	$cb = get_codebird();
 	$api_options = array("owner_screen_name" => $user, "slug" => $list);
 	$api_options["count"] = setting_fetch('perPage', 20);
+	$cursor = $_GET['cursor'];
+	
+	if (!is_numeric($cursor)) {
+		$cursor = -1;
+	}
+	if ($cursor > 0) {
+		$api_options["cursor"] = $cursor;
+	}
 	$list = $cb->lists_members($api_options);
 	twitter_api_status($list);
 	return $list;
@@ -86,10 +93,17 @@ function twitter_lists_list_members($user, $list) {
 
 function twitter_lists_list_subscribers($user, $list) {
 	// Subscribers of a list
-	// return lists_paginated_process(API_NEW."lists/subscribers.json?owner_screen_name={$user}&slug={$list}");
 	$cb = get_codebird();
 	$api_options = array("owner_screen_name" => $user, "slug" => $list);
 	$api_options["count"] = setting_fetch('perPage', 20);
+	$cursor = $_GET['cursor'];
+	
+	if (!is_numeric($cursor)) {
+		$cursor = -1;
+	}
+	if ($cursor > 0) {
+		$api_options["cursor"] = $cursor;
+	}
 	$list = $cb->lists_subscribers($api_options);
 	twitter_api_status($list);
 	return $list;
