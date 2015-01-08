@@ -387,12 +387,12 @@ function theme_user_header($user) {
 		$out .= " | " . pluralise('favourite', $user->favourites_count, true);
 	}
 	else {
-		$out .= " | <a href='followers/{$user->screen_name}'>" . pluralise('follower', $user->followers_count, true) . "</a>";
-		$out .= " | <a href='friends/{$user->screen_name}'>" . pluralise('friend', $user->friends_count, true) . "</a>";
+		$out .= " | <a href='followers/{$user->screen_name}'>" .  pluralise('follower',  $user->followers_count, true) .  "</a>";
+		$out .= " | <a href='friends/{$user->screen_name}'>" .    pluralise('friend',    $user->friends_count, true) .    "</a>";
 		$out .= " | <a href='favourites/{$user->screen_name}'>" . pluralise('favourite', $user->favourites_count, true) . "</a>";
 	}
 
-	$out .=     " | <a href='lists/{$user->screen_name}'>" . pluralise('list', $user->listed_count, true) . "</a>";
+	$out .=     " | <a href='lists/{$user->screen_name}'>" .      pluralise('list',      $user->listed_count, true) .     "</a>";
 	if($following) {
 		$out .=	" | <a href='directs/create/{$user->screen_name}'>Direct Message</a>";
 	}
