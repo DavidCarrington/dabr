@@ -326,13 +326,14 @@ function theme_retweet($status)
 	}
 	else
 	{
-		$content.="<p>@{$status->user->screen_name} doesn't allow you to retweet them. You will have to use the  use the old style editable retweet</p>";
+		$content.="<p>@{$status->user->screen_name} doesn't allow you to retweet them. You will have to retweet them manually.</p>";
 	}
 
-	$content .= "<p>Old style editable retweet:</p>
+	$content .= "<p>Edit before retweet:</p>
 					<form action='update' method='post'>
-						<input type='hidden' name='from' value='$from' />
-						<textarea name='status' style='width:90%; max-width: 400px;' rows='3' id='status'>$text</textarea>
+						<input type='hidden' name='from' value='{$from}' />
+						<input type='hidden' name='in_reply_to_id' value='{$status->id_str}' />
+						<textarea name='status' style='width:90%; max-width: 400px;' rows='5' id='status'>{$text}</textarea>
 						<br/>
 						<input type='submit' value='Retweet' />
 						<span id='remaining'>" . (140 - $length) ."</span>
