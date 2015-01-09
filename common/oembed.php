@@ -68,7 +68,7 @@ function oembed_embed_thumbnails(&$feed)
 		// 	$justUrls = array_chunk ($justUrls, 10);
 		// 	$justUrls = $justUrls[0];
 		// }
-		$url = 'https://embedkit.com/api/v1/extract?key='.EMBEDKIT_KEY.'&urls=' . implode(',', $justUrls) . '&format=json';
+		$url = 'https://embedkit.com/api/v1/embed?key='.EMBEDKIT_KEY.'&urls=' . implode(',', $justUrls) . '&format=json';
 
 		$embedly_json = url_fetch($url);
 		$oembeds = json_decode($embedly_json);
@@ -85,26 +85,34 @@ function oembed_embed_thumbnails(&$feed)
 			foreach ($justUrls as $index => $url)
 			{
 				$thumb = "";
+				$title = "";
 				
-				if ($oembeds[$index]->links->file) {
+				if ($oembeds[$index]->thumbnail_url) {
 					//	Direct links to files
-					$thumb = $oembeds[$index]->links->file[0]->href;
-				} elseif ($oembeds[$index]->links->image[0]->href) {
-					//	Image
-					$thumb = $oembeds[$index]->links->image[0]->href;	
-				} elseif ($oembeds[$index]->links->thumbnail[0]->href) {
-					//	Thumbnail
-					$thumb = $oembeds[$index]->links->thumbnail[0]->href;	
+					$thumb = $oembeds[$index]->thumbnail_url;
+				} 
+
+				if ($oembeds[$index]->title) {
+					//	Direct links to files
+					$title = $oembeds[$index]->title;
 				}
 
 				if ($thumb) 
-				{
-					$html = theme('external_link', urldecode($url), "<img src='" . image_proxy($thumb, "") . "' class=\"embedded\" />");
+				{	//	Embed the thumbnail
+					$html = theme('external_link', urldecode($url), "<img src=\"" . image_proxy($thumb, "") . "\"" .
+					                                                " title=\"{$title}\" alt=\"{$title}\" class=\"embedded\" />");
+					foreach ($matched_urls[$url] as $statusId) 
+					{
+						$feed[$statusId]->text = $feed[$statusId]->text . '<br />' . '<span class="embed">' . $html . '</span>';
+					}
+				} elseif  ($title) 	{	//	Embed a link
+					$html = theme('external_link', urldecode($url), $title);
 					foreach ($matched_urls[$url] as $statusId) 
 					{
 						$feed[$statusId]->text = $feed[$statusId]->text . '<br />' . '<span class="embed">' . $html . '</span>';
 					}
 				}
+
 			}
 		}
 	}
