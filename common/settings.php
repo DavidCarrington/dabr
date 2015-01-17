@@ -1,7 +1,7 @@
 <?php
 
 /*
-Assembled in theme_css()
+Assembled in css.php
 Syntax is 
          'Name|          links, body_background,body_text,small, odd,   even,  replyodd,replyeven,menu_background,menu_text,menu_link',
 */

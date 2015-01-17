@@ -15,6 +15,7 @@ require 'common/theme.php';
 require 'common/twitter.php';
 require 'common/settings.php';
 require 'common/codebird.php';
+require 'common/css.php';
 
 //	Initial menu items to show even when not logged in.
 menu_register(array (
@@ -30,6 +31,10 @@ menu_register(array (
 	'oauth' => array(
 		'callback' => 'user_oauth',
 		'hidden' => 'true',
+	),
+	'widgets' => array(
+		'callback' => 'css',
+		'hidden'   => 'true', 
 	),
 ));
 
