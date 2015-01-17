@@ -751,13 +751,29 @@ function twitter_confirmation_page($query)
 			break;
 
 		case 'delete':
+			$cb = get_codebird();
+			$api_options = array("id" => $target);
+			$status = $cb->statuses_show_ID($api_options);
+			@twitter_api_status($status);
+
 			$content = '<p>Are you really sure you want to delete your tweet?</p>';
-			$content .= "<ul><li>Tweet ID: <strong>$target</strong></li><li>There is no way to undo this action.</li></ul>";
+			$content .= "<ul>
+			                 <li>Tweet: {$status->text}</li>
+			                 <li>There is <strong>no way to undo this action</strong>.</li>
+			            </ul>";
 			break;
 
 		case 'deleteDM':
+			$cb = get_codebird();
+			$api_options = array("id" => $target);
+			$status = $cb->directMessages_show($api_options);
+			@twitter_api_status($status);
 			$content = '<p>Are you really sure you want to delete that DM?</p>';
-			$content .= "<ul><li>Tweet ID: <strong>$target</strong></li><li>There is no way to undo this action.</li><li>The DM will be deleted from both the sender's outbox <em>and</em> receiver's inbox.</li></ul>";
+			$content .= "<ul>
+			                <li>Message: {$status->text}</li>
+			                <li>There is <strong>no way to undo this action</strong>.</li>
+			                <li>The DM will be deleted from both the sender's outbox <em>and</em> receiver's inbox.</li>
+			            </ul>";
 			break;
 
 		case 'spam':
@@ -930,7 +946,7 @@ function twitter_update() {
 
 	//	POSTing adds slashes, let's get rid of them.
 	//	Or not...
-	$status_text = trim($_POST['status']);//stripslashes(trim($_POST['status']));
+	$status_text = trim($_POST['status']);
 	
 	if ($status_text) {
 		//	Ensure that the text is properly escaped
