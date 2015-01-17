@@ -528,7 +528,14 @@ function theme_timeline($feed, $paginate = true) {
 		}
 
 		//need to replace & in links with &amps and force new window on links
-		$source .= " " . $status->source ? " Via ".str_replace('rel="nofollow"', 'target="' . get_target() . '"', preg_replace('/&(?![a-z][a-z0-9]*;|#[0-9]+;|#x[0-9a-f]+;)/i', '&amp;', $status->source)) . "." : ''; 
+		if ($status->source) {
+			$source .= " Via ".
+			           str_replace('rel="nofollow"', 'target="' . get_target() . '"', 
+			           	preg_replace('/&(?![a-z][a-z0-9]*;|#[0-9]+;|#x[0-9a-f]+;)/i', '&amp;', $status->source)) . 
+			           "."; 
+		}
+
+		// $source .= " " . $status->source ? " Via ".str_replace('rel="nofollow"', 'target="' . get_target() . '"', preg_replace('/&(?![a-z][a-z0-9]*;|#[0-9]+;|#x[0-9a-f]+;)/i', '&amp;', $status->source)) . "." : ''; 
 		
 		//	Build up the status to display
 		$html = "<b>" . theme_full_name($status->from) . "</b>
