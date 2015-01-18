@@ -158,6 +158,11 @@ menu_register(array(
 		'security' => true,
 		'callback' => 'twitter_retweets',
 	),
+	'blocked' => array(
+		'hidden' => true,
+		'security' => true,
+		'callback' => 'twitter_blocks',
+	),
 ));
 
 // How should external links be opened?
@@ -896,6 +901,29 @@ function twitter_followers_page($query) {
 
 	$content = theme('users_list', $tl);
 	theme('page', 'Followers', $content);
+}
+
+function twitter_blocks() {
+
+	$cursor = $_GET['cursor'];
+	if (!is_numeric($cursor)) {
+		$cursor = -1;
+	}	
+
+	$cb = get_codebird();
+
+	$api_options = array("skip_status" => "true");
+	$api_options["count"] = setting_fetch('perPage', 20);
+	
+	if ($cursor > 0) {
+		$api_options["cursor"] = $cursor;
+	}
+	
+	$tl = $cb->blocks_list($api_options);
+	twitter_api_status($tl);
+
+	$content = theme('users_list', $tl);
+	theme('page', 'Blocked Users', $content);
 }
 
 //  Shows first 100 users who retweeted a specific status (limit defined by twitter)

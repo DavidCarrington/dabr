@@ -426,6 +426,9 @@ function theme_user_header($user) {
 		}
 
 		$out .= " | <a href='confirm/spam/{$user->screen_name}/{$user->id}'>Report Spam</a>";
+	} else {
+		//	Items we can only show on ourself
+		$out .= " | <a href='blocked'>Show Blocked Users</a>";
 	}
 	
 	$out .= " | <a href='search?query=%40{$user->screen_name}'>Search @{$user->screen_name}</a>";
