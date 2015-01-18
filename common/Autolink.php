@@ -441,7 +441,7 @@ class Twitter_Autolink extends Twitter_Regex {
       # Replace the username
       $element = $username;
       $class = $this->class_user;
-      $url = $this->url_base_user . 'user/' . $element;
+      $url = $this->url_base_user . $element;
       $postfix = '';
     }
     return $before . $at . $this->wrap($url, $class, $element) . $postfix . $after;

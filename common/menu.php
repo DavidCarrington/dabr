@@ -13,8 +13,11 @@ function menu_execute_active_handler() {
 	$GLOBALS['page'] = $query[0];
 	$page = $GLOBALS['menu_registry'][$GLOBALS['page']];
 	if (!$page) {
-		header('HTTP/1.0 404 Not Found');
-		die('404 - Page not found.');
+		// header('HTTP/1.0 404 Not Found');
+		// die('404 - Page not found.');
+		$GLOBALS['page'] = "user";
+		$page = $GLOBALS['menu_registry'][$GLOBALS['page']];
+		array_unshift($query, "user");
 	}
 
 	if ($page['security'])

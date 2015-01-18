@@ -193,7 +193,7 @@ function lists_list_tweets_page($user, $list) {
 	$tl = twitter_standard_timeline($tweets, 'user');
 	$content = theme('status_form');
 	$list_url = "lists/{$user}/{$list}";
-	$content .= "<p>Tweets in <a href='user/{$user}'>@{$user}</a>/<strong>{$list}</strong> | <a href='{$list_url}/members'>View Members</a> | <a href='{$list_url}/subscribers'>View Subscribers</a></p>";
+	$content .= "<p>Tweets in <a href='{$user}'>@{$user}</a>/<strong>{$list}</strong> | <a href='{$list_url}/members'>View Members</a> | <a href='{$list_url}/subscribers'>View Subscribers</a></p>";
 	$content .= theme('timeline', $tl);
 	theme('page', "List {$user}/{$list}", $content);
 }
@@ -204,7 +204,7 @@ function lists_list_members_page($user, $list) {
 	$p = twitter_lists_list_members($user, $list);
 
 	// TODO: use a different theme() function? Add a "delete member" link for each member
-	$content = "<div class='heading'>Members of <a href='user/{$user}'>@{$user}</a>/<a href='lists/{$user}/{$list}'>{$list}</a>:</div>\n";
+	$content = "<div class='heading'>Members of <a href='{$user}'>@{$user}</a>/<a href='lists/{$user}/{$list}'>{$list}</a>:</div>\n";
 	$content .= theme('users_list', $p);
 	theme('page', "Members of {$user}/{$list}", $content);
 }
@@ -212,12 +212,10 @@ function lists_list_members_page($user, $list) {
 function lists_list_subscribers_page($user, $list) {
 	// Show subscribers of a list
 	$p = twitter_lists_list_subscribers($user, $list);
-	$content = "<div class='heading'>Subscribers of <a href='user/{$user}'>@{$user}</a>/<a href='lists/{$user}/{$list}'>{$list}</a>:</div>\n";
+	$content = "<div class='heading'>Subscribers of <a href='{$user}'>@{$user}</a>/<a href='lists/{$user}/{$list}'>{$list}</a>:</div>\n";
 	$content .= theme('users_list', $p);
 	theme('page', "Subscribers of {$user}/{$list}", $content);
 }
-
-
 
 /* Theme functions */
 
@@ -237,7 +235,7 @@ function theme_lists($json) {
 		$url = "lists/{$list->user->screen_name}/{$list->slug}";
 
 		$rows[] = array('data' => 	array(
-										array('data' => "<a href='user/{$list->user->screen_name}'>@{$list->user->screen_name}</a>/<wbr><a href='{$url}'><strong>{$list->slug}</strong></a>", 'style' => 'display: table-cell;'),
+										array('data' => "<a href='{$list->user->screen_name}'>@{$list->user->screen_name}</a>/<wbr><a href='{$url}'><strong>{$list->slug}</strong></a>", 'style' => 'display: table-cell;'),
 										array('data' => "<a href='{$url}/members'>".number_format($list->member_count)."</a>", 'class' => 'table-cell-middle'),
 										array('data' => "<a href='{$url}/subscribers'>".number_format($list->subscriber_count)."</a>", 'class' => 'table-cell-end'),
 	                                ),

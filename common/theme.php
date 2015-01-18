@@ -207,7 +207,7 @@ function theme_profile_form($user){
 	return $out;
 }
 function theme_directs_menu() {
-	return '<p><a href="directs/create">Create</a> | <a href="directs/inbox">Inbox</a> | <a href="directs/sent">Sent</a></p>';
+	return '<p><a href="messages/create">Create</a> | <a href="messages/inbox">Inbox</a> | <a href="messages/sent">Sent</a></p>';
 }
 
 function theme_directs_form($to) {
@@ -221,7 +221,7 @@ function theme_directs_form($to) {
 	} else {
 		$html_to .= "To: <input name='to'><br />Message:";
 	}
-	$content = "<form action='directs/send' method='post'>$html_to
+	$content = "<form action='messages/send' method='post'>$html_to
 	                <br>
 	                <textarea name='message' style='width:90%; max-width: 400px;' rows='3' id='message'></textarea>
 	                <br>
@@ -396,7 +396,7 @@ function theme_user_header($user) {
 
 	$out .=     " | <a href='lists/{$user->screen_name}'>" .      pluralise('list',      $user->listed_count, true) .     "</a>";
 	if($following) {
-		$out .=	" | <a href='directs/create/{$user->screen_name}'>Direct Message</a>";
+		$out .=	" | <a href='messages/create/{$user->screen_name}'>Direct Message</a>";
 	}
 	
 	//	One cannot follow, block, nor report spam oneself.
@@ -501,7 +501,7 @@ function theme_timeline($feed, $paginate = true) {
 
 		if ($status->retweeted_by) {
 			$retweeted_by = $status->retweeted_by->user->screen_name;
-			$retweeted = "<br /><small>RT by <a href='user/{$retweeted_by}'>{$retweeted_by}</a></small>";
+			$retweeted = "<br /><small>RT by <a href='{$retweeted_by}'>{$retweeted_by}</a></small>";
 		} else {
 			$retweeted = "";
 		}
@@ -621,9 +621,9 @@ function theme_full_name($user) {
 	//	Link to the screen name but display as "Ms E Xample (@Example"
 	if ($user->name == $user->screen_name || "" == $user->name)
 	{
-		$name = "@<a href='user/{$user->screen_name}'>{$user->screen_name}</a>";
+		$name = "@<a href='{$user->screen_name}'>{$user->screen_name}</a>";
 	} else  {
-		$name = "<a href='user/{$user->screen_name}'>{$user->name}</a> (@{$user->screen_name})";
+		$name = "<a href='{$user->screen_name}'>{$user->name}</a> (@{$user->screen_name})";
 	} 
 
 	//	Add the veified tick
@@ -668,7 +668,7 @@ function theme_search_results($feed) {
 		$actions = theme('action_icons', $status);
 
 		$row = array(
-		theme('avatar', theme_get_avatar($status)), "<a href='user/{$status->from_user}'>{$status->from_user}</a> $actions - {$link}<br />{$text}",);
+		theme('avatar', theme_get_avatar($status)), "<a href='{$status->from_user}'>{$status->from_user}</a> $actions - {$link}<br />{$text}",);
 		if (twitter_is_reply($status)) {
 			$row = array('class' => 'reply', 'data' => $row);
 		}
@@ -732,16 +732,12 @@ function theme_action_icons($status) {
 	$actions = array();
 
 	if (!$status->is_direct) {
-		$actions[] = theme('action_icon', "user/{$from}/reply/{$status->id}", '@', 'Reply');
-	}
-	//Reply All functionality.
-	if( $status->entities->user_mentions ) {
-//		$actions[] = theme('action_icon', "user/{$from}/replyall/{$status->id}", 'images/replyall.png', 'REPLY ALL');
+		$actions[] = theme('action_icon', "{$from}/reply/{$status->id}", '@', 'Reply');
 	}
 
 	//	DM only shows up if we can actually send a DM
 	if (!user_is_current_user($from)) {
-		$actions[] = theme('action_icon', "directs/create/{$from}", '✉', 'Direct Message');
+		$actions[] = theme('action_icon', "messages/create/{$from}", '✉', 'Direct Message');
 	}
 	if (!$status->is_direct) {
 

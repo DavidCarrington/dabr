@@ -38,7 +38,7 @@ menu_register(array(
 		'security' => true,
 		'callback' => 'twitter_mark_favourite_page',
 	),
-	'directs' => array(
+	'messages' => array(
 		'security' => true,
 		'callback' => 'twitter_directs_page',
 		'display' => '✉'
@@ -143,7 +143,7 @@ menu_register(array(
 		'hidden' => true,
 		'callback' => 'twitter_retweeters_page',
 	),
-	'edit-profile' => array(
+	'account' => array(
 		'security' => true,
 		'callback' => 'twitter_profile_page',
 		'display' => '☺'
@@ -647,7 +647,7 @@ function twitter_delete_page($query) {
 		$response = $cb->statuses_destroy_ID($api_options);	
 		twitter_api_status($response);
 
-		twitter_refresh('user/'.user_current_username());
+		twitter_refresh(user_current_username());
 	}
 }
 
@@ -662,7 +662,7 @@ function twitter_deleteDM_page($query) {
 		$response = $cb->directMessages_destroy($api_options);	
 		twitter_api_status($response);
 
-		twitter_refresh('directs/');
+		twitter_refresh('messages/');
 	}
 }
 
@@ -670,7 +670,8 @@ function twitter_ensure_post_action() {
 	// This function is used to make sure the user submitted their action as an HTTP POST request
 	// It slightly increases security for actions such as Delete, Block and Spam
 	if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-		die('Error: Invalid HTTP request method for this action.');
+		theme('error', "<h2>Error: You broke something.</h2><p>Invalid HTTP request method for this action.</p>");
+		// die('Error: Invalid HTTP request method for this action.');
 	}
 }
 
@@ -792,6 +793,9 @@ function twitter_confirmation_page($query)
 			$content .= "<ul><li>The tweets that {$target} shares will appear in your timeline.</li>
 			                 <li>You can turn these off at any time.</li></ul>";
 			break;
+		case '':
+			theme('error', "<h2>Error!</h2><p>Nothing to confirm.</p>");
+			break;
 
 
 	}
@@ -836,7 +840,7 @@ function twitter_retweets($query) {
 			$api_options["retweets"] = true;
 			@twitter_api_status($cb->friendships_update($api_options));
 		}
-		twitter_refresh("user/{$user}");
+		twitter_refresh($user);
 	}	
 }
 
@@ -1049,7 +1053,7 @@ function twitter_directs_page($query) {
 			$message = trim(stripslashes($_POST['message']));
 			$api_options = array('screen_name' => $to, 'text' => $message);
 			@twitter_api_status($cb->directMessages_new($api_options));
-			twitter_refresh('directs/sent');
+			twitter_refresh('messages/sent');
 
 		case 'sent':
 			if ($_GET['max_id']) {
@@ -1173,7 +1177,12 @@ function twitter_user_page($query) {
 	
 	$content = '';
 
-	if (!$screen_name) theme('error', 'No username given');
+	if (!$screen_name) {
+		// theme('error', 'No username given');
+
+		//	Ugly cludge because @user is a real user
+		twitter_refresh('user/user');
+	}
 
 	// Load up user profile information and one tweet
 	$user = twitter_user_info($screen_name);
@@ -1335,7 +1344,9 @@ function twitter_hashtag_page($query) {
 		$content .= theme('timeline', $tl);
 		theme('page', $hashtag, $content);
 	} else {
-		theme('page', 'Hashtag', 'Hash hash!');
+		//	Ugly cludge because @hash is a real user
+		twitter_refresh('user/hash');
+		// theme('page', 'Hashtag', 'Hash hash!');
 	}
 }
 
@@ -1614,7 +1625,7 @@ function twitter_api_status(&$response) {
 				return;
 			case 401:
 				user_logout();
-				theme('error', "<p>Error: Login credentials incorrect.</p><p>Twitter says: {$error_message} (Code {$error_code})</p>");
+				theme('error', "<h2>Error: Login credentials incorrect.</h2><p>Twitter says: {$error_message} (Code {$error_code})</p>");
 			case 429:
 				theme('error', "<h2>Rate limit exceeded!</h2><p>{$rate_limit}.</p>");
 			case 403:
