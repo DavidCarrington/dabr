@@ -194,9 +194,12 @@ small,small a{
 }
 .table {
 	display: table;
+	max-width:95%;
 }
 .table-row {
 	display: table-row;
+	text-align: right;
+	word-wrap:break-word;
 }
 .table-cell {
 	display: table-cell;
@@ -205,7 +208,6 @@ small,small a{
 	display: table-cell;
 	padding-left: 1em;
 	padding-right:1em;
-	text-align: right;
 }
 ";
 

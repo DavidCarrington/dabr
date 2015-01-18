@@ -237,7 +237,7 @@ function theme_lists($json) {
 		$url = "lists/{$list->user->screen_name}/{$list->slug}";
 
 		$rows[] = array('data' => 	array(
-										array('data' => "<a href='user/{$list->user->screen_name}'>@{$list->user->screen_name}</a>/<br/><a href='{$url}'><strong>{$list->slug}</strong></a>", 'style' => 'display: table-cell;'),
+										array('data' => "<a href='user/{$list->user->screen_name}'>@{$list->user->screen_name}</a>/<wbr><a href='{$url}'><strong>{$list->slug}</strong></a>", 'style' => 'display: table-cell;'),
 										array('data' => "<a href='{$url}/members'>".number_format($list->member_count)."</a>", 'class' => 'table-cell-middle'),
 										array('data' => "<a href='{$url}/subscribers'>".number_format($list->subscriber_count)."</a>", 'class' => 'table-cell-end'),
 	                                ),
