@@ -195,11 +195,17 @@ small,small a{
 .table {
 	display: table;
 }
-.row {
+.table-row {
 	display: table-row;
 }
-.cell {
+.table-cell {
 	display: table-cell;
+}
+.table-cell-middle,.table-cell-end {
+	display: table-cell;
+	padding-left: 1em;
+	padding-right:1em;
+	text-align: right;
 }
 ";
 

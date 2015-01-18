@@ -232,15 +232,21 @@ function theme_lists($json) {
 		return "<p>No lists to display</p>";
 	}
 	$rows = array();
-	$headers = array('List ', 'Members ', 'Subscribers');
+	$headers = array('<div class="table"><div class="table-row"><span class="table-cell">Lists</span><span class="table-cell-middle">Members</span><span class="table-cell-end">Subscribers</span></div>');
 	foreach ($lists as $list) {
 		$url = "lists/{$list->user->screen_name}/{$list->slug}";
-		$rows[] = array(
-			"<a href='user/{$list->user->screen_name}'>@{$list->user->screen_name}</a>/<a href='{$url}'><strong>{$list->slug}</strong></a> ",
-			"<a href='{$url}/members'>{$list->member_count}</a> ",
-			"<a href='{$url}/subscribers'>{$list->subscriber_count}</a>",
-		);
+
+		$rows[] = array('data' => 	array(
+										array('data' => "<a href='user/{$list->user->screen_name}'>@{$list->user->screen_name}</a>/<br/><a href='{$url}'><strong>{$list->slug}</strong></a>", 'style' => 'display: table-cell;'),
+										array('data' => "<a href='{$url}/members'>".number_format($list->member_count)."</a>", 'class' => 'table-cell-middle'),
+										array('data' => "<a href='{$url}/subscribers'>".number_format($list->subscriber_count)."</a>", 'class' => 'table-cell-end'),
+	                                ),
+		                'class' => 'table-row');
+
 	}
+
+	//	Closing </div> missing. Grrrr.
+	// $rows[] = array("</div>");
 	$content = theme('table', $headers, $rows);
 	$content .= theme('list_pagination', $json);
 	return $content;
