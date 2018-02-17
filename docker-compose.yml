@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+  dabr:
+    restart: always
+    build: .
+    ports:
+      - "${PORT}:80"
+    volumes:
+      - .:/var/www/html
+
